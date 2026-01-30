@@ -1,1 +1,162 @@
-<p>login works!</p>
+<div class="auth-wrapper">
+  <!-- LEFT: LOGIN -->
+  <div class="auth-left">
+    <div class="logo">
+      <div class="logo-icon">W</div>
+      <div class="logo-text">WMS Portal</div>
+    </div>
+
+    <h1 class="auth-title">Sign in</h1>
+    <p class="auth-subtitle">
+      Don’t have an account?
+      <a href="#">Create now</a>
+    </p>
+
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+      <!-- Error message -->
+      <div *ngIf="errorMessage" class="error-message">
+        {{ errorMessage }}
+      </div>
+
+      <!-- USERNAME -->
+      <div class="form-group">
+        <label class="form-label" for="username">Username</label>
+        <input
+          id="username"
+          type="text"
+          class="form-input"
+          formControlName="username"
+          placeholder="Enter your username"
+          [class.is-invalid]="submitted && username?.invalid"
+        />
+        <div class="error-text" *ngIf="submitted && username?.invalid">
+          <span *ngIf="username?.errors?.['required']">Username is required</span>
+        </div>
+      </div>
+
+      <!-- PASSWORD -->
+      <div class="form-group">
+        <label class="form-label" for="password">Password</label>
+
+        <div class="form-input-wrapper">
+          <input
+            id="password"
+            class="form-input"
+            formControlName="password"
+            [type]="hidePassword ? 'password' : 'text'"
+            placeholder="••••••••"
+            [class.is-invalid]="submitted && password?.invalid"
+          />
+          <button
+            type="button"
+            class="toggle-password"
+            (click)="togglePassword()"
+          >
+            {{ hidePassword ? '👁' : '👁‍🗨' }}
+          </button>
+        </div>
+
+        <div class="error-text" *ngIf="submitted && password?.invalid">
+          <span *ngIf="password?.errors?.['required']">Password is required</span>
+          <span *ngIf="password?.errors?.['minlength']">
+            Password must be at least 6 characters
+          </span>
+        </div>
+      </div>
+
+      <!-- EXTRA ROW -->
+      <div class="extra-row">
+        <label class="checkbox">
+          <input type="checkbox" />
+          <span>Remember me</span>
+        </label>
+        <a href="#">Forgot password?</a>
+      </div>
+
+      <!-- SUBMIT -->
+      <button class="btn-primary" type="submit" [disabled]="isLoading">
+        <span *ngIf="!isLoading">Sign in</span>
+        <span *ngIf="isLoading" class="loading-spinner">⟳</span>
+      </button>
+
+      <!-- DIVIDER -->
+      <div class="divider">
+        <div class="divider-line"></div>
+        <span>OR</span>
+        <div class="divider-line"></div>
+      </div>
+
+      <!-- SOCIAL BUTTONS -->
+      <button type="button" class="btn-social btn-google">
+        <i class="fa-brands fa-google"></i>
+        <span>Continue with Google</span>
+      </button>
+
+      <button type="button" class="btn-social btn-facebook">
+        <i class="fa-brands fa-facebook"></i>
+        <span>Continue with Facebook</span>
+      </button>
+    </form>
+  </div>
+
+  <!-- RIGHT: WMS IMAGE + CONTENT (giữ nguyên của bạn) -->
+  <div class="auth-right">
+    <div class="auth-right-inner">
+      <div class="support-top">
+        <span>Support</span>
+        <div class="support-pill">?</div>
+      </div>
+
+      <div class="hero-card">
+        <div>
+          <h3 class="hero-text-title">Manage your warehouse smarter</h3>
+          <p class="hero-text-desc">
+            Control receiving, putaway, picking, packing and dispatch in one WMS
+            dashboard. Real-time visibility, fewer mistakes, faster operations.
+          </p>
+          <button class="btn-secondary">Explore WMS features</button>
+        </div>
+        <div class="hero-image-wrapper">
+          <div class="hero-image">
+            <img src="assets/images/whs-login.jpg" alt="Warehouse Management System" />
+            <div class="metrics">
+              <span>
+                Today
+                <strong>+124 orders</strong>
+              </span>
+              <span>
+                Accuracy
+                <strong>99.7%</strong>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <h2 class="section-title">Introducing WMS workflows</h2>
+        <p class="section-body">
+          From receiving to dispatch, automate every step in your warehouse.
+          Track pallets, optimize picking routes and keep inventory always up to date.
+        </p>
+
+        <div class="feature-tags">
+          <span class="feature-tag">Receiving</span>
+          <span class="feature-tag">Putaway</span>
+          <span class="feature-tag">Picking</span>
+          <span class="feature-tag">Packing</span>
+          <span class="feature-tag">Loading</span>
+          <span class="feature-tag">Stocktaking</span>
+          <span class="feature-tag">Replenishment</span>
+          <span class="feature-tag">Reporting</span>
+        </div>
+
+        <div class="carousel-dots">
+          <div class="dot active"></div>
+          <div class="dot"></div>
+          <div class="dot"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
