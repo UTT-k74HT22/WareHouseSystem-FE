@@ -9,7 +9,7 @@ import { RegisterComponent } from './authenticate/register/register.component';
 import { HttpClientModule, HTTP_INTERCEPTORS } from "@angular/common/http";
 import { ReactiveFormsModule, FormsModule } from "@angular/forms";
 import { ToastrModule } from 'ngx-toastr';
-import { ToastrComponent } from './toastr/toastr.component';
+import { ToastrComponent } from './share/toastr/toastr.component';
 import { JwtInterceptor } from './security/interceptors/jwt.interceptor';
 import { ErrorInterceptor } from './security/interceptors/error.interceptor';
 import { DashboardComponent } from './pages/dashboard/dashboard.component';

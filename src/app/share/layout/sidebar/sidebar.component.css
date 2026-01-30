@@ -43,14 +43,23 @@
   height: 40px;
   border-radius: 12px;
   background: linear-gradient(135deg, var(--whs-primary), #0b5ed7);
-  color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 700;
-  font-size: 20px;
   box-shadow: 0 4px 12px rgba(13, 110, 253, 0.25);
+  /* bỏ mấy cái cho text đi */
+  /* color: #fff;
+  font-weight: 700;
+  font-size: 20px; */
 }
+
+.logo-icon img {
+  max-width: 70%;
+  max-height: 70%;
+  display: block;
+  object-fit: contain;
+}
+
 
 .logo-text {
   font-weight: 700;

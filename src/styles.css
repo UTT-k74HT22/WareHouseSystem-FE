@@ -1,3 +1,6 @@
+/* Import ngx-toastr styles */
+@import 'ngx-toastr/toastr';
+
 /* ========== RESET CƠ BẢN ========== */
 *,
 *::before,
