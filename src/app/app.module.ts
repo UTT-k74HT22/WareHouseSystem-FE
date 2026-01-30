@@ -7,12 +7,16 @@ import { AppComponent } from './app.component';
 import { LoginComponent } from './authenticate/login/login.component';
 import { RegisterComponent } from './authenticate/register/register.component';
 import { HttpClientModule, HTTP_INTERCEPTORS } from "@angular/common/http";
-import { ReactiveFormsModule } from "@angular/forms";
+import { ReactiveFormsModule, FormsModule } from "@angular/forms";
 import { ToastrModule } from 'ngx-toastr';
-import { ToastrComponent } from './toastr/toastr.component';
+import { ToastrComponent } from './share/toastr/toastr.component';
 import { JwtInterceptor } from './security/interceptors/jwt.interceptor';
 import { ErrorInterceptor } from './security/interceptors/error.interceptor';
 import { DashboardComponent } from './pages/dashboard/dashboard.component';
+import { SidebarComponent } from './share/layout/sidebar/sidebar.component';
+import { HeaderComponent } from './share/layout/header/header.component';
+import { FooterComponent } from './share/layout/footer/footer.component';
+import { WarehouseComponent } from './pages/warehouse/warehouse.component';
 
 @NgModule({
   declarations: [
@@ -21,6 +25,10 @@ import { DashboardComponent } from './pages/dashboard/dashboard.component';
     RegisterComponent,
     ToastrComponent,
     DashboardComponent,
+    SidebarComponent,
+    HeaderComponent,
+    FooterComponent,
+    WarehouseComponent,
   ],
   imports: [
     BrowserModule,
@@ -28,6 +36,7 @@ import { DashboardComponent } from './pages/dashboard/dashboard.component';
     BrowserAnimationsModule,
     AppRoutingModule,
     ReactiveFormsModule,
+    FormsModule,
     HttpClientModule,
     ToastrModule.forRoot({
       timeOut: 3000,

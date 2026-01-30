@@ -1,0 +1,295 @@
+<div class="warehouse-container">
+  <!-- Header Section -->
+  <div class="warehouse-header">
+    <div class="header-title">
+      <h1>🏭 Quản lý Kho</h1>
+      <p>Quản lý và giám sát các kho hàng trong hệ thống</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-primary">
+        <span class="icon">➕</span>
+        Thêm Kho Mới
+      </button>
+    </div>
+  </div>
+
+  <!-- Stats Section -->
+  <div class="stats-section" *ngIf="stats">
+    <div class="stat-card">
+      <div class="stat-icon">🏭</div>
+      <div class="stat-content">
+        <div class="stat-value">{{ stats.totalWarehouses }}</div>
+        <div class="stat-label">Tổng số kho</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon">✅</div>
+      <div class="stat-content">
+        <div class="stat-value">{{ stats.activeWarehouses }}</div>
+        <div class="stat-label">Kho hoạt động</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon">📦</div>
+      <div class="stat-content">
+        <div class="stat-value">{{ stats.totalCapacity | number }}</div>
+        <div class="stat-label">Tổng sức chứa (m³)</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon">📊</div>
+      <div class="stat-content">
+        <div class="stat-value">{{ stats.utilizationRate }}%</div>
+        <div class="stat-label">Tỷ lệ sử dụng</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters and Search Section -->
+  <div class="filter-section">
+    <div class="search-box">
+      <span class="search-icon">🔍</span>
+      <input
+        type="text"
+        class="search-input"
+        placeholder="Tìm kiếm theo tên, mã kho hoặc thành phố..."
+        [(ngModel)]="searchTerm"
+        (input)="onSearch()"
+      />
+    </div>
+
+    <div class="filter-controls">
+      <select class="filter-select" [(ngModel)]="selectedStatus" (change)="onStatusFilter()">
+        <option value="ALL">Tất cả trạng thái</option>
+        <option value="ACTIVE">Hoạt động</option>
+        <option value="INACTIVE">Không hoạt động</option>
+        <option value="MAINTENANCE">Bảo trì</option>
+      </select>
+
+      <button class="btn-view-toggle" (click)="toggleViewMode()">
+        <span *ngIf="viewMode === 'grid'">📋</span>
+        <span *ngIf="viewMode === 'list'">⊞</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-spinner" *ngIf="loading">
+    <div class="spinner"></div>
+    <p>Đang tải dữ liệu...</p>
+  </div>
+
+  <!-- Warehouses Grid/List -->
+  <div class="warehouses-content" *ngIf="!loading">
+    <!-- Grid View -->
+    <div class="warehouses-grid" *ngIf="viewMode === 'grid'">
+      <div class="warehouse-card" *ngFor="let warehouse of filteredWarehouses" (click)="selectWarehouse(warehouse)">
+        <div class="card-header">
+          <div class="warehouse-code">{{ warehouse.code }}</div>
+          <span class="status-badge" [ngClass]="getStatusClass(warehouse.status)">
+            {{ getStatusText(warehouse.status) }}
+          </span>
+        </div>
+
+        <div class="card-body">
+          <h3 class="warehouse-name">{{ warehouse.name }}</h3>
+          <div class="warehouse-info">
+            <div class="info-item">
+              <span class="info-icon">📍</span>
+              <span>{{ warehouse.city }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-icon">👤</span>
+              <span>{{ warehouse.manager }}</span>
+            </div>
+          </div>
+
+          <div class="capacity-section">
+            <div class="capacity-header">
+              <span>Sức chứa</span>
+              <span class="capacity-value">{{ warehouse.currentOccupancy | number }} / {{ warehouse.capacity | number }} m³</span>
+            </div>
+            <div class="capacity-bar">
+              <div
+                class="capacity-fill"
+                [style.width.%]="getOccupancyPercentage(warehouse)"
+                [ngClass]="getOccupancyClass(getOccupancyPercentage(warehouse))"
+              ></div>
+            </div>
+            <div class="capacity-percentage">{{ getOccupancyPercentage(warehouse) }}% đã sử dụng</div>
+          </div>
+        </div>
+
+        <div class="card-footer">
+          <div class="footer-info">
+            <span class="footer-icon">📞</span>
+            <span>{{ warehouse.phone }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- List View -->
+    <div class="warehouses-list" *ngIf="viewMode === 'list'">
+      <table class="warehouse-table">
+        <thead>
+          <tr>
+            <th>Mã kho</th>
+            <th>Tên kho</th>
+            <th>Thành phố</th>
+            <th>Quản lý</th>
+            <th>Sức chứa</th>
+            <th>Sử dụng</th>
+            <th>Trạng thái</th>
+            <th>Thao tác</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let warehouse of filteredWarehouses" (click)="selectWarehouse(warehouse)" class="table-row">
+            <td class="warehouse-code-cell">{{ warehouse.code }}</td>
+            <td class="warehouse-name-cell">{{ warehouse.name }}</td>
+            <td>{{ warehouse.city }}</td>
+            <td>{{ warehouse.manager }}</td>
+            <td>{{ warehouse.capacity | number }} m³</td>
+            <td>
+              <div class="table-capacity">
+                <span>{{ getOccupancyPercentage(warehouse) }}%</span>
+                <div class="mini-capacity-bar">
+                  <div
+                    class="mini-capacity-fill"
+                    [style.width.%]="getOccupancyPercentage(warehouse)"
+                    [ngClass]="getOccupancyClass(getOccupancyPercentage(warehouse))"
+                  ></div>
+                </div>
+              </div>
+            </td>
+            <td>
+              <span class="status-badge" [ngClass]="getStatusClass(warehouse.status)">
+                {{ getStatusText(warehouse.status) }}
+              </span>
+            </td>
+            <td>
+              <button class="btn-action">Chi tiết</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- No Results -->
+    <div class="no-results" *ngIf="filteredWarehouses.length === 0">
+      <div class="no-results-icon">🔍</div>
+      <p>Không tìm thấy kho nào phù hợp</p>
+    </div>
+  </div>
+
+  <!-- Warehouse Detail Modal -->
+  <div class="modal-overlay" *ngIf="selectedWarehouse" (click)="closeDetail()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>{{ selectedWarehouse.name }}</h2>
+        <button class="btn-close" (click)="closeDetail()">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="detail-section">
+          <h3>Thông tin cơ bản</h3>
+          <div class="detail-grid">
+            <div class="detail-item">
+              <label>Mã kho:</label>
+              <span>{{ selectedWarehouse.code }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Trạng thái:</label>
+              <span class="status-badge" [ngClass]="getStatusClass(selectedWarehouse.status)">
+                {{ getStatusText(selectedWarehouse.status) }}
+              </span>
+            </div>
+            <div class="detail-item">
+              <label>Địa chỉ:</label>
+              <span>{{ selectedWarehouse.address }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Thành phố:</label>
+              <span>{{ selectedWarehouse.city }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Quốc gia:</label>
+              <span>{{ selectedWarehouse.country }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="detail-section">
+          <h3>Thông tin quản lý</h3>
+          <div class="detail-grid">
+            <div class="detail-item">
+              <label>Quản lý:</label>
+              <span>{{ selectedWarehouse.manager }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Điện thoại:</label>
+              <span>{{ selectedWarehouse.phone }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Email:</label>
+              <span>{{ selectedWarehouse.email }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="detail-section">
+          <h3>Sức chứa & Sử dụng</h3>
+          <div class="detail-capacity">
+            <div class="capacity-stats">
+              <div class="capacity-stat">
+                <label>Tổng sức chứa:</label>
+                <span class="stat-value-large">{{ selectedWarehouse.capacity | number }} m³</span>
+              </div>
+              <div class="capacity-stat">
+                <label>Đã sử dụng:</label>
+                <span class="stat-value-large">{{ selectedWarehouse.currentOccupancy | number }} m³</span>
+              </div>
+              <div class="capacity-stat">
+                <label>Còn trống:</label>
+                <span class="stat-value-large">{{ selectedWarehouse.capacity - selectedWarehouse.currentOccupancy | number }} m³</span>
+              </div>
+            </div>
+            <div class="capacity-bar-large">
+              <div
+                class="capacity-fill"
+                [style.width.%]="getOccupancyPercentage(selectedWarehouse)"
+                [ngClass]="getOccupancyClass(getOccupancyPercentage(selectedWarehouse))"
+              ></div>
+            </div>
+            <div class="capacity-percentage-large">
+              {{ getOccupancyPercentage(selectedWarehouse) }}% đã sử dụng
+            </div>
+          </div>
+        </div>
+
+        <div class="detail-section">
+          <h3>Thông tin khác</h3>
+          <div class="detail-grid">
+            <div class="detail-item">
+              <label>Ngày tạo:</label>
+              <span>{{ selectedWarehouse.createdDate | date: 'dd/MM/yyyy' }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Cập nhật lần cuối:</label>
+              <span>{{ selectedWarehouse.lastUpdated | date: 'dd/MM/yyyy HH:mm' }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeDetail()">Đóng</button>
+        <button class="btn btn-warning">Chỉnh sửa</button>
+      </div>
+    </div>
+  </div>
+</div>

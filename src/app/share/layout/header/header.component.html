@@ -1,0 +1,40 @@
+<header class="header">
+  <div class="header-left">
+    <div>
+      <h1 class="page-title">{{ pageTitle }}</h1>
+      <p class="page-subtitle">{{ pageSubtitle }}</p>
+    </div>
+  </div>
+
+  <div class="header-right">
+    <button class="btn btn-outline">Thông báo</button>
+    <div class="user-dropdown-container">
+      <div class="header-user">
+        <div class="avatar">DH</div>
+        <div class="user-meta">
+          <span class="user-name">Dung Hoang</span>
+          <span class="user-role">Warehouse Admin</span>
+        </div>
+      </div>
+      <div class="dropdown-menu">
+        <a class="dropdown-item" (click)="viewProfile()">
+          <i class="icon">👤</i>
+          <span>Xem thông tin</span>
+        </a>
+        <a class="dropdown-item" (click)="changePassword()">
+          <i class="icon">🔒</i>
+          <span>Đổi mật khẩu</span>
+        </a>
+        <a class="dropdown-item" (click)="settings()">
+          <i class="icon">⚙️</i>
+          <span>Cài đặt</span>
+        </a>
+        <div class="dropdown-divider"></div>
+        <a class="dropdown-item logout" (click)="logout()">
+          <i class="icon">🚪</i>
+          <span>Đăng xuất</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</header>

@@ -1,2 +1,25 @@
-<router-outlet></router-outlet>
+<!-- Layout with sidebar/header/footer for authenticated pages -->
+<div class="app-shell" *ngIf="showLayout">
+  <!-- Sidebar cố định bên trái -->
+  <app-sidebar></app-sidebar>
+
+  <!-- Main area bên phải -->
+  <div class="main">
+    <app-header></app-header>
+
+    <!-- Content thay đổi theo từng page -->
+    <main class="content">
+      <router-outlet></router-outlet>
+    </main>
+
+    <app-footer></app-footer>
+  </div>
+</div>
+
+<!-- Simple layout for login/register pages -->
+<div class="auth-shell" *ngIf="!showLayout">
+  <router-outlet></router-outlet>
+</div>
+
+<!-- Toastr component - hiển thị thông báo -->
 <app-toastr></app-toastr>

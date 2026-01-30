@@ -3,6 +3,7 @@ import { RouterModule, Routes } from '@angular/router';
 import { LoginComponent } from './authenticate/login/login.component';
 import { RegisterComponent } from './authenticate/register/register.component';
 import { DashboardComponent } from './pages/dashboard/dashboard.component';
+import { WarehouseComponent } from './pages/warehouse/warehouse.component';
 import { AuthGuard } from './security/guards/auth.guard';
 import { GuestGuard } from './security/guards/guest.guard';
 
@@ -25,7 +26,20 @@ const routes: Routes = [
   {
     path: 'dashboard',
     component: DashboardComponent,
-    canActivate: [AuthGuard]
+    canActivate: [AuthGuard],
+    data: {
+      title: 'Dashboard',
+      subtitle: 'Tổng quan hoạt động kho hôm nay'
+    }
+  },
+  {
+    path: 'warehouse',
+    component: WarehouseComponent,
+    canActivate: [AuthGuard],
+    data: {
+      title: 'Quản lý kho',
+      subtitle: 'Danh sách và thông tin các kho hàng'
+    }
   },
 
   // TODO: Thêm routes khác với role-based protection
