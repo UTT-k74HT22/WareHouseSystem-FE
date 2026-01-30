@@ -6,10 +6,13 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { LoginComponent } from './authenticate/login/login.component';
 import { RegisterComponent } from './authenticate/register/register.component';
-import {HttpClientModule} from "@angular/common/http";
-import {ReactiveFormsModule} from "@angular/forms";
+import { HttpClientModule, HTTP_INTERCEPTORS } from "@angular/common/http";
+import { ReactiveFormsModule } from "@angular/forms";
 import { ToastrModule } from 'ngx-toastr';
 import { ToastrComponent } from './toastr/toastr.component';
+import { JwtInterceptor } from './security/interceptors/jwt.interceptor';
+import { ErrorInterceptor } from './security/interceptors/error.interceptor';
+import { DashboardComponent } from './pages/dashboard/dashboard.component';
 
 @NgModule({
   declarations: [
@@ -17,6 +20,7 @@ import { ToastrComponent } from './toastr/toastr.component';
     LoginComponent,
     RegisterComponent,
     ToastrComponent,
+    DashboardComponent,
   ],
   imports: [
     BrowserModule,
@@ -37,7 +41,12 @@ import { ToastrComponent } from './toastr/toastr.component';
       autoDismiss: true
     }),
   ],
-  providers: [],
+  providers: [
+    // Đăng ký JWT Interceptor - Thêm token vào headers
+    { provide: HTTP_INTERCEPTORS, useClass: JwtInterceptor, multi: true },
+    // Đăng ký Error Interceptor - Xử lý lỗi HTTP
+    { provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor, multi: true }
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

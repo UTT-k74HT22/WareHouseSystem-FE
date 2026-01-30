@@ -1,5 +1,4 @@
 <div class="auth-wrapper">
-  <!-- LEFT: LOGIN -->
   <div class="auth-left">
     <div class="logo">
       <div class="logo-icon">W</div>
@@ -13,7 +12,6 @@
     </p>
 
     <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
-      <!-- Error message -->
       <div *ngIf="errorMessage" class="error-message">
         {{ errorMessage }}
       </div>
@@ -33,8 +31,6 @@
           <span *ngIf="username?.errors?.['required']">Username is required</span>
         </div>
       </div>
-
-      <!-- PASSWORD -->
       <div class="form-group">
         <label class="form-label" for="password">Password</label>
 
@@ -99,7 +95,6 @@
     </form>
   </div>
 
-  <!-- RIGHT: WMS IMAGE + CONTENT (giữ nguyên của bạn) -->
   <div class="auth-right">
     <div class="auth-right-inner">
       <div class="support-top">

@@ -3,5 +3,5 @@ export interface AuthResponse {
   refresh_token: string;
   expire_access_token: string;
   expire_refresh_token: string;
-  ip: string;
+  ip: string | null;
 }
