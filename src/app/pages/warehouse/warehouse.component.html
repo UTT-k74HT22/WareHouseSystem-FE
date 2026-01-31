@@ -60,18 +60,17 @@
     </div>
 
     <select class="filter-select" [(ngModel)]="selectedStatus" (change)="onFilterChange()">
-      <option value="">Tất cả trạng thái</option>
-      <option value="ACTIVE">Hoạt động</option>
-      <option value="INACTIVE">Ngừng hoạt động</option>
-      <option value="UNDER_MAINTENANCE">Bảo trì</option>
+      <option [ngValue]="''">Tất cả trạng thái</option>
+      <option *ngFor="let st of getStatusOptions()" [ngValue]="st">
+        {{ getStatusLabel(st) }}
+      </option>
     </select>
 
     <select class="filter-select" [(ngModel)]="selectedType" (change)="onFilterChange()">
-      <option value="">Tất cả loại kho</option>
-      <option value="MAIN">Kho chính</option>
-      <option value="SATELLITE">Kho vệ tinh</option>
-      <option value="TRANSIT">Kho trung chuyển</option>
-      <option value="RETURN">Kho hoàn trả</option>
+      <option [ngValue]="''">Tất cả loại kho</option>
+      <option *ngFor="let t of getTypeOptions()" [ngValue]="t">
+        {{ getTypeLabel(t) }}
+      </option>
     </select>
 
     <div class="view-toggle">
@@ -441,14 +440,13 @@
               <select
                 id="create-type"
                 class="form-control"
-                [(ngModel)]="createForm.wareHouseType"
-                name="wareHouseType"
+                [(ngModel)]="createForm.ware_house_type"
+                name="ware_house_type"
                 required
               >
-                <option [value]="WareHouseType.MAIN">Kho chính</option>
-                <option [value]="WareHouseType.SATELLITE">Kho vệ tinh</option>
-                <option [value]="WareHouseType.TRANSIT">Kho trung chuyển</option>
-                <option [value]="WareHouseType.RETURN">Kho hoàn trả</option>
+                <option *ngFor="let type of getTypeOptions()" [ngValue]="type">
+                  {{ getTypeLabel(type) }}
+                </option>
               </select>
             </div>
 
@@ -461,9 +459,9 @@
                 name="status"
                 required
               >
-                <option [value]="WareHouseStatus.ACTIVE">Hoạt động</option>
-                <option [value]="WareHouseStatus.INACTIVE">Ngừng hoạt động</option>
-                <option [value]="WareHouseStatus.UNDER_MAINTENANCE">Bảo trì</option>
+                <option *ngFor="let st of getStatusOptions()" [ngValue]="st">
+                  {{ getStatusLabel(st) }}
+                </option>
               </select>
             </div>
           </div>
@@ -474,8 +472,8 @@
               type="text"
               id="create-manager"
               class="form-control"
-              [(ngModel)]="createForm.managerId"
-              name="managerId"
+              [(ngModel)]="createForm.manager_id"
+              name="manager_id"
               placeholder="Nhập Manager ID (tùy chọn)"
             />
           </div>
@@ -559,14 +557,13 @@
               <select
                 id="edit-type"
                 class="form-control"
-                [(ngModel)]="editForm.wareHouseType"
-                name="wareHouseType"
+                [(ngModel)]="editForm.ware_house_type"
+                name="ware_house_type"
                 required
               >
-                <option [value]="WareHouseType.MAIN">Kho chính</option>
-                <option [value]="WareHouseType.SATELLITE">Kho vệ tinh</option>
-                <option [value]="WareHouseType.TRANSIT">Kho trung chuyển</option>
-                <option [value]="WareHouseType.RETURN">Kho hoàn trả</option>
+                <option *ngFor="let type of getTypeOptions()" [ngValue]="type">
+                  {{ getTypeLabel(type) }}
+                </option>
               </select>
             </div>
 
@@ -576,8 +573,8 @@
                 type="text"
                 id="edit-manager"
                 class="form-control"
-                [(ngModel)]="editForm.managerId"
-                name="managerId"
+                [(ngModel)]="editForm.manager_id"
+                name="manager_id"
                 placeholder="Nhập Manager ID (tùy chọn)"
               />
             </div>
@@ -636,9 +633,9 @@
               [(ngModel)]="newStatus"
               name="newStatus"
             >
-              <option [value]="WareHouseStatus.ACTIVE">Hoạt động</option>
-              <option [value]="WareHouseStatus.INACTIVE">Ngừng hoạt động</option>
-              <option [value]="WareHouseStatus.UNDER_MAINTENANCE">Bảo trì</option>
+              <option *ngFor="let st of getStatusOptions()" [ngValue]="st">
+                {{ getStatusLabel(st) }}
+              </option>
             </select>
           </div>
         </div>

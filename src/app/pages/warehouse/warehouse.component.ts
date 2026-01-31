@@ -7,6 +7,7 @@ import { CreateWarehouseRequest } from '../../dto/request/WareHouse/CreateWareho
 import { UpdateWarehouseRequest } from '../../dto/request/WareHouse/UpdateWarehouseRequest';
 import { ChangeStatusRequest } from '../../dto/request/WareHouse/ChangeStatusRequest';
 import { ToastrService } from '../../service/SystemService/toastr.service';
+import {WAREHOUSE_STATUS_LABELS, WAREHOUSE_TYPE_LABELS} from "../../helper/constraint/warehouse-labels";
 
 @Component({
   selector: 'app-warehouse',
@@ -24,10 +25,10 @@ export class WarehouseComponent implements OnInit {
   totalElements: number = 0;
   totalPages: number = 0;
 
-  // Filter properties
+// Filter properties
   searchTerm: string = '';
-  selectedStatus: string = '';
-  selectedType: string = '';
+  selectedStatus: '' | WareHouseStatus = '';
+  selectedType: '' | WareHouseType = '';
 
   // Modal states
   showCreateModal: boolean = false;
@@ -63,9 +64,9 @@ export class WarehouseComponent implements OnInit {
       address: '',
       phone: '',
       email: '',
-      wareHouseType: WareHouseType.MAIN,
+      ware_house_type: WareHouseType.MAIN,
       status: WareHouseStatus.ACTIVE,
-      managerId: ''
+      manager_id: ''
     };
   }
 
@@ -75,8 +76,8 @@ export class WarehouseComponent implements OnInit {
       address: '',
       phone: '',
       email: '',
-      wareHouseType: WareHouseType.MAIN,
-      managerId: ''
+      ware_house_type: WareHouseType.MAIN,
+      manager_id: ''
     };
   }
 
@@ -141,22 +142,13 @@ export class WarehouseComponent implements OnInit {
 
   // Label helpers
   getStatusLabel(status: WareHouseStatus | undefined): string {
-    const statusMap: { [key: string]: string } = {
-      'ACTIVE': 'Hoạt động',
-      'INACTIVE': 'Ngừng hoạt động',
-      'UNDER_MAINTENANCE': 'Bảo trì'
-    };
-    return statusMap[status || ''] || status || 'Không xác định';
+    if (!status) return 'Không xác định';
+    return WAREHOUSE_STATUS_LABELS[status] ?? 'Không xác định';
   }
 
   getTypeLabel(type: WareHouseType | undefined): string {
-    const typeMap: { [key: string]: string } = {
-      'MAIN': 'Kho chính',
-      'SATELLITE': 'Kho vệ tinh',
-      'TRANSIT': 'Kho trung chuyển',
-      'RETURN': 'Kho hoàn trả'
-    };
-    return typeMap[type || ''] || type || 'Không xác định';
+    if (!type) return 'Không xác định';
+    return WAREHOUSE_TYPE_LABELS[type] ?? 'Không xác định';
   }
 
   // CRUD operations
@@ -202,8 +194,8 @@ export class WarehouseComponent implements OnInit {
       address: warehouse.address,
       phone: warehouse.phone,
       email: warehouse.email,
-      wareHouseType: warehouse.ware_house_type,
-      managerId: warehouse.manager_id || ''
+      ware_house_type: warehouse.ware_house_type,
+      manager_id: warehouse.manager_id || ''
     };
     this.showEditModal = true;
   }

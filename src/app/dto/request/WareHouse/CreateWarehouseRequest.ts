@@ -7,7 +7,7 @@ export interface CreateWarehouseRequest {
   address: string;
   phone: string;
   email: string;
-  wareHouseType: WareHouseType;
+  ware_house_type: WareHouseType;
   status: WareHouseStatus;
-  managerId?: string;
+  manager_id?: string;
 }

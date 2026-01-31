@@ -5,6 +5,6 @@ export interface UpdateWarehouseRequest {
   address: string;
   phone: string;
   email: string;
-  wareHouseType: WareHouseType;
-  managerId?: string;
+  ware_house_type: WareHouseType;
+  manager_id?: string;
 }
