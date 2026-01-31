@@ -1,6 +1,8 @@
 import { Component, OnInit } from '@angular/core';
-import { Warehouse, WarehouseStats } from '../../dto/Warehouse';
+import { WareHouseResponse } from '../../dto/response/WareHouse/WareHouseResponse';
 import { WarehouseService } from '../../service/WarehouseService/warehouse.service';
+import { WareHouseStatus } from '../../helper/enums/WareHouseStatus';
+import { WareHouseType } from '../../helper/enums/WareHouseType';
 
 @Component({
   selector: 'app-warehouse',
@@ -8,148 +10,124 @@ import { WarehouseService } from '../../service/WarehouseService/warehouse.servi
   styleUrls: ['./warehouse.component.css']
 })
 export class WarehouseComponent implements OnInit {
-  warehouses: Warehouse[] = [];
-  filteredWarehouses: Warehouse[] = [];
-  stats: WarehouseStats | null = null;
-  selectedWarehouse: Warehouse | null = null;
 
-  // Filters and search
-  searchTerm: string = '';
-  selectedStatus: string = 'ALL';
-
-  // Loading state
+  wareHouses: WareHouseResponse[] = [];
+  selectedWarehouse: WareHouseResponse | null = null;
   loading: boolean = false;
-
-  // View mode
   viewMode: 'grid' | 'list' = 'grid';
+  currentPage: number = 0;
+  pageSize: number = 10;
+  totalElements: number = 0;
+  totalPages: number = 0;
+
+  // Filter properties
+  searchTerm: string = '';
+  selectedStatus: string = '';
+  selectedType: string = '';
 
   constructor(private warehouseService: WarehouseService) {}
 
   ngOnInit(): void {
     this.loadWarehouses();
-    this.loadStats();
   }
 
-  loadWarehouses(): void {
+  private loadWarehouses(): void {
     this.loading = true;
-    this.warehouseService.getAllWarehouses().subscribe({
-      next: (data) => {
-        this.warehouses = data;
-        this.filteredWarehouses = data;
+
+    this.warehouseService.getAll(this.currentPage, this.pageSize).subscribe({
+      next: (response) => {
+        if (response.success && response.data) {
+          this.wareHouses = response.data.content;
+          this.totalElements = response.data.total_elements;
+          this.totalPages = response.data.total_pages;
+        }
         this.loading = false;
       },
       error: (error) => {
-        console.error('Error loading warehouses:', error);
+        console.error('Error fetching warehouses:', error);
         this.loading = false;
       }
     });
   }
 
-  loadStats(): void {
-    this.warehouseService.getWarehouseStats().subscribe({
-      next: (data) => {
-        this.stats = data;
-      },
-      error: (error) => {
-        console.error('Error loading stats:', error);
-      }
+  // Filter and search methods
+  getFilteredWarehouses(): WareHouseResponse[] {
+    return this.wareHouses.filter(warehouse => {
+      const matchesSearch = !this.searchTerm ||
+        warehouse.name.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+        warehouse.code.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+        warehouse.address.toLowerCase().includes(this.searchTerm.toLowerCase());
+
+      const matchesStatus = !this.selectedStatus ||
+        warehouse.status === this.selectedStatus;
+
+      const matchesType = !this.selectedType ||
+        warehouse.ware_house_type === this.selectedType;
+
+      return matchesSearch && matchesStatus && matchesType;
     });
   }
 
   onSearch(): void {
-    if (!this.searchTerm.trim()) {
-      this.applyFilters();
-      return;
-    }
-
-    this.loading = true;
-    this.warehouseService.searchWarehouses(this.searchTerm).subscribe({
-      next: (data) => {
-        this.filteredWarehouses = data;
-        if (this.selectedStatus !== 'ALL') {
-          this.filteredWarehouses = this.filteredWarehouses.filter(
-            w => w.status === this.selectedStatus
-          );
-        }
-        this.loading = false;
-      },
-      error: (error) => {
-        console.error('Error searching warehouses:', error);
-        this.loading = false;
-      }
-    });
+    // Search is handled by getFilteredWarehouses()
   }
 
-  onStatusFilter(): void {
-    this.applyFilters();
+  onFilterChange(): void {
+    // Filter is handled by getFilteredWarehouses()
   }
 
-  applyFilters(): void {
-    this.loading = true;
-    this.warehouseService.filterByStatus(this.selectedStatus).subscribe({
-      next: (data) => {
-        this.filteredWarehouses = data;
-        if (this.searchTerm.trim()) {
-          this.filteredWarehouses = this.filteredWarehouses.filter(w =>
-            w.name.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-            w.code.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-            w.city.toLowerCase().includes(this.searchTerm.toLowerCase())
-          );
-        }
-        this.loading = false;
-      },
-      error: (error) => {
-        console.error('Error filtering warehouses:', error);
-        this.loading = false;
-      }
-    });
+  // Statistics methods
+  getActiveCount(): number {
+    return this.wareHouses.filter(w => w.status === WareHouseStatus.ACTIVE).length;
   }
 
-  selectWarehouse(warehouse: Warehouse): void {
-    this.selectedWarehouse = warehouse;
+  getInactiveCount(): number {
+    return this.wareHouses.filter(w => w.status === WareHouseStatus.INACTIVE).length;
   }
 
-  closeDetail(): void {
-    this.selectedWarehouse = null;
+  getMaintenanceCount(): number {
+    return this.wareHouses.filter(w => w.status === WareHouseStatus.UNDER_MAINTENANCE).length;
   }
 
-  getStatusClass(status: string): string {
-    switch (status) {
-      case 'ACTIVE':
-        return 'status-active';
-      case 'INACTIVE':
-        return 'status-inactive';
-      case 'MAINTENANCE':
-        return 'status-maintenance';
-      default:
-        return '';
+  // Label helpers
+  getStatusLabel(status: WareHouseStatus | undefined): string {
+    const statusMap: { [key: string]: string } = {
+      'ACTIVE': 'Hoạt động',
+      'INACTIVE': 'Ngừng hoạt động',
+      'UNDER_MAINTENANCE': 'Bảo trì'
+    };
+    return statusMap[status || ''] || status || 'Không xác định';
+  }
+
+  getTypeLabel(type: WareHouseType | undefined): string {
+    const typeMap: { [key: string]: string } = {
+      'MAIN': 'Kho chính',
+      'SATELLITE': 'Kho vệ tinh',
+      'TRANSIT': 'Kho trung chuyển',
+      'RETURN': 'Kho hoàn trả'
+    };
+    return typeMap[type || ''] || type || 'Không xác định';
+  }
+
+  //BUILD FUNCTION FOR PAGINATION
+
+  // Function to handle page change
+  onPageChange(page: number): void {
+    this.currentPage = page;
+    this.loadWarehouses();
+  }
+
+  nextPage(): void {
+    if (this.currentPage < this.totalPages - 1) {
+      this.currentPage++;
+      this.loadWarehouses();
     }
   }
 
-  getStatusText(status: string): string {
-    switch (status) {
-      case 'ACTIVE':
-        return 'Hoạt động';
-      case 'INACTIVE':
-        return 'Không hoạt động';
-      case 'MAINTENANCE':
-        return 'Bảo trì';
-      default:
-        return status;
+  previousPage(): void {
+    if (this.currentPage > 0) {
+      this.currentPage--;
+      this.loadWarehouses();
     }
-  }
-
-  getOccupancyPercentage(warehouse: Warehouse): number {
-    return Math.round((warehouse.currentOccupancy / warehouse.capacity) * 100);
-  }
-
-  getOccupancyClass(percentage: number): string {
-    if (percentage >= 90) return 'occupancy-high';
-    if (percentage >= 70) return 'occupancy-medium';
-    return 'occupancy-low';
-  }
-
-  toggleViewMode(): void {
-    this.viewMode = this.viewMode === 'grid' ? 'list' : 'grid';
   }
 }

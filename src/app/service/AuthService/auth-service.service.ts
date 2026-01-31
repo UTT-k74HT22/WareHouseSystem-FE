@@ -7,7 +7,7 @@ import {AuthMapper} from "../../helper/mapper/Authmapper";
 import {AuthState} from "../../dto/response/Auth/AuthState";
 import {AuthStorageService} from "./AuthStorage/auth-storage.service";
 import {AuthTokens} from "../../dto/response/Auth/AuthTokens";
-import {ApiResponse} from "../../dto/ApiResponse";
+import {ApiResponse} from "../../dto/response/ApiResponse";
 
 @Injectable({
   providedIn: 'root'
