@@ -7,6 +7,7 @@ import { WarehouseComponent } from './pages/warehouse/warehouse.component';
 import { NotFoundComponent } from './pages/not-found/not-found.component';
 import { AuthGuard } from './security/guards/auth.guard';
 import { GuestGuard } from './security/guards/guest.guard';
+import {LocationComponent} from "./pages/location/location/location.component";
 
 const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -40,6 +41,15 @@ const routes: Routes = [
     data: {
       title: 'Quản lý kho',
       subtitle: 'Danh sách và thông tin các kho hàng'
+    }
+  },
+  {
+    path: 'location',
+    component: LocationComponent,
+    canActivate: [AuthGuard],
+    data: {
+      title: 'Quản lý vị trí',
+      subtitle: 'Danh sách và thông tin các vị trí trong kho'
     }
   },
 

@@ -39,6 +39,10 @@ export class WarehouseService {
     return this.http.get<ApiResponse<WareHouseResponse>>(`${this.apiUrl}/${id}`);
   }
 
+  getList(): Observable<ApiResponse<WareHouseResponse[]>> {
+    return this.http.get<ApiResponse<WareHouseResponse[]>>(`${this.apiUrl}/all`);
+  }
+
   /**
    * Create a new warehouse
    */

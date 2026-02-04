@@ -18,6 +18,7 @@ import { HeaderComponent } from './share/layout/header/header.component';
 import { FooterComponent } from './share/layout/footer/footer.component';
 import { WarehouseComponent } from './pages/warehouse/warehouse.component';
 import { NotFoundComponent } from './pages/not-found/not-found.component';
+import { LocationComponent } from './pages/location/location/location.component';
 
 @NgModule({
   declarations: [
@@ -31,6 +32,7 @@ import { NotFoundComponent } from './pages/not-found/not-found.component';
     FooterComponent,
     WarehouseComponent,
     NotFoundComponent,
+    LocationComponent,
   ],
   imports: [
     BrowserModule,
