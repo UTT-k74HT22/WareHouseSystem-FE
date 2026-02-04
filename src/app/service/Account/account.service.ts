@@ -17,4 +17,8 @@ export class AccountService {
   getUserByRoleManager(): Observable<ApiResponse<AccountResponse[]>> {
     return this.http.get<ApiResponse<AccountResponse[]>>(`${this.apiUrl}/managers`);
   }
+
+  getUserById(id: string): Observable<ApiResponse<AccountResponse>> {
+    return this.http.get<ApiResponse<AccountResponse>>(`${this.apiUrl}/${id}`);
+  }
 }

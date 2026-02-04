@@ -11,6 +11,8 @@ import { ToastrService } from '../../../service/SystemService/toastr.service';
 import { LOCATION_STATUS_LABELS, LOCATION_TYPE_LABELS } from '../../../helper/constraint/location-labels';
 import {WareHouseResponse} from "../../../dto/response/WareHouse/WareHouseResponse";
 import {WarehouseService} from "../../../service/WarehouseService/warehouse.service";
+import {AccountService} from "../../../service/Account/account.service";
+import {AccountResponse} from "../../../dto/response/Account/AccountResponse";
 
 @Component({
   selector: 'app-location',
@@ -21,6 +23,7 @@ export class LocationComponent implements OnInit {
 
   locations: LocationResponse[] = [];
   warehouses: WareHouseResponse[] = [];
+  account: AccountResponse | null = null;
   selectedLocation: LocationResponse | null = null;
   loading: boolean = false;
   viewMode: 'grid' | 'list' = 'grid';
@@ -58,6 +61,7 @@ export class LocationComponent implements OnInit {
   constructor(
     private locationService: LocationService,
     private wareHouseService: WarehouseService,
+    private accountService: AccountService,
     private toastr: ToastrService
   ) {}
 
@@ -104,6 +108,19 @@ export class LocationComponent implements OnInit {
         console.error('Error fetching locations:', error);
         this.toastr.error('Lỗi tải dữ liệu', error.error?.message || 'Có lỗi khi tải danh sách vị trí');
         this.loading = false;
+      }
+    });
+  }
+
+  loadCreatorInfo(createdById: string): void {
+    this.accountService.getUserById(createdById).subscribe({
+      next: (response) => {
+        if (response.success && response.data) {
+          this.account = response.data;
+        }
+      },
+      error: (error) => {
+        console.error('Error fetching creator info:', error);
       }
     });
   }
@@ -205,6 +222,9 @@ export class LocationComponent implements OnInit {
   // Detail view
   viewDetails(location: LocationResponse): void {
     this.selectedLocation = location;
+    if (location.created_by) {
+      this.loadCreatorInfo(location.created_by);
+    }
   }
 
   closeDetails(): void {

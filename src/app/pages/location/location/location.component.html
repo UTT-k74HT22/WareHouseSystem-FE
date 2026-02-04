@@ -336,7 +336,10 @@
             </div>
             <div class="detail-item">
               <label>Người tạo</label>
-              <span>{{ selectedLocation.created_by }}</span>
+              <span>
+                {{ account && selectedLocation.created_by === account.account_id
+                ? (account.first_name + ' ' + account.last_name)
+                : selectedLocation.created_by }}</span>
             </div>
             <div class="detail-item">
               <label>Ngày tạo</label>
