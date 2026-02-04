@@ -327,9 +327,9 @@
                 {{ getStatusLabel(selectedWarehouse.status) }}
               </span>
             </div>
-            <div class="detail-item">
-              <label>Manager ID</label>
-              <span>{{ selectedWarehouse.manager_id || 'Chưa có' }}</span>
+            <div class="detail-item" *ngIf="selectedWarehouse.manager">
+              <label>Người quản lý</label>
+              <span>{{ selectedWarehouse.manager.first_name }} {{ selectedWarehouse.manager.last_name }}</span>
             </div>
           </div>
         </div>
@@ -468,14 +468,17 @@
 
           <div class="form-group">
             <label for="create-manager">Manager ID</label>
-            <input
-              type="text"
+            <select
               id="create-manager"
               class="form-control"
               [(ngModel)]="createForm.manager_id"
               name="manager_id"
-              placeholder="Nhập Manager ID (tùy chọn)"
-            />
+            >
+              <option value="">Chọn người quản lí</option>
+              <option *ngFor="let acc of accountManagers" [value]="acc.account_id">
+                {{ acc.first_name }} {{ acc.last_name }} (ID: {{ acc.account_id }})
+              </option>
+            </select>
           </div>
         </form>
       </div>
