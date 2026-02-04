@@ -379,15 +379,18 @@
           <div class="form-row">
             <div class="form-group">
               <label for="create-warehouse">Kho <span class="required">*</span></label>
-              <input
-                type="text"
+              <select
                 id="create-warehouse"
                 class="form-control"
                 [(ngModel)]="createForm.warehouse_id"
                 name="warehouse_id"
-                placeholder="Nhập ID kho"
                 required
-              />
+              >
+                <option [ngValue]="''" disabled selected>-- Chọn kho --</option>
+                <option *ngFor="let wh of warehouses" [ngValue]="wh.id">
+                  {{ wh.name }} ({{ wh.code }})
+                </option>
+              </select>
             </div>
 
             <div class="form-group">

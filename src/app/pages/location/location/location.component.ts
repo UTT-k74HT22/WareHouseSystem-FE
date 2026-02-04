@@ -9,6 +9,8 @@ import { ChangeLocationStatusRequest } from '../../../dto/request/Location/Chang
 import { SearchLocationRequest } from '../../../dto/request/Location/SearchLocationRequest';
 import { ToastrService } from '../../../service/SystemService/toastr.service';
 import { LOCATION_STATUS_LABELS, LOCATION_TYPE_LABELS } from '../../../helper/constraint/location-labels';
+import {WareHouseResponse} from "../../../dto/response/WareHouse/WareHouseResponse";
+import {WarehouseService} from "../../../service/WarehouseService/warehouse.service";
 
 @Component({
   selector: 'app-location',
@@ -18,6 +20,7 @@ import { LOCATION_STATUS_LABELS, LOCATION_TYPE_LABELS } from '../../../helper/co
 export class LocationComponent implements OnInit {
 
   locations: LocationResponse[] = [];
+  warehouses: WareHouseResponse[] = [];
   selectedLocation: LocationResponse | null = null;
   loading: boolean = false;
   viewMode: 'grid' | 'list' = 'grid';
@@ -54,6 +57,7 @@ export class LocationComponent implements OnInit {
 
   constructor(
     private locationService: LocationService,
+    private wareHouseService: WarehouseService,
     private toastr: ToastrService
   ) {}
 
@@ -210,6 +214,7 @@ export class LocationComponent implements OnInit {
   // Create methods
   openCreateModal(): void {
     this.createForm = this.initCreateForm();
+    this.loadWareHouses();
     this.showCreateModal = true;
   }
 
@@ -347,6 +352,21 @@ export class LocationComponent implements OnInit {
         this.loading = false;
       }
     });
+  }
+
+  //load data warehouse
+  private loadWareHouses(): void {
+    this.wareHouseService.getList().subscribe({
+      next: (response) => {
+        if (response.success && response.data) {
+          this.warehouses = response.data;
+        }
+      },
+      error: (error) => {
+        console.error('Error fetching warehouses:', error);
+        this.toastr.error('Lỗi tải dữ liệu', error.error?.message || 'Có lỗi khi tải danh sách kho hàng');
+      }
+    })
   }
 
   // Helper methods for enum options
