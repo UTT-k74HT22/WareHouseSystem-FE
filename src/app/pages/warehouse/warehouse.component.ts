@@ -8,6 +8,8 @@ import { UpdateWarehouseRequest } from '../../dto/request/WareHouse/UpdateWareho
 import { ChangeStatusRequest } from '../../dto/request/WareHouse/ChangeStatusRequest';
 import { ToastrService } from '../../service/SystemService/toastr.service';
 import {WAREHOUSE_STATUS_LABELS, WAREHOUSE_TYPE_LABELS} from "../../helper/constraint/warehouse-labels";
+import {AccountResponse} from "../../dto/response/Account/AccountResponse";
+import {AccountService} from "../../service/Account/account.service";
 
 @Component({
   selector: 'app-warehouse',
@@ -17,6 +19,7 @@ import {WAREHOUSE_STATUS_LABELS, WAREHOUSE_TYPE_LABELS} from "../../helper/const
 export class WarehouseComponent implements OnInit {
 
   wareHouses: WareHouseResponse[] = [];
+  accountManagers: AccountResponse[] = [];
   selectedWarehouse: WareHouseResponse | null = null;
   loading: boolean = false;
   viewMode: 'grid' | 'list' = 'grid';
@@ -50,11 +53,13 @@ export class WarehouseComponent implements OnInit {
 
   constructor(
     private warehouseService: WarehouseService,
+    private accountService: AccountService,
     private toastr: ToastrService
   ) {}
 
   ngOnInit(): void {
     this.loadWarehouses();
+    this.loadAccountManagers();
   }
 
   private initCreateForm(): CreateWarehouseRequest {
@@ -99,6 +104,20 @@ export class WarehouseComponent implements OnInit {
         this.loading = false;
       }
     });
+  }
+
+  private loadAccountManagers(): void {
+    this.accountService.getUserByRoleManager().subscribe({
+      next: (response) => {
+        if (response.success && response.data) {
+          this.accountManagers = response.data;
+        }
+      },
+      error: (error) => {
+        console.error('Error fetching account managers:', error);
+        this.toastr.error('Lỗi tải dữ liệu', error.error?.message || 'Có lỗi khi tải danh sách quản lý');
+      }
+    })
   }
 
   // Filter and search methods
