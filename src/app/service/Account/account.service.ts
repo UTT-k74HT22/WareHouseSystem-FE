@@ -3,7 +3,7 @@ import {HttpClient} from "@angular/common/http";
 import {BaseURL} from "../../../environments/BaseURL";
 import {Observable} from "rxjs";
 import {ApiResponse} from "../../dto/response/ApiResponse";
-import {AccountResponse} from "../../dto/response/ Account/AccountResponse";
+import {AccountResponse} from "../../dto/response/Account/AccountResponse";
 
 @Injectable({
   providedIn: 'root'

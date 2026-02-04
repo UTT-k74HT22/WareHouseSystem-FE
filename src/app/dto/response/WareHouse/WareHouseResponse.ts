@@ -1,6 +1,6 @@
 import { WareHouseStatus } from "../../../helper/enums/WareHouseStatus";
 import { WareHouseType } from "../../../helper/enums/WareHouseType";
-import {AccountResponse} from "../ Account/AccountResponse";
+import {AccountResponse} from "../Account/AccountResponse";
 
 export interface WareHouseResponse {
   id: string;

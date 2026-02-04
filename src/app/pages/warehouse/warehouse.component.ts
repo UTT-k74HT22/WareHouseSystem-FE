@@ -8,7 +8,7 @@ import { UpdateWarehouseRequest } from '../../dto/request/WareHouse/UpdateWareho
 import { ChangeStatusRequest } from '../../dto/request/WareHouse/ChangeStatusRequest';
 import { ToastrService } from '../../service/SystemService/toastr.service';
 import {WAREHOUSE_STATUS_LABELS, WAREHOUSE_TYPE_LABELS} from "../../helper/constraint/warehouse-labels";
-import {AccountResponse} from "../../dto/response/ Account/AccountResponse";
+import {AccountResponse} from "../../dto/response/Account/AccountResponse";
 import {AccountService} from "../../service/Account/account.service";
 
 @Component({
