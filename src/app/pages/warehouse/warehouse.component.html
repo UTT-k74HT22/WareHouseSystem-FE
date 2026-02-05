@@ -1,43 +1,55 @@
 <div class="warehouse-container">
-  <!-- Header Section -->
-  <div class="warehouse-header">
-    <div class="header-content">
-      <div class="header-title">
-        <h1>Quản lý Kho Hàng</h1>
-        <p>Quản lý và giám sát tất cả các kho trong hệ thống</p>
+  <!-- Header Section (NEW) -->
+  <div class="warehouse-hero">
+    <div class="hero-left">
+      <div class="hero-accent"></div>
+
+      <div class="hero-text">
+        <h1 class="hero-title">Quản lý Kho Hàng</h1>
+        <p class="hero-subtitle">Quản lý và giám sát tất cả các kho trong hệ thống</p>
       </div>
-      <div class="header-actions">
-        <button class="btn btn-export">Xuất Excel</button>
-        <button class="btn btn-primary" (click)="openCreateModal()">+ Thêm Kho Mới</button>
-      </div>
+    </div>
+
+    <div class="hero-actions">
+      <button class="btn btn-ghost" type="button">
+        Xuất Excel
+      </button>
+
+      <button class="btn btn-primary" type="button" (click)="openCreateModal()">
+        + Thêm Kho Mới
+      </button>
     </div>
   </div>
 
-  <!-- Statistics Cards -->
-  <div class="stats-section" *ngIf="!loading && wareHouses.length > 0">
-    <div class="stat-card stat-total">
-      <div class="stat-content">
+  <!-- Statistics Cards (NEW) -->
+  <div class="stats-grid" *ngIf="!loading && wareHouses.length > 0">
+    <div class="stat-item stat-total">
+      <div class="stat-bar"></div>
+      <div class="stat-body">
         <div class="stat-label">Tổng số kho</div>
         <div class="stat-value">{{ totalElements }}</div>
       </div>
     </div>
 
-    <div class="stat-card stat-active">
-      <div class="stat-content">
+    <div class="stat-item stat-active">
+      <div class="stat-bar"></div>
+      <div class="stat-body">
         <div class="stat-label">Đang hoạt động</div>
         <div class="stat-value">{{ getActiveCount() }}</div>
       </div>
     </div>
 
-    <div class="stat-card stat-inactive">
-      <div class="stat-content">
+    <div class="stat-item stat-inactive">
+      <div class="stat-bar"></div>
+      <div class="stat-body">
         <div class="stat-label">Ngừng hoạt động</div>
         <div class="stat-value">{{ getInactiveCount() }}</div>
       </div>
     </div>
 
-    <div class="stat-card stat-maintenance">
-      <div class="stat-content">
+    <div class="stat-item stat-maintenance">
+      <div class="stat-bar"></div>
+      <div class="stat-body">
         <div class="stat-label">Đang bảo trì</div>
         <div class="stat-value">{{ getMaintenanceCount() }}</div>
       </div>
