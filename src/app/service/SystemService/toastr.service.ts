@@ -21,19 +21,19 @@ export class ToastrService {
     this.toastSubject.next({ type, title, message, duration });
   }
 
-  success(title: string, message: string, duration?: number): void {
+  success(title: string, message: string = '', duration?: number): void {
     this.show('success', title, message, duration);
   }
 
-  error(title: string, message: string, duration?: number): void {
+  error(title: string, message: string = '', duration?: number): void {
     this.show('error', title, message, duration);
   }
 
-  warning(title: string, message: string, duration?: number): void {
+  warning(title: string, message: string = '', duration?: number): void {
     this.show('warning', title, message, duration);
   }
 
-  info(title: string, message: string, duration?: number): void {
+  info(title: string, message: string = '', duration?: number): void {
     this.show('info', title, message, duration);
   }
 }

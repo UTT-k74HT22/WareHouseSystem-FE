@@ -9,6 +9,7 @@
     <span class="logo-text">Ware House System</span>
   </div>
 
+  <!-- ── TỔNG QUAN ─────────────────────────────────────── -->
   <div class="nav-section-title">Tổng quan</div>
   <nav class="sidebar-nav">
     <a class="nav-item" routerLink="/dashboard" routerLinkActive="active">
@@ -17,35 +18,79 @@
     </a>
     <a class="nav-item" routerLink="/warehouse" routerLinkActive="active">
       <span class="nav-icon">🏭</span>
-      <span class="nav-label">Warehouse</span>
+      <span class="nav-label">Kho hàng</span>
     </a>
     <a class="nav-item" routerLink="/location" routerLinkActive="active">
-      <span class="nav-icon">🏭</span>
-      <span class="nav-label">Location</span>
-    </a>
-    <a class="nav-item">
-      <span class="nav-icon">📦</span>
-      <span class="nav-label">Inventory</span>
+      <span class="nav-icon">📍</span>
+      <span class="nav-label">Vị trí kho</span>
     </a>
   </nav>
 
-  <div class="nav-section-title">Vận hành</div>
+  <!-- ── DANH MỤC ─────────────────────────────────────── -->
+  <div class="nav-section-title">Danh mục</div>
   <nav class="sidebar-nav">
-    <a class="nav-item">
-      <span class="nav-icon">🛒</span>
-      <span class="nav-label">Orders</span>
+    <a class="nav-item" routerLink="/product" routerLinkActive="active">
+      <span class="nav-icon">📦</span>
+      <span class="nav-label">Sản phẩm</span>
     </a>
-    <a class="nav-item">
-      <span class="nav-icon">🚚</span>
-      <span class="nav-label">Shipments</span>
+    <a class="nav-item" routerLink="/category" routerLinkActive="active">
+      <span class="nav-icon">🗂️</span>
+      <span class="nav-label">Danh mục SP</span>
     </a>
-    <a class="nav-item">
-      <span class="nav-icon">📈</span>
-      <span class="nav-label">Reports</span>
+    <a class="nav-item" routerLink="/uom" routerLinkActive="active">
+      <span class="nav-icon">⚖️</span>
+      <span class="nav-label">Đơn vị tính</span>
     </a>
-    <a class="nav-item">
-      <span class="nav-icon">⚙️</span>
-      <span class="nav-label">Settings</span>
+    <a class="nav-item" routerLink="/business-partner" routerLinkActive="active">
+      <span class="nav-icon">🤝</span>
+      <span class="nav-label">Đối tác (NCC/KH)</span>
+    </a>
+    <a class="nav-item" routerLink="/batch" routerLinkActive="active">
+      <span class="nav-icon">🏷️</span>
+      <span class="nav-label">Lô hàng</span>
     </a>
   </nav>
+
+  <!-- ── VẬN HÀNH ─────────────────────────────────────── -->
+  <div class="nav-section-title">Vận hành</div>
+  <nav class="sidebar-nav">
+    <a class="nav-item" routerLink="/purchase-order" routerLinkActive="active">
+      <span class="nav-icon">🛒</span>
+      <span class="nav-label">Đơn mua hàng</span>
+    </a>
+    <a class="nav-item" routerLink="/sales-order" routerLinkActive="active">
+      <span class="nav-icon">💰</span>
+      <span class="nav-label">Đơn bán hàng</span>
+    </a>
+    <a class="nav-item" routerLink="/inbound" routerLinkActive="active">
+      <span class="nav-icon">📥</span>
+      <span class="nav-label">Nhập kho</span>
+    </a>
+    <a class="nav-item" routerLink="/outbound" routerLinkActive="active">
+      <span class="nav-icon">📤</span>
+      <span class="nav-label">Xuất kho</span>
+    </a>
+  </nav>
+
+  <!-- ── KHO HÀNG ─────────────────────────────────────── -->
+  <div class="nav-section-title">Kho hàng</div>
+  <nav class="sidebar-nav">
+    <a class="nav-item" routerLink="/inventory" routerLinkActive="active">
+      <span class="nav-icon">📊</span>
+      <span class="nav-label">Tồn kho</span>
+    </a>
+    <a class="nav-item" routerLink="/stock-movements" routerLinkActive="active">
+      <span class="nav-icon">🔄</span>
+      <span class="nav-label">Lịch sử giao dịch</span>
+    </a>
+    <a class="nav-item" routerLink="/stock-adjustments" routerLinkActive="active">
+      <span class="nav-icon">⚙️</span>
+      <span class="nav-label">Điều chỉnh kho</span>
+    </a>
+    <a class="nav-item" routerLink="/stock-transfers" routerLinkActive="active">
+      <span class="nav-icon">🔀</span>
+      <span class="nav-label">Chuyển vị trí</span>
+    </a>
+  </nav>
+
 </aside>

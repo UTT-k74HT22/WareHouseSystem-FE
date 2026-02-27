@@ -1,0 +1,203 @@
+<div class="page-container">
+
+  <div class="page-hero">
+    <div class="hero-left">
+      <div class="hero-accent"></div>
+      <div class="hero-text">
+        <h1 class="hero-title">📦 Quản lý lô hàng (Batch)</h1>
+        <p class="hero-subtitle">Theo dõi lô hàng, ngày sản xuất, hạn sử dụng</p>
+      </div>
+    </div>
+    <div class="hero-actions">
+      <button class="btn btn-primary" (click)="openCreateModal()">+ Thêm lô hàng</button>
+    </div>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-item stat-total">
+      <div class="stat-bar"></div>
+      <div class="stat-body"><div class="stat-label">Tổng lô</div><div class="stat-value">{{ totalElements }}</div></div>
+    </div>
+    <div class="stat-item stat-active">
+      <div class="stat-bar"></div>
+      <div class="stat-body"><div class="stat-label">Đang dùng</div><div class="stat-value">{{ activeCount }}</div></div>
+    </div>
+    <div class="stat-item stat-inactive">
+      <div class="stat-bar"></div>
+      <div class="stat-body"><div class="stat-label">Hết hạn</div><div class="stat-value">{{ expiredCount }}</div></div>
+    </div>
+  </div>
+
+  <div class="filter-section">
+    <input class="search-input" type="text" [(ngModel)]="searchKeyword" placeholder="Mã lô, tên sản phẩm..." (keyup.enter)="onSearch()" />
+    <select class="filter-select" [(ngModel)]="selectedStatus">
+      <option value="">-- Tất cả trạng thái --</option>
+      <option [value]="BatchStatus.ACTIVE">Đang dùng</option>
+      <option [value]="BatchStatus.EXPIRED">Hết hạn</option>
+      <option [value]="BatchStatus.QUARANTINE">Kiểm dịch</option>
+      <option [value]="BatchStatus.DISPOSED">Đã huỷ</option>
+    </select>
+    <button class="btn btn-primary" (click)="onSearch()">🔍 Tìm kiếm</button>
+    <button class="btn btn-ghost" (click)="onResetFilter()">↺ Reset</button>
+  </div>
+
+  <div class="loading-state" *ngIf="loading"><span>Đang tải dữ liệu...</span></div>
+
+  <div class="table-container" *ngIf="!loading">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Mã lô</th>
+          <th>Sản phẩm</th>
+          <th>SKU</th>
+          <th>Nhà cung cấp</th>
+          <th>Ngày sản xuất</th>
+          <th>Hạn sử dụng</th>
+          <th>Số lượng</th>
+          <th>Trạng thái</th>
+          <th>Thao tác</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let b of batches; let i = index">
+          <td>{{ currentPage * pageSize + i + 1 }}</td>
+          <td><code>{{ b.batch_number }}</code></td>
+          <td>{{ b.product_name }}</td>
+          <td><code>{{ b.product_sku }}</code></td>
+          <td>{{ b.supplier_name ?? '—' }}</td>
+          <td>{{ b.manufacture_date | date:'dd/MM/yyyy' }}</td>
+          <td [ngClass]="b.status === BatchStatus.EXPIRED ? 'text-danger' : ''">
+            {{ b.expiry_date | date:'dd/MM/yyyy' }}
+          </td>
+          <td><strong>{{ b.quantity }}</strong></td>
+          <td>
+            <span class="badge" [ngClass]="getStatusClass(b.status)">{{ getStatusLabel(b.status) }}</span>
+          </td>
+          <td class="actions">
+            <button class="btn-icon" title="Sửa" (click)="openEditModal(b)">✏️</button>
+            <button class="btn-icon btn-icon-danger" title="Xoá" (click)="openDeleteModal(b)">🗑️</button>
+          </td>
+        </tr>
+        <tr *ngIf="batches.length === 0">
+          <td colspan="10" class="empty-state">Chưa có lô hàng nào</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="pagination" *ngIf="totalPages > 1">
+    <button (click)="onPageChange(currentPage - 1)" [disabled]="currentPage === 0">« Trước</button>
+    <span class="page-info">Trang {{ currentPage + 1 }} / {{ totalPages }}</span>
+    <button (click)="onPageChange(currentPage + 1)" [disabled]="currentPage >= totalPages - 1">Sau »</button>
+  </div>
+
+</div>
+
+<!-- MODAL: TẠO LÔ HÀNG -->
+<div class="modal-overlay" *ngIf="showCreateModal" (click)="closeAllModals()">
+  <div class="modal-box" (click)="$event.stopPropagation()">
+    <div class="modal-header"><h3>Thêm lô hàng mới</h3><button class="modal-close" (click)="closeAllModals()">✕</button></div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Sản phẩm (ID) *</label>
+          <input class="form-control" type="text" [(ngModel)]="createForm.product_id" placeholder="ID sản phẩm" required />
+        </div>
+        <div class="form-group">
+          <label>Mã lô *</label>
+          <input class="form-control" type="text" [(ngModel)]="createForm.batch_number" placeholder="VD: LOT-2025-001" required />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Ngày sản xuất</label>
+          <input class="form-control" type="date" [(ngModel)]="createForm.manufacture_date" />
+        </div>
+        <div class="form-group">
+          <label>Hạn sử dụng</label>
+          <input class="form-control" type="date" [(ngModel)]="createForm.expiry_date" />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Số lượng *</label>
+          <input class="form-control" type="number" [(ngModel)]="createForm.quantity" min="0" required />
+        </div>
+        <div class="form-group">
+          <label>Nhà cung cấp (ID)</label>
+          <input class="form-control" type="text" [(ngModel)]="createForm.supplier_id" placeholder="ID NCC (tuỳ chọn)" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Ghi chú</label>
+        <textarea class="form-control" [(ngModel)]="createForm.notes" rows="2"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" (click)="closeAllModals()">Huỷ</button>
+      <button class="btn btn-primary" (click)="onCreateSubmit()">Tạo lô</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: SỬA LÔ HÀNG -->
+<div class="modal-overlay" *ngIf="showEditModal" (click)="closeAllModals()">
+  <div class="modal-box" (click)="$event.stopPropagation()">
+    <div class="modal-header"><h3>Cập nhật lô hàng</h3><button class="modal-close" (click)="closeAllModals()">✕</button></div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Mã lô</label>
+          <input class="form-control" type="text" [(ngModel)]="editForm.batch_number" />
+        </div>
+        <div class="form-group">
+          <label>Trạng thái</label>
+          <select class="form-control" [(ngModel)]="editForm.status">
+            <option [value]="BatchStatus.ACTIVE">Đang dùng</option>
+            <option [value]="BatchStatus.EXPIRED">Hết hạn</option>
+            <option [value]="BatchStatus.QUARANTINE">Kiểm dịch</option>
+            <option [value]="BatchStatus.DISPOSED">Đã huỷ</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Ngày sản xuất</label>
+          <input class="form-control" type="date" [(ngModel)]="editForm.manufacture_date" />
+        </div>
+        <div class="form-group">
+          <label>Hạn sử dụng</label>
+          <input class="form-control" type="date" [(ngModel)]="editForm.expiry_date" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Số lượng</label>
+        <input class="form-control" type="number" [(ngModel)]="editForm.quantity" min="0" />
+      </div>
+      <div class="form-group">
+        <label>Ghi chú</label>
+        <textarea class="form-control" [(ngModel)]="editForm.notes" rows="2"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" (click)="closeAllModals()">Huỷ</button>
+      <button class="btn btn-primary" (click)="onEditSubmit()">Cập nhật</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: XÁC NHẬN XOÁ -->
+<div class="modal-overlay" *ngIf="showDeleteModal" (click)="closeAllModals()">
+  <div class="modal-box modal-sm" (click)="$event.stopPropagation()">
+    <div class="modal-header modal-header-danger"><h3>Xác nhận xoá</h3><button class="modal-close" (click)="closeAllModals()">✕</button></div>
+    <div class="modal-body">
+      <p>Bạn có chắc chắn muốn xoá lô hàng <strong>{{ selectedBatch?.batch_number }}</strong>?</p>
+      <p class="text-muted">Hành động này không thể hoàn tác.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" (click)="closeAllModals()">Huỷ</button>
+      <button class="btn btn-danger" (click)="onDeleteConfirm()">Xoá lô hàng</button>
+    </div>
+  </div>
+</div>

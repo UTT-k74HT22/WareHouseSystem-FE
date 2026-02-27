@@ -23,8 +23,8 @@
       45deg,
       transparent,
       transparent 35px,
-      rgba(13, 110, 253, 0.02) 35px,
-      rgba(13, 110, 253, 0.02) 70px
+      rgba(79, 70, 229, 0.02) 35px,
+      rgba(79, 70, 229, 0.02) 70px
     );
   pointer-events: none;
 }
@@ -58,8 +58,8 @@
 .digit {
   font-size: 120px;
   font-weight: 800;
-  color: #0d6efd;
-  text-shadow: 4px 4px 0 rgba(13, 110, 253, 0.1);
+  color: #4f46e5;
+  text-shadow: 4px 4px 0 rgba(79, 70, 229, 0.1);
   animation: bounceIn 1s ease-out;
   line-height: 1;
 }
@@ -95,7 +95,7 @@
 /* Decorative boxes */
 .deco-box {
   position: absolute;
-  background: linear-gradient(135deg, #0d6efd, #0b5ed7);
+  background: linear-gradient(135deg, #4f46e5, #4338ca);
   opacity: 0.1;
   border-radius: 12px;
   animation: float 4s ease-in-out infinite;
@@ -132,6 +132,7 @@
   border-radius: 16px;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
   animation: fadeInUp 0.8s ease-out 0.2s both;
+  border: 1px solid #e5e7eb;
 }
 
 .error-title {
@@ -182,14 +183,14 @@
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #0d6efd, #0b5ed7);
+  background: linear-gradient(135deg, #4f46e5, #4338ca);
   color: white;
-  box-shadow: 0 4px 12px rgba(13, 110, 253, 0.3);
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
 }
 
 .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(13, 110, 253, 0.4);
+  box-shadow: 0 6px 20px rgba(79, 70, 229, 0.4);
 }
 
 .btn-primary:active {
@@ -251,15 +252,15 @@
 .link-icon {
   width: 18px;
   height: 18px;
-  color: #0d6efd;
+  color: #4f46e5;
 }
 
 .link-item:hover {
   background: white;
-  border-color: #0d6efd;
-  color: #0d6efd;
+  border-color: #4f46e5;
+  color: #4f46e5;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(13, 110, 253, 0.15);
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.15);
 }
 
 /* ========== ANIMATIONS ========== */

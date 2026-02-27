@@ -1,0 +1,151 @@
+<div class="page-container">
+
+  <div class="page-hero">
+    <div class="hero-left">
+      <div class="hero-accent"></div>
+      <div class="hero-text">
+        <h1 class="hero-title">🧾 Đơn bán hàng (SO)</h1>
+        <p class="hero-subtitle">Quản lý đơn hàng giao đến khách hàng</p>
+      </div>
+    </div>
+    <div class="hero-actions">
+      <button class="btn btn-ghost">Xuất Excel</button>
+      <button class="btn btn-primary" (click)="openCreateModal()">+ Tạo đơn bán</button>
+    </div>
+  </div>
+
+  <div class="filter-section">
+    <input class="search-input" type="text" [(ngModel)]="searchKeyword" placeholder="Tìm theo số đơn, khách hàng..." (keyup.enter)="onSearch()" />
+    <select class="filter-select" [(ngModel)]="selectedStatus">
+      <option value="">-- Tất cả trạng thái --</option>
+      <option value="DRAFT">Nháp</option>
+      <option value="CONFIRMED">Đã xác nhận</option>
+      <option value="IN_PROGRESS">Đang xử lý</option>
+      <option value="COMPLETED">Hoàn thành</option>
+      <option value="CANCELLED">Đã huỷ</option>
+    </select>
+    <button class="btn btn-primary" (click)="onSearch()">🔍 Tìm kiếm</button>
+    <button class="btn btn-ghost" (click)="onResetFilter()">↺ Reset</button>
+  </div>
+
+  <div class="loading-state" *ngIf="loading"><span>Đang tải dữ liệu...</span></div>
+
+  <div class="table-container" *ngIf="!loading">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Số đơn hàng</th>
+          <th>Khách hàng</th>
+          <th>Kho xuất</th>
+          <th>Ngày đặt</th>
+          <th>Ngày giao dự kiến</th>
+          <th>Tổng tiền</th>
+          <th>Trạng thái</th>
+          <th>Thao tác</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let order of orders; let i = index">
+          <td>{{ currentPage * pageSize + i + 1 }}</td>
+          <td><a class="link" (click)="openDetailModal(order)">{{ order.order_number }}</a></td>
+          <td>{{ order.customer_name }}</td>
+          <td>{{ order.warehouse_name }}</td>
+          <td>{{ order.order_date | date:'dd/MM/yyyy' }}</td>
+          <td>{{ order.expected_date | date:'dd/MM/yyyy' }}</td>
+          <td>{{ order.total_amount | number:'1.0-0' }} {{ order.currency }}</td>
+          <td><span class="badge" [ngClass]="getStatusClass(order.status)">{{ getStatusLabel(order.status) }}</span></td>
+          <td class="actions">
+            <button class="btn-icon" (click)="openDetailModal(order)">👁️</button>
+            <button class="btn-icon btn-delete" (click)="openDeleteConfirm(order)" [disabled]="order.status !== 'DRAFT'">🗑️</button>
+          </td>
+        </tr>
+        <tr *ngIf="orders.length === 0">
+          <td colspan="9" class="empty-state">Không có đơn bán hàng nào</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="pagination" *ngIf="totalPages > 1">
+    <button (click)="onPageChange(currentPage - 1)" [disabled]="currentPage === 0">« Trước</button>
+    <span class="page-info">Trang {{ currentPage + 1 }} / {{ totalPages }}</span>
+    <button (click)="onPageChange(currentPage + 1)" [disabled]="currentPage >= totalPages - 1">Sau »</button>
+  </div>
+
+</div>
+
+<!-- MODAL: TẠO ĐƠN BÁN -->
+<div class="modal-overlay" *ngIf="showCreateModal" (click)="closeAllModals()">
+  <div class="modal-box" (click)="$event.stopPropagation()">
+    <div class="modal-header"><h3>Tạo đơn bán hàng mới</h3><button class="modal-close" (click)="closeAllModals()">✕</button></div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Khách hàng <span class="required">*</span></label>
+          <select [(ngModel)]="createForm.customer_id">
+            <option value="">-- Chọn khách hàng --</option>
+            <option *ngFor="let c of customers" [value]="c.id">{{ c.name }}</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Kho xuất <span class="required">*</span></label>
+          <select [(ngModel)]="createForm.warehouse_id">
+            <option value="">-- Chọn kho --</option>
+            <option *ngFor="let w of warehouses" [value]="w.id">{{ w.name }}</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Ngày giao dự kiến</label>
+          <input type="date" [(ngModel)]="createForm.expected_date" />
+        </div>
+        <div class="form-group">
+          <label>Tiền tệ</label>
+          <input type="text" [(ngModel)]="createForm.currency" placeholder="VND" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Ghi chú</label>
+        <textarea [(ngModel)]="createForm.notes" rows="3"></textarea>
+      </div>
+      <div class="info-box">💡 Sau khi tạo đơn bán, bạn có thể thêm dòng sản phẩm vào đơn.</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" (click)="closeAllModals()">Huỷ</button>
+      <button class="btn btn-primary" (click)="onCreateSubmit()">Tạo đơn bán</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: CHI TIẾT -->
+<div class="modal-overlay" *ngIf="showDetailModal" (click)="closeAllModals()">
+  <div class="modal-box modal-lg" (click)="$event.stopPropagation()">
+    <div class="modal-header"><h3>Chi tiết: {{ selectedOrder?.order_number }}</h3><button class="modal-close" (click)="closeAllModals()">✕</button></div>
+    <div class="modal-body" *ngIf="selectedOrder">
+      <div class="detail-grid">
+        <div class="detail-item"><span class="detail-label">Khách hàng:</span><span>{{ selectedOrder.customer_name }}</span></div>
+        <div class="detail-item"><span class="detail-label">Kho:</span><span>{{ selectedOrder.warehouse_name }}</span></div>
+        <div class="detail-item"><span class="detail-label">Trạng thái:</span>
+          <span class="badge" [ngClass]="getStatusClass(selectedOrder.status)">{{ getStatusLabel(selectedOrder.status) }}</span>
+        </div>
+        <div class="detail-item"><span class="detail-label">Tổng tiền:</span><span>{{ selectedOrder.total_amount | number:'1.0-0' }} {{ selectedOrder.currency }}</span></div>
+      </div>
+      <div class="info-box">📋 Dòng đơn hàng (Sales Order Lines) sẽ hiển thị tại đây.</div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-ghost" (click)="closeAllModals()">Đóng</button></div>
+  </div>
+</div>
+
+<!-- CONFIRM: XOÁ -->
+<div class="modal-overlay" *ngIf="showDeleteConfirm" (click)="closeAllModals()">
+  <div class="modal-box modal-sm" (click)="$event.stopPropagation()">
+    <div class="modal-header modal-header-danger"><h3>Xác nhận xoá</h3><button class="modal-close" (click)="closeAllModals()">✕</button></div>
+    <div class="modal-body"><p>Xoá đơn <strong>{{ orderToDelete?.order_number }}</strong>?</p></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" (click)="closeAllModals()">Huỷ</button>
+      <button class="btn btn-danger" (click)="onDeleteConfirm()">Xoá</button>
+    </div>
+  </div>
+</div>

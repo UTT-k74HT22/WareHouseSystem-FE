@@ -1,0 +1,241 @@
+<div class="page-container">
+
+  <!-- ══════════ HEADER ══════════ -->
+  <div class="page-hero">
+    <div class="hero-left">
+      <div class="hero-accent"></div>
+      <div class="hero-text">
+        <h1 class="hero-title">📦 Quản lý Sản phẩm</h1>
+        <p class="hero-subtitle">Danh sách và thông tin tất cả sản phẩm trong hệ thống</p>
+      </div>
+    </div>
+    <div class="hero-actions">
+      <button class="btn btn-ghost" type="button">Xuất Excel</button>
+      <button class="btn btn-primary" type="button" (click)="openCreateModal()">+ Thêm Sản phẩm</button>
+    </div>
+  </div>
+
+  <!-- ══════════ STATS ══════════ -->
+  <div class="stats-grid" *ngIf="!loading">
+    <div class="stat-item stat-total">
+      <div class="stat-bar"></div>
+      <div class="stat-body">
+        <div class="stat-label">Tổng sản phẩm</div>
+        <div class="stat-value">{{ totalElements }}</div>
+      </div>
+    </div>
+    <div class="stat-item stat-active">
+      <div class="stat-bar"></div>
+      <div class="stat-body">
+        <div class="stat-label">Đang hoạt động</div>
+        <div class="stat-value">{{ getActiveCount() }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ FILTER ══════════ -->
+  <div class="filter-section">
+    <input class="search-input" type="text" [(ngModel)]="searchKeyword"
+           placeholder="Tìm theo tên, SKU..." (keyup.enter)="onSearch()" />
+
+    <select class="filter-select" [(ngModel)]="selectedCategoryId">
+      <option value="">-- Tất cả danh mục --</option>
+      <option *ngFor="let c of categories" [value]="c.id">{{ c.name }}</option>
+    </select>
+
+    <select class="filter-select" [(ngModel)]="selectedStatus">
+      <option value="">-- Tất cả trạng thái --</option>
+      <option value="ACTIVE">Đang hoạt động</option>
+      <option value="INACTIVE">Ngừng hoạt động</option>
+      <option value="DISCONTINUED">Ngừng kinh doanh</option>
+    </select>
+
+    <button class="btn btn-primary" (click)="onSearch()">🔍 Tìm kiếm</button>
+    <button class="btn btn-ghost" (click)="onResetFilter()">↺ Reset</button>
+  </div>
+
+  <!-- ══════════ LOADING ══════════ -->
+  <div class="loading-state" *ngIf="loading">
+    <span>Đang tải dữ liệu...</span>
+  </div>
+
+  <!-- ══════════ TABLE ══════════ -->
+  <div class="table-container" *ngIf="!loading">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>SKU</th>
+          <th>Tên sản phẩm</th>
+          <th>Danh mục</th>
+          <th>Đơn vị</th>
+          <th>Batch Tracked</th>
+          <th>Trạng thái</th>
+          <th>Thao tác</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let product of products; let i = index">
+          <td>{{ currentPage * pageSize + i + 1 }}</td>
+          <td><code>{{ product.sku }}</code></td>
+          <td>
+            <div class="cell-main">{{ product.name }}</div>
+            <div class="cell-sub" *ngIf="product.description">{{ product.description }}</div>
+          </td>
+          <td>{{ product.category_name }}</td>
+          <td>{{ product.uom_code }}</td>
+          <td>
+            <span [class]="product.is_batch_tracked ? 'badge badge-active' : 'badge badge-inactive'">
+              {{ product.is_batch_tracked ? 'Có' : 'Không' }}
+            </span>
+          </td>
+          <td>
+            <span class="badge" [ngClass]="getStatusClass(product.status)">
+              {{ getStatusLabel(product.status) }}
+            </span>
+          </td>
+          <td class="actions">
+            <button class="btn-icon btn-edit" title="Chỉnh sửa" (click)="openEditModal(product)">✏️</button>
+            <button class="btn-icon btn-delete" title="Xoá" (click)="openDeleteConfirm(product)">🗑️</button>
+          </td>
+        </tr>
+        <tr *ngIf="products.length === 0">
+          <td colspan="8" class="empty-state">Không có sản phẩm nào</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ══════════ PAGINATION ══════════ -->
+  <div class="pagination" *ngIf="totalPages > 1">
+    <button (click)="onPageChange(currentPage - 1)" [disabled]="currentPage === 0">« Trước</button>
+    <span class="page-info">Trang {{ currentPage + 1 }} / {{ totalPages }} ({{ totalElements }} bản ghi)</span>
+    <button (click)="onPageChange(currentPage + 1)" [disabled]="currentPage >= totalPages - 1">Sau »</button>
+  </div>
+
+</div>
+
+<!-- ══════════════════════════════════════════════ -->
+<!--  MODAL: TẠO SẢN PHẨM                          -->
+<!-- ══════════════════════════════════════════════ -->
+<div class="modal-overlay" *ngIf="showCreateModal" (click)="closeAllModals()">
+  <div class="modal-box" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Thêm sản phẩm mới</h3>
+      <button class="modal-close" (click)="closeAllModals()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>SKU <span class="required">*</span></label>
+        <input type="text" [(ngModel)]="createForm.sku" placeholder="VD: SP-001" />
+      </div>
+      <div class="form-group">
+        <label>Tên sản phẩm <span class="required">*</span></label>
+        <input type="text" [(ngModel)]="createForm.name" placeholder="Tên sản phẩm" />
+      </div>
+      <div class="form-group">
+        <label>Mô tả</label>
+        <textarea [(ngModel)]="createForm.description" rows="3" placeholder="Mô tả sản phẩm..."></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Danh mục <span class="required">*</span></label>
+          <select [(ngModel)]="createForm.category_id">
+            <option value="">-- Chọn danh mục --</option>
+            <option *ngFor="let c of categories" [value]="c.id">{{ c.name }}</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Đơn vị tính <span class="required">*</span></label>
+          <select [(ngModel)]="createForm.uom_id">
+            <option value="">-- Chọn đơn vị --</option>
+            <option *ngFor="let u of uomList" [value]="u.id">{{ u.code }} - {{ u.name }}</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Tồn kho tối thiểu</label>
+          <input type="number" [(ngModel)]="createForm.min_stock_level" min="0" />
+        </div>
+        <div class="form-group">
+          <label>Tồn kho tối đa</label>
+          <input type="number" [(ngModel)]="createForm.max_stock_level" min="0" />
+        </div>
+      </div>
+      <div class="form-group form-check">
+        <input type="checkbox" id="batchTracked" [(ngModel)]="createForm.is_batch_tracked" />
+        <label for="batchTracked">Theo dõi theo lô (Batch Tracking)</label>
+      </div>
+      <!-- TODO: Thêm upload ảnh, trọng lượng, kích thước -->
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" (click)="closeAllModals()">Huỷ</button>
+      <button class="btn btn-primary" (click)="onCreateSubmit()">Tạo sản phẩm</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ -->
+<!--  MODAL: CHỈNH SỬA                             -->
+<!-- ══════════════════════════════════════════════ -->
+<div class="modal-overlay" *ngIf="showEditModal" (click)="closeAllModals()">
+  <div class="modal-box" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Chỉnh sửa sản phẩm</h3>
+      <button class="modal-close" (click)="closeAllModals()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Tên sản phẩm</label>
+        <input type="text" [(ngModel)]="editForm.name" />
+      </div>
+      <div class="form-group">
+        <label>Mô tả</label>
+        <textarea [(ngModel)]="editForm.description" rows="3"></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Danh mục</label>
+          <select [(ngModel)]="editForm.category_id">
+            <option value="">-- Chọn danh mục --</option>
+            <option *ngFor="let c of categories" [value]="c.id">{{ c.name }}</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Trạng thái</label>
+          <select [(ngModel)]="editForm.status">
+            <option value="ACTIVE">Đang hoạt động</option>
+            <option value="INACTIVE">Ngừng hoạt động</option>
+            <option value="DISCONTINUED">Ngừng kinh doanh</option>
+          </select>
+        </div>
+      </div>
+      <!-- TODO: Thêm các field khác -->
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" (click)="closeAllModals()">Huỷ</button>
+      <button class="btn btn-primary" (click)="onEditSubmit()">Lưu thay đổi</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ -->
+<!--  CONFIRM: XOÁ                                  -->
+<!-- ══════════════════════════════════════════════ -->
+<div class="modal-overlay" *ngIf="showDeleteConfirm" (click)="closeAllModals()">
+  <div class="modal-box modal-sm" (click)="$event.stopPropagation()">
+    <div class="modal-header modal-header-danger">
+      <h3>Xác nhận xoá</h3>
+      <button class="modal-close" (click)="closeAllModals()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p>Bạn có chắc muốn xoá sản phẩm <strong>{{ productToDelete?.name }}</strong> không?</p>
+      <p class="text-warning">Thao tác này không thể hoàn tác.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" (click)="closeAllModals()">Huỷ</button>
+      <button class="btn btn-danger" (click)="onDeleteConfirm()">Xoá</button>
+    </div>
+  </div>
+</div>

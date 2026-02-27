@@ -1,0 +1,112 @@
+<div class="page-container">
+
+  <div class="page-hero">
+    <div class="hero-left">
+      <div class="hero-accent"></div>
+      <div class="hero-text">
+        <h1 class="hero-title">📊 Tồn kho (Inventory)</h1>
+        <p class="hero-subtitle">Theo dõi số lượng hàng hoá tại từng vị trí kho</p>
+      </div>
+    </div>
+    <div class="hero-actions">
+      <button class="btn btn-ghost">Xuất Excel</button>
+    </div>
+  </div>
+
+  <div class="stats-grid" *ngIf="!loading">
+    <div class="stat-item stat-total">
+      <div class="stat-bar"></div>
+      <div class="stat-body"><div class="stat-label">Tổng bản ghi</div><div class="stat-value">{{ totalElements }}</div></div>
+    </div>
+    <div class="stat-item stat-active">
+      <div class="stat-bar"></div>
+      <div class="stat-body"><div class="stat-label">Tổng tồn kho</div><div class="stat-value">{{ totalQuantityOnHand }}</div></div>
+    </div>
+    <div class="stat-item stat-full">
+      <div class="stat-bar"></div>
+      <div class="stat-body"><div class="stat-label">Có thể xuất</div><div class="stat-value">{{ totalQuantityAvailable }}</div></div>
+    </div>
+  </div>
+
+  <div class="filter-section">
+    <input class="search-input" type="text" [(ngModel)]="searchProductKeyword" placeholder="Tìm theo tên SP, SKU..." (keyup.enter)="onSearch()" />
+    <select class="filter-select" [(ngModel)]="selectedWarehouseId">
+      <option value="">-- Tất cả kho --</option>
+      <option *ngFor="let w of warehouses" [value]="w.id">{{ w.name }}</option>
+    </select>
+    <button class="btn btn-primary" (click)="onSearch()">🔍 Tìm kiếm</button>
+    <button class="btn btn-ghost" (click)="onResetFilter()">↺ Reset</button>
+  </div>
+
+  <div class="loading-state" *ngIf="loading"><span>Đang tải dữ liệu...</span></div>
+
+  <div class="table-container" *ngIf="!loading">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Sản phẩm</th>
+          <th>SKU</th>
+          <th>Kho</th>
+          <th>Vị trí</th>
+          <th>Số lô</th>
+          <th>Tồn kho</th>
+          <th>Đã giữ</th>
+          <th>Có thể xuất</th>
+          <th>ĐVT</th>
+          <th>Thao tác</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of items; let i = index" [ngClass]="getLowStockClass(item)">
+          <td>{{ currentPage * pageSize + i + 1 }}</td>
+          <td>{{ item.product_name }}</td>
+          <td><code>{{ item.product_sku }}</code></td>
+          <td>{{ item.warehouse_name }}</td>
+          <td>{{ item.location_code }}</td>
+          <td>{{ item.batch_number ?? '—' }}</td>
+          <td><strong>{{ item.quantity_on_hand }}</strong></td>
+          <td>{{ item.quantity_reserved }}</td>
+          <td [ngClass]="item.quantity_available <= 0 ? 'text-danger' : ''">
+            <strong>{{ item.quantity_available }}</strong>
+          </td>
+          <td>{{ item.uom_code }}</td>
+          <td class="actions">
+            <button class="btn-icon" (click)="openDetailModal(item)">👁️</button>
+          </td>
+        </tr>
+        <tr *ngIf="items.length === 0">
+          <td colspan="11" class="empty-state">Không có dữ liệu tồn kho</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="pagination" *ngIf="totalPages > 1">
+    <button (click)="onPageChange(currentPage - 1)" [disabled]="currentPage === 0">« Trước</button>
+    <span class="page-info">Trang {{ currentPage + 1 }} / {{ totalPages }}</span>
+    <button (click)="onPageChange(currentPage + 1)" [disabled]="currentPage >= totalPages - 1">Sau »</button>
+  </div>
+
+</div>
+
+<!-- MODAL: CHI TIẾT -->
+<div class="modal-overlay" *ngIf="showDetailModal" (click)="closeAllModals()">
+  <div class="modal-box" (click)="$event.stopPropagation()">
+    <div class="modal-header"><h3>Chi tiết tồn kho</h3><button class="modal-close" (click)="closeAllModals()">✕</button></div>
+    <div class="modal-body" *ngIf="selectedItem">
+      <div class="detail-grid">
+        <div class="detail-item"><span class="detail-label">Sản phẩm:</span><span>{{ selectedItem.product_name }}</span></div>
+        <div class="detail-item"><span class="detail-label">SKU:</span><span><code>{{ selectedItem.product_sku }}</code></span></div>
+        <div class="detail-item"><span class="detail-label">Kho:</span><span>{{ selectedItem.warehouse_name }}</span></div>
+        <div class="detail-item"><span class="detail-label">Vị trí:</span><span>{{ selectedItem.location_code }} - {{ selectedItem.location_name }}</span></div>
+        <div class="detail-item"><span class="detail-label">Số lô:</span><span>{{ selectedItem.batch_number ?? '—' }}</span></div>
+        <div class="detail-item"><span class="detail-label">Tồn kho:</span><span>{{ selectedItem.quantity_on_hand }} {{ selectedItem.uom_code }}</span></div>
+        <div class="detail-item"><span class="detail-label">Đã đặt giữ:</span><span>{{ selectedItem.quantity_reserved }} {{ selectedItem.uom_code }}</span></div>
+        <div class="detail-item"><span class="detail-label">Có thể xuất:</span><span>{{ selectedItem.quantity_available }} {{ selectedItem.uom_code }}</span></div>
+        <div class="detail-item"><span class="detail-label">Kiểm kê lần cuối:</span><span>{{ selectedItem.last_counted_at | date:'dd/MM/yyyy HH:mm' }}</span></div>
+      </div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-ghost" (click)="closeAllModals()">Đóng</button></div>
+  </div>
+</div>

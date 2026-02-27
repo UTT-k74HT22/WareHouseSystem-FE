@@ -1,0 +1,6 @@
+export enum BatchStatus {
+  ACTIVE = 'ACTIVE',
+  EXPIRED = 'EXPIRED',
+  QUARANTINE = 'QUARANTINE',
+  DISPOSED = 'DISPOSED'
+}

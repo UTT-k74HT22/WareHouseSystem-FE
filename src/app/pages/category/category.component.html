@@ -1,0 +1,170 @@
+<div class="page-container">
+
+  <div class="page-hero">
+    <div class="hero-left">
+      <div class="hero-accent"></div>
+      <div class="hero-text">
+        <h1 class="hero-title">🗂️ Quản lý Danh mục</h1>
+        <p class="hero-subtitle">Phân loại sản phẩm theo danh mục</p>
+      </div>
+    </div>
+    <div class="hero-actions">
+      <button class="btn btn-primary" (click)="openCreateModal()">+ Thêm Danh mục</button>
+    </div>
+  </div>
+
+  <div class="stats-grid" *ngIf="!loading">
+    <div class="stat-item stat-total">
+      <div class="stat-bar"></div>
+      <div class="stat-body">
+        <div class="stat-label">Tổng danh mục</div>
+        <div class="stat-value">{{ totalElements }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="filter-section">
+    <input class="search-input" type="text" [(ngModel)]="searchKeyword"
+           placeholder="Tìm theo tên, mã..." (keyup.enter)="onSearch()" />
+    <select class="filter-select" [(ngModel)]="selectedStatus">
+      <option value="">-- Tất cả trạng thái --</option>
+      <option value="ACTIVE">Đang hoạt động</option>
+      <option value="INACTIVE">Ngừng hoạt động</option>
+    </select>
+    <button class="btn btn-primary" (click)="onSearch()">🔍 Tìm kiếm</button>
+    <button class="btn btn-ghost" (click)="onResetFilter()">↺ Reset</button>
+  </div>
+
+  <div class="loading-state" *ngIf="loading"><span>Đang tải dữ liệu...</span></div>
+
+  <div class="table-container" *ngIf="!loading">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Mã</th>
+          <th>Tên danh mục</th>
+          <th>Danh mục cha</th>
+          <th>Mô tả</th>
+          <th>Số SP</th>
+          <th>Trạng thái</th>
+          <th>Thao tác</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let cat of categories; let i = index">
+          <td>{{ currentPage * pageSize + i + 1 }}</td>
+          <td><code>{{ cat.code }}</code></td>
+          <td>{{ cat.name }}</td>
+          <td>{{ cat.parent_name ?? '—' }}</td>
+          <td>{{ cat.description ?? '—' }}</td>
+          <td>{{ cat.product_count }}</td>
+          <td>
+            <span class="badge" [ngClass]="getStatusClass(cat.status)">
+              {{ getStatusLabel(cat.status) }}
+            </span>
+          </td>
+          <td class="actions">
+            <button class="btn-icon btn-edit" (click)="openEditModal(cat)">✏️</button>
+            <button class="btn-icon btn-delete" (click)="openDeleteConfirm(cat)">🗑️</button>
+          </td>
+        </tr>
+        <tr *ngIf="categories.length === 0">
+          <td colspan="8" class="empty-state">Không có danh mục nào</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="pagination" *ngIf="totalPages > 1">
+    <button (click)="onPageChange(currentPage - 1)" [disabled]="currentPage === 0">« Trước</button>
+    <span class="page-info">Trang {{ currentPage + 1 }} / {{ totalPages }}</span>
+    <button (click)="onPageChange(currentPage + 1)" [disabled]="currentPage >= totalPages - 1">Sau »</button>
+  </div>
+
+</div>
+
+<!-- MODAL: TẠO -->
+<div class="modal-overlay" *ngIf="showCreateModal" (click)="closeAllModals()">
+  <div class="modal-box" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Thêm danh mục mới</h3>
+      <button class="modal-close" (click)="closeAllModals()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Mã danh mục <span class="required">*</span></label>
+          <input type="text" [(ngModel)]="createForm.code" placeholder="VD: CAT-001" />
+        </div>
+        <div class="form-group">
+          <label>Tên danh mục <span class="required">*</span></label>
+          <input type="text" [(ngModel)]="createForm.name" placeholder="Tên danh mục" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Mô tả</label>
+        <textarea [(ngModel)]="createForm.description" rows="3"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Danh mục cha</label>
+        <select [(ngModel)]="createForm.parent_id">
+          <option value="">-- Không có --</option>
+          <option *ngFor="let c of categories" [value]="c.id">{{ c.name }}</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" (click)="closeAllModals()">Huỷ</button>
+      <button class="btn btn-primary" (click)="onCreateSubmit()">Tạo danh mục</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: CHỈNH SỬA -->
+<div class="modal-overlay" *ngIf="showEditModal" (click)="closeAllModals()">
+  <div class="modal-box" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Chỉnh sửa danh mục</h3>
+      <button class="modal-close" (click)="closeAllModals()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Tên danh mục</label>
+        <input type="text" [(ngModel)]="editForm.name" />
+      </div>
+      <div class="form-group">
+        <label>Mô tả</label>
+        <textarea [(ngModel)]="editForm.description" rows="3"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Trạng thái</label>
+        <select [(ngModel)]="editForm.status">
+          <option value="ACTIVE">Đang hoạt động</option>
+          <option value="INACTIVE">Ngừng hoạt động</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" (click)="closeAllModals()">Huỷ</button>
+      <button class="btn btn-primary" (click)="onEditSubmit()">Lưu thay đổi</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM: XOÁ -->
+<div class="modal-overlay" *ngIf="showDeleteConfirm" (click)="closeAllModals()">
+  <div class="modal-box modal-sm" (click)="$event.stopPropagation()">
+    <div class="modal-header modal-header-danger">
+      <h3>Xác nhận xoá</h3>
+      <button class="modal-close" (click)="closeAllModals()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p>Xoá danh mục <strong>{{ categoryToDelete?.name }}</strong>?</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" (click)="closeAllModals()">Huỷ</button>
+      <button class="btn btn-danger" (click)="onDeleteConfirm()">Xoá</button>
+    </div>
+  </div>
+</div>

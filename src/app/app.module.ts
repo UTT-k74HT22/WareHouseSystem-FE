@@ -19,6 +19,20 @@ import { FooterComponent } from './share/layout/footer/footer.component';
 import { WarehouseComponent } from './pages/warehouse/warehouse.component';
 import { NotFoundComponent } from './pages/not-found/not-found.component';
 import { LocationComponent } from './pages/location/location/location.component';
+// ── Master Data ──────────────────────────────────────────────
+import { ProductComponent } from './pages/product/product.component';
+import { CategoryComponent } from './pages/category/category.component';
+import { BusinessPartnerComponent } from './pages/business-partner/business-partner.component';
+import { UomComponent } from './pages/uom/uom.component';
+import { BatchComponent } from './pages/batch/batch.component';
+// ── Operations ───────────────────────────────────────────────
+import { PurchaseOrderComponent } from './pages/purchase-order/purchase-order.component';
+import { SalesOrderComponent } from './pages/sales-order/sales-order.component';
+import { InboundComponent } from './pages/inbound/inbound.component';
+import { OutboundComponent } from './pages/outbound/outbound.component';
+// ── Stock & Inventory ────────────────────────────────────────
+import { InventoryComponent } from './pages/inventory/inventory.component';
+import { StockMovementsComponent, StockAdjustmentsComponent, StockTransfersComponent } from './pages/stock/stock.component';
 
 @NgModule({
   declarations: [
@@ -33,6 +47,22 @@ import { LocationComponent } from './pages/location/location/location.component'
     WarehouseComponent,
     NotFoundComponent,
     LocationComponent,
+    // ── Master Data ──────────────────────────────────────────
+    ProductComponent,
+    CategoryComponent,
+    BusinessPartnerComponent,
+    UomComponent,
+    BatchComponent,
+    // ── Operations ───────────────────────────────────────────
+    PurchaseOrderComponent,
+    SalesOrderComponent,
+    InboundComponent,
+    OutboundComponent,
+    // ── Stock & Inventory ────────────────────────────────────
+    InventoryComponent,
+    StockMovementsComponent,
+    StockAdjustmentsComponent,
+    StockTransfersComponent,
   ],
   imports: [
     BrowserModule,

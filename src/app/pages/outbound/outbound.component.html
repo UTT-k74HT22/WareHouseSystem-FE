@@ -1,0 +1,144 @@
+<div class="page-container">
+
+  <div class="page-hero">
+    <div class="hero-left">
+      <div class="hero-accent"></div>
+      <div class="hero-text">
+        <h1 class="hero-title">📤 Xuất hàng (Outbound)</h1>
+        <p class="hero-subtitle">Quản lý phiếu xuất giao hàng đến khách hàng</p>
+      </div>
+    </div>
+    <div class="hero-actions">
+      <button class="btn btn-ghost">Xuất Excel</button>
+      <button class="btn btn-primary" (click)="openCreateModal()">+ Tạo phiếu xuất</button>
+    </div>
+  </div>
+
+  <div class="filter-section">
+    <input class="search-input" type="text" [(ngModel)]="searchKeyword" placeholder="Tìm theo số phiếu, khách hàng..." (keyup.enter)="onSearch()" />
+    <select class="filter-select" [(ngModel)]="selectedStatus">
+      <option value="">-- Tất cả trạng thái --</option>
+      <option value="PENDING">Chờ xử lý</option>
+      <option value="PICKING">Đang lấy hàng</option>
+      <option value="PACKING">Đang đóng gói</option>
+      <option value="SHIPPED">Đã giao vận</option>
+      <option value="DELIVERED">Đã giao hàng</option>
+      <option value="CANCELLED">Đã huỷ</option>
+    </select>
+    <button class="btn btn-primary" (click)="onSearch()">🔍 Tìm kiếm</button>
+    <button class="btn btn-ghost" (click)="onResetFilter()">↺ Reset</button>
+  </div>
+
+  <div class="loading-state" *ngIf="loading"><span>Đang tải dữ liệu...</span></div>
+
+  <div class="table-container" *ngIf="!loading">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Số phiếu xuất</th>
+          <th>Khách hàng</th>
+          <th>Kho xuất</th>
+          <th>Đơn bán hàng</th>
+          <th>Ngày dự kiến</th>
+          <th>Mã vận đơn</th>
+          <th>Trạng thái</th>
+          <th>Thao tác</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let s of shipments; let i = index">
+          <td>{{ currentPage * pageSize + i + 1 }}</td>
+          <td><a class="link" (click)="openDetailModal(s)">{{ s.shipment_number }}</a></td>
+          <td>{{ s.customer_name }}</td>
+          <td>{{ s.warehouse_name }}</td>
+          <td>{{ s.sales_order_number ?? '—' }}</td>
+          <td>{{ s.expected_date | date:'dd/MM/yyyy' }}</td>
+          <td>{{ s.tracking_number ?? '—' }}</td>
+          <td><span class="badge" [ngClass]="getStatusClass(s.status)">{{ getStatusLabel(s.status) }}</span></td>
+          <td class="actions">
+            <button class="btn-icon" (click)="openDetailModal(s)">👁️</button>
+            <button class="btn-icon btn-delete" (click)="openDeleteConfirm(s)" [disabled]="s.status === 'DELIVERED'">🗑️</button>
+          </td>
+        </tr>
+        <tr *ngIf="shipments.length === 0">
+          <td colspan="9" class="empty-state">Không có phiếu xuất nào</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="pagination" *ngIf="totalPages > 1">
+    <button (click)="onPageChange(currentPage - 1)" [disabled]="currentPage === 0">« Trước</button>
+    <span class="page-info">Trang {{ currentPage + 1 }} / {{ totalPages }}</span>
+    <button (click)="onPageChange(currentPage + 1)" [disabled]="currentPage >= totalPages - 1">Sau »</button>
+  </div>
+
+</div>
+
+<!-- MODAL: TẠO -->
+<div class="modal-overlay" *ngIf="showCreateModal" (click)="closeAllModals()">
+  <div class="modal-box" (click)="$event.stopPropagation()">
+    <div class="modal-header"><h3>Tạo phiếu xuất mới</h3><button class="modal-close" (click)="closeAllModals()">✕</button></div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Khách hàng <span class="required">*</span></label>
+          <select [(ngModel)]="createForm.customer_id">
+            <option value="">-- Chọn khách hàng --</option>
+            <option *ngFor="let c of customers" [value]="c.id">{{ c.name }}</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Kho xuất <span class="required">*</span></label>
+          <select [(ngModel)]="createForm.warehouse_id">
+            <option value="">-- Chọn kho --</option>
+            <option *ngFor="let w of warehouses" [value]="w.id">{{ w.name }}</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Đơn bán hàng (SO)</label><input type="text" [(ngModel)]="createForm.sales_order_id" placeholder="ID đơn bán (tùy chọn)" /></div>
+        <div class="form-group"><label>Đơn vị vận chuyển</label><input type="text" [(ngModel)]="createForm.carrier" placeholder="VD: GHN, GHTK..." /></div>
+      </div>
+      <div class="form-group"><label>Ghi chú</label><textarea [(ngModel)]="createForm.notes" rows="3"></textarea></div>
+      <div class="info-box">💡 Sau khi tạo, bạn có thể thêm các dòng sản phẩm cần xuất.</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" (click)="closeAllModals()">Huỷ</button>
+      <button class="btn btn-primary" (click)="onCreateSubmit()">Tạo phiếu xuất</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: CHI TIẾT -->
+<div class="modal-overlay" *ngIf="showDetailModal" (click)="closeAllModals()">
+  <div class="modal-box modal-lg" (click)="$event.stopPropagation()">
+    <div class="modal-header"><h3>{{ selectedShipment?.shipment_number }}</h3><button class="modal-close" (click)="closeAllModals()">✕</button></div>
+    <div class="modal-body" *ngIf="selectedShipment">
+      <div class="detail-grid">
+        <div class="detail-item"><span class="detail-label">Khách hàng:</span><span>{{ selectedShipment.customer_name }}</span></div>
+        <div class="detail-item"><span class="detail-label">Kho:</span><span>{{ selectedShipment.warehouse_name }}</span></div>
+        <div class="detail-item"><span class="detail-label">Đơn vị vận chuyển:</span><span>{{ selectedShipment.carrier ?? '—' }}</span></div>
+        <div class="detail-item"><span class="detail-label">Mã vận đơn:</span><span>{{ selectedShipment.tracking_number ?? '—' }}</span></div>
+        <div class="detail-item"><span class="detail-label">Trạng thái:</span>
+          <span class="badge" [ngClass]="getStatusClass(selectedShipment.status)">{{ getStatusLabel(selectedShipment.status) }}</span>
+        </div>
+      </div>
+      <div class="info-box">📋 Danh sách dòng xuất hàng (Outbound Shipment Lines) sẽ hiển thị tại đây.</div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-ghost" (click)="closeAllModals()">Đóng</button></div>
+  </div>
+</div>
+
+<!-- CONFIRM: XOÁ -->
+<div class="modal-overlay" *ngIf="showDeleteConfirm" (click)="closeAllModals()">
+  <div class="modal-box modal-sm" (click)="$event.stopPropagation()">
+    <div class="modal-header modal-header-danger"><h3>Xác nhận xoá</h3><button class="modal-close" (click)="closeAllModals()">✕</button></div>
+    <div class="modal-body"><p>Xoá phiếu xuất <strong>{{ shipmentToDelete?.shipment_number }}</strong>?</p></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" (click)="closeAllModals()">Huỷ</button>
+      <button class="btn btn-danger" (click)="onDeleteConfirm()">Xoá</button>
+    </div>
+  </div>
+</div>

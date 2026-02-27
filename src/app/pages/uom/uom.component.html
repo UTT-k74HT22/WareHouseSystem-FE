@@ -1,0 +1,100 @@
+<div class="page-container">
+
+  <div class="page-hero">
+    <div class="hero-left">
+      <div class="hero-accent"></div>
+      <div class="hero-text">
+        <h1 class="hero-title">📐 Quản lý Đơn vị tính</h1>
+        <p class="hero-subtitle">Đơn vị đo lường dùng cho sản phẩm</p>
+      </div>
+    </div>
+    <div class="hero-actions">
+      <button class="btn btn-primary" (click)="openCreateModal()">+ Thêm Đơn vị</button>
+    </div>
+  </div>
+
+  <div class="filter-section">
+    <input class="search-input" type="text" [(ngModel)]="searchKeyword"
+           placeholder="Tìm theo mã, tên..." (keyup.enter)="onSearch()" />
+    <button class="btn btn-primary" (click)="onSearch()">🔍 Tìm kiếm</button>
+    <button class="btn btn-ghost" (click)="onResetFilter()">↺ Reset</button>
+  </div>
+
+  <div class="loading-state" *ngIf="loading"><span>Đang tải...</span></div>
+
+  <div class="table-container" *ngIf="!loading">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Mã</th>
+          <th>Tên đơn vị</th>
+          <th>Mô tả</th>
+          <th>Ngày tạo</th>
+          <th>Thao tác</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let u of filteredList; let i = index">
+          <td>{{ i + 1 }}</td>
+          <td><strong>{{ u.code }}</strong></td>
+          <td>{{ u.name }}</td>
+          <td>{{ u.description ?? '—' }}</td>
+          <td>{{ u.created_at | date:'dd/MM/yyyy' }}</td>
+          <td class="actions">
+            <button class="btn-icon btn-edit" (click)="openEditModal(u)">✏️</button>
+            <button class="btn-icon btn-delete" (click)="openDeleteConfirm(u)">🗑️</button>
+          </td>
+        </tr>
+        <tr *ngIf="filteredList.length === 0">
+          <td colspan="6" class="empty-state">Không có đơn vị tính nào</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="table-footer">Tổng: {{ uomList.length }} đơn vị tính</div>
+  </div>
+
+</div>
+
+<!-- MODAL: TẠO -->
+<div class="modal-overlay" *ngIf="showCreateModal" (click)="closeAllModals()">
+  <div class="modal-box modal-sm" (click)="$event.stopPropagation()">
+    <div class="modal-header"><h3>Thêm đơn vị tính</h3><button class="modal-close" (click)="closeAllModals()">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label>Mã <span class="required">*</span></label><input type="text" [(ngModel)]="createForm.code" placeholder="VD: KG, PCS, BOX" /></div>
+      <div class="form-group"><label>Tên <span class="required">*</span></label><input type="text" [(ngModel)]="createForm.name" placeholder="VD: Kilogram, Cái, Thùng" /></div>
+      <div class="form-group"><label>Mô tả</label><textarea [(ngModel)]="createForm.description" rows="2"></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" (click)="closeAllModals()">Huỷ</button>
+      <button class="btn btn-primary" (click)="onCreateSubmit()">Tạo</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: CHỈNH SỬA -->
+<div class="modal-overlay" *ngIf="showEditModal" (click)="closeAllModals()">
+  <div class="modal-box modal-sm" (click)="$event.stopPropagation()">
+    <div class="modal-header"><h3>Chỉnh sửa đơn vị tính</h3><button class="modal-close" (click)="closeAllModals()">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label>Tên</label><input type="text" [(ngModel)]="editForm.name" /></div>
+      <div class="form-group"><label>Mô tả</label><textarea [(ngModel)]="editForm.description" rows="2"></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" (click)="closeAllModals()">Huỷ</button>
+      <button class="btn btn-primary" (click)="onEditSubmit()">Lưu</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM: XOÁ -->
+<div class="modal-overlay" *ngIf="showDeleteConfirm" (click)="closeAllModals()">
+  <div class="modal-box modal-sm" (click)="$event.stopPropagation()">
+    <div class="modal-header modal-header-danger"><h3>Xác nhận xoá</h3><button class="modal-close" (click)="closeAllModals()">✕</button></div>
+    <div class="modal-body"><p>Xoá đơn vị tính <strong>{{ uomToDelete?.code }} - {{ uomToDelete?.name }}</strong>?</p></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" (click)="closeAllModals()">Huỷ</button>
+      <button class="btn btn-danger" (click)="onDeleteConfirm()">Xoá</button>
+    </div>
+  </div>
+</div>
