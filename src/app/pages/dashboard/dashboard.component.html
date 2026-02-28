@@ -1,76 +1,163 @@
-<div class="dashboard-container">
-  <div class="dashboard-header">
-    <h1>Dashboard</h1>
-    <button class="btn-logout" (click)="logout()">
-      <span>Đăng xuất</span>
-    </button>
-  </div>
+﻿<div class="dashboard-container">
 
-  <div class="welcome-section">
-    <h2>Chào mừng, {{ username }}! 👋</h2>
-    <p class="subtitle">Bạn đã đăng nhập thành công vào hệ thống</p>
-  </div>
-
-  <div class="info-cards">
-    <div class="info-card">
-      <h3>👤 Thông tin người dùng</h3>
-      <div class="info-item">
-        <span class="label">Tên đăng nhập:</span>
-        <span class="value">{{ username }}</span>
-      </div>
-      <div class="info-item">
-        <span class="label">Vai trò:</span>
-        <span class="value">
-          <span class="role-badge" *ngFor="let role of roles">{{ role }}</span>
-        </span>
-      </div>
-      <div class="info-item">
-        <span class="label">Trạng thái:</span>
-        <span class="value status-active">Đang hoạt động</span>
+  <!-- â•â•â• HEADER â•â•â• -->
+  <div class="dash-header">
+    <div class="dash-header-left">
+      <div class="dash-accent"></div>
+      <div>
+        <h1 class="dash-title">Tổng quan hệ thống</h1>
+        <p class="dash-sub">Warehouse Management System · {{ today }}</p>
       </div>
     </div>
-
-    <div class="info-card">
-      <h3>🔐 Bảo mật</h3>
-      <div class="security-info">
-        <p>✅ Route Guard đã được kích hoạt</p>
-        <p>✅ JWT Token được quản lý tự động</p>
-        <p>✅ Interceptor đang hoạt động</p>
-        <p>✅ Session được bảo vệ</p>
-      </div>
+    <div class="dash-header-right">
+      <span class="dash-date-badge">{{ today }}</span>
     </div>
   </div>
 
-  <!-- Admin Panel - Chỉ hiển thị cho ADMIN -->
-  <div class="admin-section" *ngIf="isAdmin()">
-    <h3>🛡️ Admin Panel</h3>
-    <p>Bạn có quyền quản trị viên. Nội dung này chỉ ADMIN mới thấy được.</p>
-    <div class="admin-actions">
-      <button class="btn-action">Quản lý người dùng</button>
-      <button class="btn-action">Cấu hình hệ thống</button>
-      <button class="btn-action">Xem báo cáo</button>
+  <!-- â•â•â• KPI CARDS â•â•â• -->
+  <div class="kpi-grid">
+    <div class="kpi-card kpi-indigo">
+      <div class="kpi-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/>
+        </svg>
+      </div>
+      <div class="kpi-body">
+        <div class="kpi-value">{{ kpi.totalOrders }}</div>
+        <div class="kpi-label">Tổng đơn hàng</div>
+        <div class="kpi-trend kpi-up">+24 tháng này</div>
+      </div>
+    </div>
+    <div class="kpi-card kpi-emerald">
+      <div class="kpi-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
+        </svg>
+      </div>
+      <div class="kpi-body">
+        <div class="kpi-value">{{ kpi.revenue }}M</div>
+        <div class="kpi-label">Doanh thu (₫)</div>
+        <div class="kpi-trend kpi-up">+7.5% so với T1</div>
+      </div>
+    </div>
+    <div class="kpi-card kpi-amber">
+      <div class="kpi-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/>
+        </svg>
+      </div>
+      <div class="kpi-body">
+        <div class="kpi-value">{{ kpi.pendingOrders }}</div>
+        <div class="kpi-label">Đơn chờ xử lý</div>
+        <div class="kpi-trend kpi-down">-5 so với hôm qua</div>
+      </div>
+    </div>
+    <div class="kpi-card kpi-rose">
+      <div class="kpi-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+        </svg>
+      </div>
+      <div class="kpi-body">
+        <div class="kpi-value">{{ kpi.completedToday }}</div>
+        <div class="kpi-label">Hoàn thành hôm nay</div>
+        <div class="kpi-trend kpi-up">+8 so với hôm qua</div>
+      </div>
     </div>
   </div>
 
-  <!-- Manager Panel - Chỉ hiển thị cho MANAGER -->
-  <div class="manager-section" *ngIf="isManager()">
-    <h3>📊 Manager Panel</h3>
-    <p>Bạn có quyền quản lý. Nội dung này chỉ MANAGER mới thấy được.</p>
-    <div class="manager-actions">
-      <button class="btn-action">Quản lý kho</button>
-      <button class="btn-action">Theo dõi đơn hàng</button>
-      <button class="btn-action">Báo cáo tồn kho</button>
+  <!-- â•â•â• ROW 1: LINE CHART (lá»›n) + DOUGHNUT â•â•â• -->
+  <div class="charts-row">
+
+    <!-- Line chart: Doanh thu & Ä‘Æ¡n hÃ ng theo thÃ¡ng -->
+    <div class="chart-card">
+      <div class="chart-header">
+        <div class="chart-header-left">
+          <div class="chart-title">Doanh thu &amp; Đơn hàng theo tháng</div>
+          <div class="chart-subtitle">6 tháng gần nhất · Doanh thu (trái) | Số đơn (phải)</div>
+        </div>
+        <span class="chart-badge">T9/2025 – T2/2026</span>
+      </div>
+      <div class="chart-canvas-wrap" style="height:260px">
+        <canvas baseChart
+          [data]="lineChartData"
+          [options]="lineChartOptions"
+          [type]="lineChartType">
+        </canvas>
+      </div>
     </div>
+
+    <!-- Doughnut: Tráº¡ng thÃ¡i Ä‘Æ¡n hÃ ng -->
+    <div class="chart-card">
+      <div class="chart-header">
+        <div class="chart-header-left">
+          <div class="chart-title">Trạng thái đơn hàng</div>
+          <div class="chart-subtitle">Tháng 2/2026</div>
+        </div>
+        <span class="chart-badge">286 đơn</span>
+      </div>
+      <div class="chart-canvas-wrap" style="height:260px">
+        <canvas baseChart
+          [data]="doughnutData"
+          [options]="doughnutOptions"
+          [type]="doughnutType">
+        </canvas>
+      </div>
+    </div>
+
   </div>
 
-  <div class="instructions">
-    <h3>📝 Hướng dẫn sử dụng</h3>
-    <ul>
-      <li>Route này được bảo vệ bởi <strong>AuthGuard</strong></li>
-      <li>Nếu chưa đăng nhập, bạn sẽ tự động chuyển về trang login</li>
-      <li>Token được tự động thêm vào mọi HTTP request</li>
-      <li>Khi token hết hạn (401), bạn sẽ tự động đăng xuất</li>
-      <li>Xem file <code>SECURITY_GUIDE.md</code> để biết thêm chi tiết</li>
-    </ul>
+  <!-- â•â•â• ROW 2: BAR CHART + ACTIVITY FEED â•â•â• -->
+  <div class="charts-row">
+
+    <!-- Bar chart: Sá»©c chá»©a kho -->
+    <div class="chart-card">
+      <div class="chart-header">
+        <div class="chart-header-left">
+          <div class="chart-title">Sức chứa kho hàng</div>
+          <div class="chart-subtitle">% công suất đang sử dụng · Đỏ ≥ 80% | Xanh &lt; 50%</div>
+        </div>
+        <span class="chart-badge">5 kho</span>
+      </div>
+      <div class="chart-canvas-wrap" style="height:220px">
+        <canvas baseChart
+          [data]="barChartData"
+          [options]="barChartOptions"
+          [type]="barChartType">
+        </canvas>
+      </div>
+    </div>
+
+    <!-- Activity feed -->
+    <div class="chart-card">
+      <div class="chart-header">
+        <div class="chart-header-left">
+          <div class="chart-title">Hoạt động gần đây</div>
+          <div class="chart-subtitle">Hôm nay</div>
+        </div>
+        <a class="chart-badge" routerLink="/stock-movements" style="cursor:pointer;text-decoration:none;color:#4f46e5">Xem tất cả</a>
+      </div>
+      <div class="activity-list">
+        <div class="activity-item" *ngFor="let a of activities">
+          <div class="activity-icon" [ngClass]="'act-' + a.type">
+            <!-- inbound -->
+            <svg *ngIf="a.type === 'in'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+            <!-- outbound -->
+            <svg *ngIf="a.type === 'out'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+            <!-- adjustment -->
+            <svg *ngIf="a.type === 'adj'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            <!-- transfer -->
+            <svg *ngIf="a.type === 'tr'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4"/></svg>
+          </div>
+          <div class="activity-body">
+            <div class="activity-desc">{{ a.desc }}</div>
+            <div class="activity-time">{{ a.time }}</div>
+          </div>
+          <div class="activity-qty" [ngClass]="a.up ? 'qty-up' : 'qty-down'">{{ a.qty }}</div>
+        </div>
+      </div>
+    </div>
+
   </div>
+
 </div>

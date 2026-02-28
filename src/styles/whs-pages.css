@@ -29,7 +29,7 @@
 .page-container {
   padding: 1.5rem 2rem 2rem;
   background: #f8f9fa;
-  min-height: 100vh;
+  min-height: 100%;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   animation: page-fadeIn 0.35s ease-out;
 }
