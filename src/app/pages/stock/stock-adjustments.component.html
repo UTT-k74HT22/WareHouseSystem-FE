@@ -1,0 +1,141 @@
+<div class="page-container">
+  <div class="page-hero">
+    <div class="hero-left">
+      <div class="hero-accent"></div>
+      <div class="hero-text">
+        <h1 class="hero-title"><i class="fa-solid fa-sliders" aria-hidden="true"></i> Điều chỉnh tồn kho</h1>
+        <p class="hero-subtitle">Tạo phiếu điều chỉnh tồn kho (tăng/giảm/hỏng/thất thoát)</p>
+      </div>
+    </div>
+    <div class="hero-actions">
+      <button class="btn btn-primary" (click)="openCreateModal()">+ Tạo điều chỉnh</button>
+      <div class="view-toggle">
+        <button class="btn-view-toggle" [class.active]="viewMode === 'grid'" (click)="viewMode = 'grid'" title="Chế độ lưới">
+          <i class="fa-solid fa-grip" aria-hidden="true"></i>
+        </button>
+        <button class="btn-view-toggle" [class.active]="viewMode === 'list'" (click)="viewMode = 'list'" title="Chế độ danh sách">
+          <i class="fa-solid fa-list" aria-hidden="true"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-item stat-total">
+      <div class="stat-bar"></div>
+      <div class="stat-body"><div class="stat-label">Tổng phiếu</div><div class="stat-value">{{ totalElements }}</div></div>
+    </div>
+  </div>
+
+  <div class="loading-state" *ngIf="loading"><span>Đang tải...</span></div>
+
+  <div class="table-container" *ngIf="!loading && viewMode === 'list'">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Mã phiếu</th>
+          <th>Loại</th>
+          <th>Sản phẩm</th>
+          <th>Vị trí</th>
+          <th>SL trước</th>
+          <th>Điều chỉnh</th>
+          <th>SL sau</th>
+          <th>Lý do</th>
+          <th>Ngày tạo</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let a of adjustments; let i = index">
+          <td>{{ currentPage * pageSize + i + 1 }}</td>
+          <td><code>{{ a.adjustment_number }}</code></td>
+          <td>
+            <span class="badge" [ngClass]="{
+              'badge-inbound': a.type === StockAdjustmentType.INCREASE || a.type === StockAdjustmentType.FOUND,
+              'badge-outbound': a.type === StockAdjustmentType.DECREASE || a.type === StockAdjustmentType.LOSS || a.type === StockAdjustmentType.DAMAGE
+            }">{{ getTypeLabel(a.type) }}</span>
+          </td>
+          <td>{{ a.product_name }}</td>
+          <td>{{ a.location_code }}</td>
+          <td>{{ a.quantity_before }}</td>
+          <td [ngClass]="a.quantity_adjusted >= 0 ? 'text-success' : 'text-danger'">
+            {{ a.quantity_adjusted >= 0 ? '+' : '' }}{{ a.quantity_adjusted }}
+          </td>
+          <td><strong>{{ a.quantity_after }}</strong></td>
+          <td>{{ a.reason }}</td>
+          <td><small>{{ a.created_at | date:'dd/MM/yyyy' }}</small></td>
+        </tr>
+        <tr *ngIf="adjustments.length === 0">
+          <td colspan="10" class="empty-state">Chưa có phiếu điều chỉnh nào</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="entity-grid" *ngIf="!loading && viewMode === 'grid'">
+    <div class="entity-card" *ngFor="let a of adjustments">
+      <h3 class="entity-card__title">{{ a.adjustment_number }}</h3>
+      <p class="entity-card__sub">{{ a.product_name }} - {{ a.location_code }}</p>
+      <div class="entity-card__meta">
+        <div class="entity-card__row">{{ getTypeLabel(a.type) }}</div>
+        <div class="entity-card__row">SL trước/sau: {{ a.quantity_before }} / {{ a.quantity_after }}</div>
+        <div class="entity-card__row">Điều chỉnh: {{ a.quantity_adjusted >= 0 ? '+' : '' }}{{ a.quantity_adjusted }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pagination" *ngIf="totalPages > 1">
+    <button (click)="onPageChange(currentPage - 1)" [disabled]="currentPage === 0">« Trước</button>
+    <span class="page-info">Trang {{ currentPage + 1 }} / {{ totalPages }}</span>
+    <button (click)="onPageChange(currentPage + 1)" [disabled]="currentPage >= totalPages - 1">Sau »</button>
+  </div>
+</div>
+
+<!-- MODAL: TẠO ĐIỀU CHỈNH -->
+<div class="modal-overlay" *ngIf="showCreateModal" (click)="closeAllModals()">
+  <div class="modal-box" (click)="$event.stopPropagation()">
+    <div class="modal-header"><h3>Tạo phiếu điều chỉnh</h3><button class="modal-close" (click)="closeAllModals()">✕</button></div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Loại điều chỉnh *</label>
+          <select class="form-control" [(ngModel)]="createForm.type" required>
+            <option [value]="StockAdjustmentType.INCREASE">Tăng tồn</option>
+            <option [value]="StockAdjustmentType.DECREASE">Giảm tồn</option>
+            <option [value]="StockAdjustmentType.DAMAGE">Hàng hỏng</option>
+            <option [value]="StockAdjustmentType.LOSS">Thất thoát</option>
+            <option [value]="StockAdjustmentType.FOUND">Tìm thấy</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Sản phẩm (ID) *</label>
+          <input class="form-control" type="text" [(ngModel)]="createForm.product_id" placeholder="ID sản phẩm" required />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Vị trí (ID) *</label>
+          <input class="form-control" type="text" [(ngModel)]="createForm.location_id" placeholder="ID vị trí" required />
+        </div>
+        <div class="form-group">
+          <label>Số lượng điều chỉnh *</label>
+          <input class="form-control" type="number" [(ngModel)]="createForm.quantity_adjusted" min="1" required />
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Lý do *</label>
+        <textarea class="form-control" [(ngModel)]="createForm.reason" rows="3" placeholder="Nhập lý do điều chỉnh..." required></textarea>
+      </div>
+      <div class="form-group">
+        <label>Ghi chú</label>
+        <textarea class="form-control" [(ngModel)]="createForm.notes" rows="2" placeholder="Ghi chú thêm (tuỳ chọn)"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" (click)="closeAllModals()">Huỷ</button>
+      <button class="btn btn-primary" (click)="onCreateSubmit()">Tạo phiếu</button>
+    </div>
+  </div>
+</div>
+
+

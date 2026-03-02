@@ -9,43 +9,14 @@
     <span class="logo-text">Ware House System</span>
   </div>
 
-  <div class="nav-section-title">Tổng quan</div>
-  <nav class="sidebar-nav">
-    <a class="nav-item" routerLink="/dashboard" routerLinkActive="active">
-      <span class="nav-icon">📊</span>
-      <span class="nav-label">Dashboard</span>
-    </a>
-    <a class="nav-item" routerLink="/warehouse" routerLinkActive="active">
-      <span class="nav-icon">🏭</span>
-      <span class="nav-label">Warehouse</span>
-    </a>
-    <a class="nav-item" routerLink="/location" routerLinkActive="active">
-      <span class="nav-icon">🏭</span>
-      <span class="nav-label">Location</span>
-    </a>
-    <a class="nav-item">
-      <span class="nav-icon">📦</span>
-      <span class="nav-label">Inventory</span>
-    </a>
-  </nav>
+  <ng-container *ngFor="let section of navSections">
+    <div class="nav-section-title">{{ section.title }}</div>
+    <nav class="sidebar-nav">
+      <a class="nav-item" *ngFor="let item of section.items" [routerLink]="item.route" routerLinkActive="active">
+        <span class="nav-icon"><i [class]="item.iconClass" aria-hidden="true"></i></span>
+        <span class="nav-label">{{ item.label }}</span>
+      </a>
+    </nav>
+  </ng-container>
 
-  <div class="nav-section-title">Vận hành</div>
-  <nav class="sidebar-nav">
-    <a class="nav-item">
-      <span class="nav-icon">🛒</span>
-      <span class="nav-label">Orders</span>
-    </a>
-    <a class="nav-item">
-      <span class="nav-icon">🚚</span>
-      <span class="nav-label">Shipments</span>
-    </a>
-    <a class="nav-item">
-      <span class="nav-icon">📈</span>
-      <span class="nav-label">Reports</span>
-    </a>
-    <a class="nav-item">
-      <span class="nav-icon">⚙️</span>
-      <span class="nav-label">Settings</span>
-    </a>
-  </nav>
 </aside>

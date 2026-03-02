@@ -1,17 +1,24 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router, NavigationEnd, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../../service/AuthService/auth-service.service';
 import { ToastrService } from '../../../service/SystemService/toastr.service';
-import { filter } from 'rxjs/operators';
+import { filter, takeUntil } from 'rxjs/operators';
+import { Subject } from 'rxjs';
 
 @Component({
   selector: 'app-header',
   templateUrl: './header.component.html',
   styleUrls: ['./header.component.css']
 })
-export class HeaderComponent implements OnInit {
+export class HeaderComponent implements OnInit, OnDestroy {
   pageTitle: string = 'Dashboard';
   pageSubtitle: string = 'Tổng quan hoạt động kho hôm nay';
+
+  username: string = 'Admin';
+  avatarInitial: string = 'A';
+  roleDisplay: string = 'Warehouse Staff';
+
+  private destroy$ = new Subject<void>();
 
   constructor(
     private authService: AuthService,
@@ -21,15 +28,33 @@ export class HeaderComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    // Set initial page info
     this.updatePageInfo();
 
-    // Listen to route changes
     this.router.events
-      .pipe(filter(event => event instanceof NavigationEnd))
-      .subscribe(() => {
-        this.updatePageInfo();
+      .pipe(filter(event => event instanceof NavigationEnd), takeUntil(this.destroy$))
+      .subscribe(() => this.updatePageInfo());
+
+    this.authService.authState$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(state => {
+        if (state.isAuthenticated && state.username) {
+          this.username = state.username;
+          this.avatarInitial = state.username.charAt(0).toUpperCase();
+          const roles = state.roles || [];
+          if (roles.some(r => r.includes('ADMIN'))) {
+            this.roleDisplay = 'Administrator';
+          } else if (roles.some(r => r.includes('MANAGER'))) {
+            this.roleDisplay = 'Warehouse Manager';
+          } else {
+            this.roleDisplay = 'Warehouse Staff';
+          }
+        }
       });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   private updatePageInfo(): void {
@@ -45,21 +70,15 @@ export class HeaderComponent implements OnInit {
   }
 
   viewProfile(): void {
-    // Navigate to profile page
     this.toastr.info('Thông báo', 'Chức năng đang được phát triển');
-    // this.router.navigate(['/profile']);
   }
 
   changePassword(): void {
-    // Navigate to change password page
     this.toastr.info('Thông báo', 'Chức năng đang được phát triển');
-    // this.router.navigate(['/change-password']);
   }
 
   settings(): void {
-    // Navigate to settings page
     this.toastr.info('Thông báo', 'Chức năng đang được phát triển');
-    // this.router.navigate(['/settings']);
   }
 
   logout(): void {
@@ -68,3 +87,4 @@ export class HeaderComponent implements OnInit {
     this.router.navigate(['/login']);
   }
 }
+

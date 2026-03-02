@@ -138,6 +138,10 @@
   transition: all 0.2s ease;
 }
 
+.nav-icon i {
+  font-size: 14px;
+}
+
 .nav-item:hover .nav-icon {
   background: #e2e8f0;
   color: var(--whs-primary);
@@ -234,3 +238,10 @@
     justify-content: center;
   }
 }
+
+@media (max-width: 768px) {
+  .sidebar {
+    display: none;
+  }
+}
+

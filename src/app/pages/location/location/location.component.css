@@ -266,9 +266,8 @@
   color: #6b7280;
 }
 
-.btn-view-toggle svg {
-  width: 18px;
-  height: 18px;
+.btn-view-toggle i {
+  font-size: 16px;
 }
 
 .btn-view-toggle.active {
@@ -622,9 +621,8 @@
   flex-shrink: 0;
 }
 
-.btn-action svg {
-  width: 16px;
-  height: 16px;
+.btn-action i {
+  font-size: 14px;
   flex-shrink: 0;
 }
 
@@ -678,9 +676,8 @@
   margin-bottom: 1rem;
 }
 
-.no-results-icon svg {
-  width: 64px;
-  height: 64px;
+.no-results-icon i {
+  font-size: 56px;
   color: #d1d5db;
 }
 
@@ -997,8 +994,7 @@ select.form-control {
 }
 
 .warning-icon {
-  width: 64px;
-  height: 64px;
+  font-size: 56px;
   color: #f59e0b;
   margin: 0 auto 1rem;
 }
@@ -1072,9 +1068,8 @@ select.form-control {
     height: 28px;
   }
 
-  .btn-action svg {
-    width: 14px;
-    height: 14px;
+  .btn-action i {
+    font-size: 12px;
   }
 }
 
@@ -1200,9 +1195,8 @@ select.form-control {
     height: 26px;
   }
 
-  .btn-action svg {
-    width: 13px;
-    height: 13px;
+  .btn-action i {
+    font-size: 11px;
   }
 
   .action-buttons {
@@ -1285,8 +1279,7 @@ select.form-control {
   }
 
   .warning-icon {
-    width: 48px;
-    height: 48px;
+    font-size: 42px;
   }
 
   .confirm-message p {
@@ -1367,9 +1360,8 @@ select.form-control {
     height: 24px;
   }
 
-  .btn-action svg {
-    width: 12px;
-    height: 12px;
+  .btn-action i {
+    font-size: 10px;
   }
 
   .action-buttons {
