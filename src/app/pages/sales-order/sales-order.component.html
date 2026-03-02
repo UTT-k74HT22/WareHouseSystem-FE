@@ -4,7 +4,7 @@
     <div class="hero-left">
       <div class="hero-accent"></div>
       <div class="hero-text">
-        <h1 class="hero-title">🧾 Đơn bán hàng (SO)</h1>
+        <h1 class="hero-title"><i class="fa-solid fa-file-invoice" aria-hidden="true"></i> Đơn bán hàng (SO)</h1>
         <p class="hero-subtitle">Quản lý đơn hàng giao đến khách hàng</p>
       </div>
     </div>
@@ -24,13 +24,21 @@
       <option value="COMPLETED">Hoàn thành</option>
       <option value="CANCELLED">Đã huỷ</option>
     </select>
-    <button class="btn btn-primary" (click)="onSearch()">🔍 Tìm kiếm</button>
-    <button class="btn btn-ghost" (click)="onResetFilter()">↺ Reset</button>
+    <button class="btn btn-primary" (click)="onSearch()"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i> Tìm kiếm</button>
+    <button class="btn btn-ghost" (click)="onResetFilter()"><i class="fa-solid fa-rotate-right" aria-hidden="true"></i> Reset</button>
+    <div class="view-toggle">
+      <button class="btn-view-toggle" [class.active]="viewMode === 'grid'" (click)="viewMode = 'grid'" title="Chế độ lưới">
+        <i class="fa-solid fa-grip" aria-hidden="true"></i>
+      </button>
+      <button class="btn-view-toggle" [class.active]="viewMode === 'list'" (click)="viewMode = 'list'" title="Chế độ danh sách">
+        <i class="fa-solid fa-list" aria-hidden="true"></i>
+      </button>
+    </div>
   </div>
 
   <div class="loading-state" *ngIf="loading"><span>Đang tải dữ liệu...</span></div>
 
-  <div class="table-container" *ngIf="!loading">
+  <div class="table-container" *ngIf="!loading && viewMode === 'list'">
     <table class="data-table">
       <thead>
         <tr>
@@ -56,8 +64,8 @@
           <td>{{ order.total_amount | number:'1.0-0' }} {{ order.currency }}</td>
           <td><span class="badge" [ngClass]="getStatusClass(order.status)">{{ getStatusLabel(order.status) }}</span></td>
           <td class="actions">
-            <button class="btn-icon" (click)="openDetailModal(order)">👁️</button>
-            <button class="btn-icon btn-delete" (click)="openDeleteConfirm(order)" [disabled]="order.status !== 'DRAFT'">🗑️</button>
+            <button class="btn-icon" (click)="openDetailModal(order)"><i class="fa-regular fa-eye" aria-hidden="true"></i></button>
+            <button class="btn-icon btn-delete" (click)="openDeleteConfirm(order)" [disabled]="order.status !== 'DRAFT'"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></button>
           </td>
         </tr>
         <tr *ngIf="orders.length === 0">
@@ -65,6 +73,23 @@
         </tr>
       </tbody>
     </table>
+  </div>
+
+  <div class="entity-grid" *ngIf="!loading && viewMode === 'grid'">
+    <div class="entity-card" *ngFor="let order of orders">
+      <h3 class="entity-card__title">{{ order.order_number }}</h3>
+      <p class="entity-card__sub">{{ order.customer_name }}</p>
+      <div class="entity-card__meta">
+        <div class="entity-card__row">Kho: {{ order.warehouse_name }}</div>
+        <div class="entity-card__row">Ngày đặt: {{ order.order_date | date:'dd/MM/yyyy' }}</div>
+        <div class="entity-card__row">Tổng tiền: {{ order.total_amount | number:'1.0-0' }} {{ order.currency }}</div>
+        <div class="entity-card__row"><span class="badge" [ngClass]="getStatusClass(order.status)">{{ getStatusLabel(order.status) }}</span></div>
+      </div>
+      <div class="entity-card__actions">
+        <button class="btn-icon" (click)="openDetailModal(order)"><i class="fa-regular fa-eye" aria-hidden="true"></i></button>
+        <button class="btn-icon btn-delete" (click)="openDeleteConfirm(order)" [disabled]="order.status !== 'DRAFT'"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></button>
+      </div>
+    </div>
   </div>
 
   <div class="pagination" *ngIf="totalPages > 1">
@@ -110,7 +135,7 @@
         <label>Ghi chú</label>
         <textarea [(ngModel)]="createForm.notes" rows="3"></textarea>
       </div>
-      <div class="info-box">💡 Sau khi tạo đơn bán, bạn có thể thêm dòng sản phẩm vào đơn.</div>
+      <div class="info-box"><i class="fa-regular fa-lightbulb" aria-hidden="true"></i> Sau khi tạo đơn bán, bạn có thể thêm dòng sản phẩm vào đơn.</div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" (click)="closeAllModals()">Huỷ</button>
@@ -132,7 +157,7 @@
         </div>
         <div class="detail-item"><span class="detail-label">Tổng tiền:</span><span>{{ selectedOrder.total_amount | number:'1.0-0' }} {{ selectedOrder.currency }}</span></div>
       </div>
-      <div class="info-box">📋 Dòng đơn hàng (Sales Order Lines) sẽ hiển thị tại đây.</div>
+      <div class="info-box"><i class="fa-regular fa-clipboard" aria-hidden="true"></i> Dòng đơn hàng (Sales Order Lines) sẽ hiển thị tại đây.</div>
     </div>
     <div class="modal-footer"><button class="btn btn-ghost" (click)="closeAllModals()">Đóng</button></div>
   </div>
@@ -149,3 +174,5 @@
     </div>
   </div>
 </div>
+
+

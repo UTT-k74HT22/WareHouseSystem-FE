@@ -20,6 +20,7 @@ export class BusinessPartnerComponent implements OnInit {
 
   // ─── Trạng thái ─────────────────────────────────────────────────
   loading = false;
+  viewMode: 'grid' | 'list' = 'list';
   searchKeyword = '';
   selectedType: '' | BusinessPartnerType = '';
   selectedStatus: '' | BusinessPartnerStatus = '';
@@ -198,3 +199,4 @@ export class BusinessPartnerComponent implements OnInit {
       p.type === BusinessPartnerType.CUSTOMER || p.type === BusinessPartnerType.BOTH).length;
   }
 }
+

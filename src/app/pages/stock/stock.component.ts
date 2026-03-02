@@ -31,6 +31,7 @@ export class StockMovementsComponent implements OnInit {
   totalElements = 0;
   totalPages = 0;
   loading = false;
+  viewMode: 'grid' | 'list' = 'list';
 
   selectedType: '' | StockMovementType = '';
   searchKeyword = '';
@@ -112,6 +113,7 @@ export class StockAdjustmentsComponent implements OnInit {
   totalElements = 0;
   totalPages = 0;
   loading = false;
+  viewMode: 'grid' | 'list' = 'list';
 
   showCreateModal = false;
   createForm: CreateStockAdjustmentRequest = this.initCreateForm();
@@ -202,6 +204,7 @@ export class StockTransfersComponent implements OnInit {
   totalElements = 0;
   totalPages = 0;
   loading = false;
+  viewMode: 'grid' | 'list' = 'list';
 
   showCreateModal = false;
   createForm: CreateStockTransferRequest = this.initCreateForm();

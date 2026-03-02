@@ -48,7 +48,8 @@
             class="toggle-password"
             (click)="togglePassword()"
           >
-            {{ hidePassword ? '👁' : '👁‍🗨' }}
+            <i *ngIf="hidePassword" class="fa-regular fa-eye" aria-hidden="true"></i>
+            <i *ngIf="!hidePassword" class="fa-regular fa-eye-slash" aria-hidden="true"></i>
           </button>
         </div>
 
@@ -72,7 +73,7 @@
       <!-- SUBMIT -->
       <button class="btn-primary" type="submit" [disabled]="isLoading">
         <span *ngIf="!isLoading">Sign in</span>
-        <span *ngIf="isLoading" class="loading-spinner">⟳</span>
+        <i *ngIf="isLoading" class="loading-spinner fa-solid fa-rotate" aria-hidden="true"></i>
       </button>
 
       <!-- DIVIDER -->

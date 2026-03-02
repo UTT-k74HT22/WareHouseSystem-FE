@@ -4,7 +4,7 @@
     <div class="hero-left">
       <div class="hero-accent"></div>
       <div class="hero-text">
-        <h1 class="hero-title">📦 Quản lý lô hàng (Batch)</h1>
+        <h1 class="hero-title"><i class="fa-solid fa-boxes-stacked" aria-hidden="true"></i> Quản lý lô hàng (Batch)</h1>
         <p class="hero-subtitle">Theo dõi lô hàng, ngày sản xuất, hạn sử dụng</p>
       </div>
     </div>
@@ -37,13 +37,21 @@
       <option [value]="BatchStatus.QUARANTINE">Kiểm dịch</option>
       <option [value]="BatchStatus.DISPOSED">Đã huỷ</option>
     </select>
-    <button class="btn btn-primary" (click)="onSearch()">🔍 Tìm kiếm</button>
-    <button class="btn btn-ghost" (click)="onResetFilter()">↺ Reset</button>
+    <button class="btn btn-primary" (click)="onSearch()"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i> Tìm kiếm</button>
+    <button class="btn btn-ghost" (click)="onResetFilter()"><i class="fa-solid fa-rotate-right" aria-hidden="true"></i> Reset</button>
+    <div class="view-toggle">
+      <button class="btn-view-toggle" [class.active]="viewMode === 'grid'" (click)="viewMode = 'grid'" title="Chế độ lưới">
+        <i class="fa-solid fa-grip" aria-hidden="true"></i>
+      </button>
+      <button class="btn-view-toggle" [class.active]="viewMode === 'list'" (click)="viewMode = 'list'" title="Chế độ danh sách">
+        <i class="fa-solid fa-list" aria-hidden="true"></i>
+      </button>
+    </div>
   </div>
 
   <div class="loading-state" *ngIf="loading"><span>Đang tải dữ liệu...</span></div>
 
-  <div class="table-container" *ngIf="!loading">
+  <div class="table-container" *ngIf="!loading && viewMode === 'list'">
     <table class="data-table">
       <thead>
         <tr>
@@ -75,8 +83,8 @@
             <span class="badge" [ngClass]="getStatusClass(b.status)">{{ getStatusLabel(b.status) }}</span>
           </td>
           <td class="actions">
-            <button class="btn-icon" title="Sửa" (click)="openEditModal(b)">✏️</button>
-            <button class="btn-icon btn-icon-danger" title="Xoá" (click)="openDeleteModal(b)">🗑️</button>
+            <button class="btn-icon" title="Sửa" (click)="openEditModal(b)"><i class="fa-regular fa-pen-to-square" aria-hidden="true"></i></button>
+            <button class="btn-icon btn-icon-danger" title="Xoá" (click)="openDeleteModal(b)"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></button>
           </td>
         </tr>
         <tr *ngIf="batches.length === 0">
@@ -84,6 +92,24 @@
         </tr>
       </tbody>
     </table>
+  </div>
+
+  <div class="entity-grid" *ngIf="!loading && viewMode === 'grid'">
+    <div class="entity-card" *ngFor="let b of batches">
+      <h3 class="entity-card__title">{{ b.batch_number }}</h3>
+      <p class="entity-card__sub">{{ b.product_name }} ({{ b.product_sku }})</p>
+      <div class="entity-card__meta">
+        <div class="entity-card__row">Số lượng: {{ b.quantity }}</div>
+        <div class="entity-card__row">HSD: {{ b.expiry_date | date:'dd/MM/yyyy' }}</div>
+        <div class="entity-card__row">
+          <span class="badge" [ngClass]="getStatusClass(b.status)">{{ getStatusLabel(b.status) }}</span>
+        </div>
+      </div>
+      <div class="entity-card__actions">
+        <button class="btn-icon" title="Sửa" (click)="openEditModal(b)"><i class="fa-regular fa-pen-to-square" aria-hidden="true"></i></button>
+        <button class="btn-icon btn-icon-danger" title="Xoá" (click)="openDeleteModal(b)"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></button>
+      </div>
+    </div>
   </div>
 
   <div class="pagination" *ngIf="totalPages > 1">
@@ -201,3 +227,5 @@
     </div>
   </div>
 </div>
+
+

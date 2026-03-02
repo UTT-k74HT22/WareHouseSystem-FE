@@ -24,6 +24,7 @@ export class InboundComponent implements OnInit {
   totalElements = 0;
   totalPages = 0;
   loading = false;
+  viewMode: 'grid' | 'list' = 'list';
 
   searchKeyword = '';
   selectedStatus: '' | InboundReceiptStatus = '';
@@ -160,3 +161,4 @@ export class InboundComponent implements OnInit {
     return classes[status];
   }
 }
+

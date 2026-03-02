@@ -48,9 +48,8 @@
   color: var(--whs-primary);
 }
 
-.btn-icon svg {
-  width: 18px;
-  height: 18px;
+.btn-icon i {
+  font-size: 16px;
 }
 
 /* ─── User dropdown container ────────────────────────────── */
@@ -203,15 +202,15 @@
   background: #f8fafc;
 }
 
-.dropdown-item svg {
+.dropdown-item i {
   width: 16px;
-  height: 16px;
+  font-size: 15px;
   color: #64748b;
   flex-shrink: 0;
   transition: color 0.15s ease;
 }
 
-.dropdown-item:hover svg {
+.dropdown-item:hover i {
   color: var(--whs-primary);
 }
 
@@ -219,7 +218,7 @@
   color: #ef4444;
 }
 
-.dropdown-item.logout svg {
+.dropdown-item.logout i {
   color: #ef4444;
 }
 

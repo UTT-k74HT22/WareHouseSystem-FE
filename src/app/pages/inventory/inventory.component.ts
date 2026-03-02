@@ -19,6 +19,7 @@ export class InventoryComponent implements OnInit {
   totalElements = 0;
   totalPages = 0;
   loading = false;
+  viewMode: 'grid' | 'list' = 'list';
 
   searchProductKeyword = '';
   selectedWarehouseId = '';
@@ -96,3 +97,4 @@ export class InventoryComponent implements OnInit {
     return '';
   }
 }
+

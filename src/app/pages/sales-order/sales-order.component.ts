@@ -24,6 +24,7 @@ export class SalesOrderComponent implements OnInit {
   totalElements = 0;
   totalPages = 0;
   loading = false;
+  viewMode: 'grid' | 'list' = 'list';
 
   searchKeyword = '';
   selectedStatus: '' | OrderStatus = '';
@@ -162,3 +163,4 @@ export class SalesOrderComponent implements OnInit {
     return classes[status];
   }
 }
+

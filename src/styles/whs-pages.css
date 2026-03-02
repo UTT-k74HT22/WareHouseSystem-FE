@@ -276,6 +276,41 @@
   box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.08);
 }
 
+/* ─── VIEW TOGGLE ────────────────────────────────────────── */
+.view-toggle {
+  display: inline-flex;
+  gap: 0;
+  padding: 0.25rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.btn-view-toggle {
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: 6px;
+  color: #64748b;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-view-toggle i {
+  font-size: 14px;
+}
+
+.btn-view-toggle:hover {
+  color: #4f46e5;
+  background: #f3f4f6;
+}
+
+.btn-view-toggle.active {
+  color: #ffffff;
+  background: #4f46e5;
+}
+
 /* ─── LOADING STATE ──────────────────────────────────────── */
 .loading-state {
   display: flex;
@@ -306,6 +341,59 @@
   overflow: hidden;
   border: 1px solid #e5e7eb;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+/* ─── GRID VIEW (shared) ─────────────────────────────────── */
+.entity-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.entity-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.entity-card:hover {
+  transform: translateY(-2px);
+  border-color: #c7d2fe;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+}
+
+.entity-card__title {
+  margin: 0 0 0.25rem;
+  color: #111827;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.entity-card__sub {
+  margin: 0;
+  color: #6b7280;
+  font-size: 0.8125rem;
+}
+
+.entity-card__meta {
+  margin-top: 0.75rem;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.35rem;
+}
+
+.entity-card__row {
+  color: #374151;
+  font-size: 0.8125rem;
+}
+
+.entity-card__actions {
+  margin-top: 0.875rem;
+  display: flex;
+  gap: 0.375rem;
 }
 
 .data-table {
@@ -850,6 +938,11 @@
     width: 100%;
   }
 
+  .view-toggle {
+    width: 100%;
+    justify-content: center;
+  }
+
   .modal-overlay {
     padding: 0;
   }
@@ -899,6 +992,10 @@
 
   .data-table {
     min-width: 700px;
+  }
+
+  .entity-grid {
+    grid-template-columns: 1fr;
   }
 }
 

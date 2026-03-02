@@ -87,15 +87,15 @@ export class ToastrComponent implements OnInit, OnDestroy {
   getIcon(type: string): string {
     switch (type) {
       case 'success':
-        return '✓';
+        return 'fa-solid fa-check';
       case 'error':
-        return '✕';
+        return 'fa-solid fa-xmark';
       case 'warning':
-        return '⚠';
+        return 'fa-solid fa-triangle-exclamation';
       case 'info':
-        return 'ℹ';
+        return 'fa-solid fa-circle-info';
       default:
-        return 'ℹ';
+        return 'fa-solid fa-circle-info';
     }
   }
 }

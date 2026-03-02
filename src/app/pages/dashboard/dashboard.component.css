@@ -86,7 +86,7 @@
   width: 48px; height: 48px; border-radius: 12px;
   display: flex; align-items: center; justify-content: center; flex-shrink: 0;
 }
-.kpi-icon svg { width: 24px; height: 24px; }
+.kpi-icon i { font-size: 22px; }
 
 .kpi-indigo .kpi-icon  { background: #eef2ff; color: #4f46e5; }
 .kpi-emerald .kpi-icon { background: #d1fae5; color: #059669; }
@@ -147,7 +147,7 @@
   width: 34px; height: 34px; border-radius: 9px;
   display: flex; align-items: center; justify-content: center; flex-shrink: 0;
 }
-.activity-icon svg { width: 15px; height: 15px; }
+.activity-icon i { font-size: 14px; }
 
 .act-in   { background: #d1fae5; color: #059669; }
 .act-out  { background: #fee2e2; color: #dc2626; }

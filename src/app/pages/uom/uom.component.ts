@@ -15,6 +15,7 @@ export class UomComponent implements OnInit {
   uomList: UnitsOfMeasureResponse[] = [];
   filteredList: UnitsOfMeasureResponse[] = [];
   loading = false;
+  viewMode: 'grid' | 'list' = 'list';
   searchKeyword = '';
 
   showCreateModal = false;
@@ -126,3 +127,4 @@ export class UomComponent implements OnInit {
     this.uomToDelete = null;
   }
 }
+

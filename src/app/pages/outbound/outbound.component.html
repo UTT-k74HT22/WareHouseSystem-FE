@@ -4,7 +4,7 @@
     <div class="hero-left">
       <div class="hero-accent"></div>
       <div class="hero-text">
-        <h1 class="hero-title">📤 Xuất hàng (Outbound)</h1>
+        <h1 class="hero-title"><i class="fa-solid fa-truck-fast" aria-hidden="true"></i> Xuất hàng (Outbound)</h1>
         <p class="hero-subtitle">Quản lý phiếu xuất giao hàng đến khách hàng</p>
       </div>
     </div>
@@ -25,13 +25,21 @@
       <option value="DELIVERED">Đã giao hàng</option>
       <option value="CANCELLED">Đã huỷ</option>
     </select>
-    <button class="btn btn-primary" (click)="onSearch()">🔍 Tìm kiếm</button>
-    <button class="btn btn-ghost" (click)="onResetFilter()">↺ Reset</button>
+    <button class="btn btn-primary" (click)="onSearch()"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i> Tìm kiếm</button>
+    <button class="btn btn-ghost" (click)="onResetFilter()"><i class="fa-solid fa-rotate-right" aria-hidden="true"></i> Reset</button>
+    <div class="view-toggle">
+      <button class="btn-view-toggle" [class.active]="viewMode === 'grid'" (click)="viewMode = 'grid'" title="Chế độ lưới">
+        <i class="fa-solid fa-grip" aria-hidden="true"></i>
+      </button>
+      <button class="btn-view-toggle" [class.active]="viewMode === 'list'" (click)="viewMode = 'list'" title="Chế độ danh sách">
+        <i class="fa-solid fa-list" aria-hidden="true"></i>
+      </button>
+    </div>
   </div>
 
   <div class="loading-state" *ngIf="loading"><span>Đang tải dữ liệu...</span></div>
 
-  <div class="table-container" *ngIf="!loading">
+  <div class="table-container" *ngIf="!loading && viewMode === 'list'">
     <table class="data-table">
       <thead>
         <tr>
@@ -57,8 +65,8 @@
           <td>{{ s.tracking_number ?? '—' }}</td>
           <td><span class="badge" [ngClass]="getStatusClass(s.status)">{{ getStatusLabel(s.status) }}</span></td>
           <td class="actions">
-            <button class="btn-icon" (click)="openDetailModal(s)">👁️</button>
-            <button class="btn-icon btn-delete" (click)="openDeleteConfirm(s)" [disabled]="s.status === 'DELIVERED'">🗑️</button>
+            <button class="btn-icon" (click)="openDetailModal(s)"><i class="fa-regular fa-eye" aria-hidden="true"></i></button>
+            <button class="btn-icon btn-delete" (click)="openDeleteConfirm(s)" [disabled]="s.status === 'DELIVERED'"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></button>
           </td>
         </tr>
         <tr *ngIf="shipments.length === 0">
@@ -66,6 +74,22 @@
         </tr>
       </tbody>
     </table>
+  </div>
+
+  <div class="entity-grid" *ngIf="!loading && viewMode === 'grid'">
+    <div class="entity-card" *ngFor="let s of shipments">
+      <h3 class="entity-card__title">{{ s.shipment_number }}</h3>
+      <p class="entity-card__sub">{{ s.customer_name }}</p>
+      <div class="entity-card__meta">
+        <div class="entity-card__row">Kho xuất: {{ s.warehouse_name }}</div>
+        <div class="entity-card__row">Dự kiến: {{ s.expected_date | date:'dd/MM/yyyy' }}</div>
+        <div class="entity-card__row"><span class="badge" [ngClass]="getStatusClass(s.status)">{{ getStatusLabel(s.status) }}</span></div>
+      </div>
+      <div class="entity-card__actions">
+        <button class="btn-icon" (click)="openDetailModal(s)"><i class="fa-regular fa-eye" aria-hidden="true"></i></button>
+        <button class="btn-icon btn-delete" (click)="openDeleteConfirm(s)" [disabled]="s.status === 'DELIVERED'"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></button>
+      </div>
+    </div>
   </div>
 
   <div class="pagination" *ngIf="totalPages > 1">
@@ -102,7 +126,7 @@
         <div class="form-group"><label>Đơn vị vận chuyển</label><input type="text" [(ngModel)]="createForm.carrier" placeholder="VD: GHN, GHTK..." /></div>
       </div>
       <div class="form-group"><label>Ghi chú</label><textarea [(ngModel)]="createForm.notes" rows="3"></textarea></div>
-      <div class="info-box">💡 Sau khi tạo, bạn có thể thêm các dòng sản phẩm cần xuất.</div>
+      <div class="info-box"><i class="fa-regular fa-lightbulb" aria-hidden="true"></i> Sau khi tạo, bạn có thể thêm các dòng sản phẩm cần xuất.</div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" (click)="closeAllModals()">Huỷ</button>
@@ -125,7 +149,7 @@
           <span class="badge" [ngClass]="getStatusClass(selectedShipment.status)">{{ getStatusLabel(selectedShipment.status) }}</span>
         </div>
       </div>
-      <div class="info-box">📋 Danh sách dòng xuất hàng (Outbound Shipment Lines) sẽ hiển thị tại đây.</div>
+      <div class="info-box"><i class="fa-regular fa-clipboard" aria-hidden="true"></i> Danh sách dòng xuất hàng (Outbound Shipment Lines) sẽ hiển thị tại đây.</div>
     </div>
     <div class="modal-footer"><button class="btn btn-ghost" (click)="closeAllModals()">Đóng</button></div>
   </div>
@@ -142,3 +166,5 @@
     </div>
   </div>
 </div>
+
+

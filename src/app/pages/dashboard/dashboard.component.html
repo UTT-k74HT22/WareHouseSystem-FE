@@ -18,9 +18,7 @@
   <div class="kpi-grid">
     <div class="kpi-card kpi-indigo">
       <div class="kpi-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-          <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/>
-        </svg>
+        <i class="fa-regular fa-clipboard" aria-hidden="true"></i>
       </div>
       <div class="kpi-body">
         <div class="kpi-value">{{ kpi.totalOrders }}</div>
@@ -30,9 +28,7 @@
     </div>
     <div class="kpi-card kpi-emerald">
       <div class="kpi-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-          <path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
-        </svg>
+        <i class="fa-solid fa-sack-dollar" aria-hidden="true"></i>
       </div>
       <div class="kpi-body">
         <div class="kpi-value">{{ kpi.revenue }}M</div>
@@ -42,9 +38,7 @@
     </div>
     <div class="kpi-card kpi-amber">
       <div class="kpi-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-          <circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/>
-        </svg>
+        <i class="fa-regular fa-clock" aria-hidden="true"></i>
       </div>
       <div class="kpi-body">
         <div class="kpi-value">{{ kpi.pendingOrders }}</div>
@@ -54,9 +48,7 @@
     </div>
     <div class="kpi-card kpi-rose">
       <div class="kpi-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-          <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
-        </svg>
+        <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
       </div>
       <div class="kpi-body">
         <div class="kpi-value">{{ kpi.completedToday }}</div>
@@ -141,13 +133,13 @@
         <div class="activity-item" *ngFor="let a of activities">
           <div class="activity-icon" [ngClass]="'act-' + a.type">
             <!-- inbound -->
-            <svg *ngIf="a.type === 'in'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+            <i *ngIf="a.type === 'in'" class="fa-solid fa-arrow-down" aria-hidden="true"></i>
             <!-- outbound -->
-            <svg *ngIf="a.type === 'out'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+            <i *ngIf="a.type === 'out'" class="fa-solid fa-arrow-up" aria-hidden="true"></i>
             <!-- adjustment -->
-            <svg *ngIf="a.type === 'adj'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            <i *ngIf="a.type === 'adj'" class="fa-solid fa-sliders" aria-hidden="true"></i>
             <!-- transfer -->
-            <svg *ngIf="a.type === 'tr'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4"/></svg>
+            <i *ngIf="a.type === 'tr'" class="fa-solid fa-right-left" aria-hidden="true"></i>
           </div>
           <div class="activity-body">
             <div class="activity-desc">{{ a.desc }}</div>

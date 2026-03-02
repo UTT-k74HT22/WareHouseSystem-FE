@@ -29,6 +29,7 @@ export class ProductComponent implements OnInit {
   totalElements = 0;
   totalPages = 0;
   loading = false;
+  viewMode: 'grid' | 'list' = 'list';
 
   // ─── Bộ lọc ─────────────────────────────────────────────────────
   searchKeyword = '';
@@ -249,3 +250,4 @@ export class ProductComponent implements OnInit {
     return this.products.filter(p => p.status === ProductStatus.ACTIVE).length;
   }
 }
+

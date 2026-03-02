@@ -25,6 +25,7 @@ export class PurchaseOrderComponent implements OnInit {
   totalElements = 0;
   totalPages = 0;
   loading = false;
+  viewMode: 'grid' | 'list' = 'list';
 
   searchKeyword = '';
   selectedStatus: '' | OrderStatus = '';
@@ -173,3 +174,4 @@ export class PurchaseOrderComponent implements OnInit {
   getDraftCount(): number { return this.orders.filter(o => o.status === OrderStatus.DRAFT).length; }
   getCompletedCount(): number { return this.orders.filter(o => o.status === OrderStatus.COMPLETED).length; }
 }
+

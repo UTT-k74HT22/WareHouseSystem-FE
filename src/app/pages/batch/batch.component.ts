@@ -18,6 +18,7 @@ export class BatchComponent implements OnInit {
   totalElements = 0;
   totalPages = 0;
   loading = false;
+  viewMode: 'grid' | 'list' = 'list';
 
   searchKeyword = '';
   selectedStatus: '' | BatchStatus = '';
@@ -159,3 +160,4 @@ export class BatchComponent implements OnInit {
     return { product_id: '', batch_number: '', manufacture_date: '', expiry_date: '', quantity: 0 };
   }
 }
+

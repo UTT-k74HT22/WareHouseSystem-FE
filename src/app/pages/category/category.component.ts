@@ -22,6 +22,7 @@ export class CategoryComponent implements OnInit {
   totalElements = 0;
   totalPages = 0;
   loading = false;
+  viewMode: 'grid' | 'list' = 'list';
 
   // ─── Bộ lọc ─────────────────────────────────────────────────────
   searchKeyword = '';
@@ -166,3 +167,4 @@ export class CategoryComponent implements OnInit {
     return status === CategoryStatus.ACTIVE ? 'badge-active' : 'badge-inactive';
   }
 }
+

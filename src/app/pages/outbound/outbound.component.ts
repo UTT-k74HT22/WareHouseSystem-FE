@@ -24,6 +24,7 @@ export class OutboundComponent implements OnInit {
   totalElements = 0;
   totalPages = 0;
   loading = false;
+  viewMode: 'grid' | 'list' = 'list';
 
   searchKeyword = '';
   selectedStatus: '' | OutboundShipmentStatus = '';
@@ -164,3 +165,4 @@ export class OutboundComponent implements OnInit {
     return classes[status];
   }
 }
+
