@@ -34,6 +34,8 @@ import { OutboundComponent } from './pages/outbound/outbound.component';
 // ── Stock & Inventory ────────────────────────────────────────
 import { InventoryComponent } from './pages/inventory/inventory.component';
 import { StockMovementsComponent, StockAdjustmentsComponent, StockTransfersComponent } from './pages/stock/stock.component';
+// ── Employee ─────────────────────────────────────────────────
+import { EmployeeComponent } from './pages/employee/employee.component';
 
 @NgModule({
   declarations: [
@@ -64,6 +66,8 @@ import { StockMovementsComponent, StockAdjustmentsComponent, StockTransfersCompo
     StockMovementsComponent,
     StockAdjustmentsComponent,
     StockTransfersComponent,
+    // ── Employee ─────────────────────────────────────────────
+    EmployeeComponent,
   ],
   imports: [
     BrowserModule,

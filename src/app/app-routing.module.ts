@@ -17,6 +17,7 @@ import { InboundComponent } from './pages/inbound/inbound.component';
 import { OutboundComponent } from './pages/outbound/outbound.component';
 import { StockMovementsComponent,StockAdjustmentsComponent,StockTransfersComponent } from './pages/stock/stock.component';
 import { InventoryComponent } from './pages/inventory/inventory.component';
+import { EmployeeComponent } from './pages/employee/employee.component';
 import { AuthGuard } from './security/guards/auth.guard';
 import { GuestGuard } from './security/guards/guest.guard';
 
@@ -188,6 +189,17 @@ const routes: Routes = [
     data: {
       title: 'Chuyển kho',
       subtitle: 'Chuyển hàng giữa các vị trí'
+    }
+  },
+
+  // ── Nhân sự ────────────────────────────────────────
+  {
+    path: 'employee',
+    component: EmployeeComponent,
+    canActivate: [AuthGuard],
+    data: {
+      title: 'Nhân viên',
+      subtitle: 'Quản lý thông tin nhân viên'
     }
   },
 

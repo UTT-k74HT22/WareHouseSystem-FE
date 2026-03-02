@@ -1,0 +1,698 @@
+<div class="employee-container">
+  <!-- Hero Header -->
+  <div class="employee-hero">
+    <div class="hero-left">
+      <div class="hero-accent"></div>
+      <div class="hero-text">
+        <h1 class="hero-title">Quản lý Nhân viên</h1>
+        <p class="hero-subtitle">Quản lý thông tin nhân viên trong hệ thống kho</p>
+      </div>
+    </div>
+    <div class="hero-actions">
+      <button class="btn btn-primary" type="button" (click)="openCreateModal()">
+        + Thêm Nhân viên
+      </button>
+    </div>
+  </div>
+
+  <!-- Statistics Cards -->
+  <div class="stats-grid" *ngIf="!loading && employees.length > 0">
+    <div class="stat-item stat-total">
+      <div class="stat-bar"></div>
+      <div class="stat-body">
+        <div class="stat-label">Tổng nhân viên</div>
+        <div class="stat-value">{{ totalElements }}</div>
+      </div>
+    </div>
+    <div class="stat-item stat-active">
+      <div class="stat-bar"></div>
+      <div class="stat-body">
+        <div class="stat-label">Đang làm việc</div>
+        <div class="stat-value">{{ getActiveCount() }}</div>
+      </div>
+    </div>
+    <div class="stat-item stat-on-leave">
+      <div class="stat-bar"></div>
+      <div class="stat-body">
+        <div class="stat-label">Đang nghỉ phép</div>
+        <div class="stat-value">{{ getOnLeaveCount() }}</div>
+      </div>
+    </div>
+    <div class="stat-item stat-terminated">
+      <div class="stat-bar"></div>
+      <div class="stat-body">
+        <div class="stat-label">Đã nghỉ việc</div>
+        <div class="stat-value">{{ getTerminatedCount() }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Search and Filter Section -->
+  <div class="filter-section" *ngIf="!loading">
+    <div class="search-box">
+      <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+      </svg>
+      <input
+        type="text"
+        class="search-input"
+        placeholder="Tìm kiếm theo mã NV, phòng ban, chức vụ..."
+        [(ngModel)]="searchTerm"
+        (keyup.enter)="onSearch()"
+      />
+      <button class="btn-search" (click)="onSearch()" title="Tìm kiếm">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
+          <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"/>
+        </svg>
+      </button>
+    </div>
+
+    <select class="filter-select" [(ngModel)]="selectedStatus" (change)="onFilterChange()">
+      <option [ngValue]="''">Tất cả trạng thái</option>
+      <option *ngFor="let st of getStatusOptions()" [ngValue]="st">
+        {{ getStatusLabel(st) }}
+      </option>
+    </select>
+
+    <select class="filter-select" [(ngModel)]="selectedWarehouse" (change)="onFilterChange()">
+      <option value="">Tất cả kho</option>
+      <option *ngFor="let wh of warehouses" [value]="wh.id">
+        {{ wh.name }}
+      </option>
+    </select>
+
+    <div class="view-toggle">
+      <button
+        class="btn-view-toggle"
+        [class.active]="viewMode === 'grid'"
+        (click)="viewMode = 'grid'"
+        title="Chế độ lưới"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M4 11h5V5H4v6zm0 7h5v-6H4v6zm6 0h5v-6h-5v6zm6 0h5v-6h-5v6zm-6-7h5V5h-5v6zm6-6v6h5V5h-5z"/>
+        </svg>
+      </button>
+      <button
+        class="btn-view-toggle"
+        [class.active]="viewMode === 'list'"
+        (click)="viewMode = 'list'"
+        title="Chế độ danh sách"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-spinner" *ngIf="loading">
+    <div class="spinner"></div>
+    <p>Đang tải dữ liệu...</p>
+  </div>
+
+  <!-- Content -->
+  <div class="employees-content" *ngIf="!loading">
+    <!-- No Data -->
+    <div class="no-results" *ngIf="employees.length === 0">
+      <div class="no-results-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+        </svg>
+      </div>
+      <p>Không tìm thấy nhân viên nào phù hợp</p>
+    </div>
+
+    <!-- Has Data -->
+    <ng-container *ngIf="employees.length > 0">
+
+      <!-- Grid View -->
+      <div class="employees-grid" *ngIf="viewMode === 'grid'">
+        <div
+          class="employee-card"
+          *ngFor="let emp of employees"
+          (click)="viewDetails(emp)"
+        >
+          <div class="card-status-bar" [ngClass]="'status-' + emp.status.toLowerCase()"></div>
+
+          <div class="card-header">
+            <div class="employee-avatar">
+              {{ (emp.first_name ? emp.first_name.charAt(0) : '') + (emp.last_name ? emp.last_name.charAt(0) : '') }}
+            </div>
+            <span class="status-badge" [ngClass]="'status-' + emp.status.toLowerCase()">
+              {{ getStatusLabel(emp.status) }}
+            </span>
+          </div>
+
+          <div class="card-body">
+            <div class="employee-code">{{ emp.employee_code }}</div>
+            <h3 class="employee-name">{{ getFullName(emp) }}</h3>
+
+            <div class="employee-info">
+              <div class="info-item">
+                <span class="info-label">Email:</span>
+                <span class="info-text">{{ emp.email || '—' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">SĐT:</span>
+                <span class="info-text">{{ emp.phone_number || '—' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Phòng ban:</span>
+                <span class="info-text">{{ emp.department || '—' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Chức vụ:</span>
+                <span class="info-text">{{ emp.position || '—' }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card-footer">
+            <span class="warehouse-tag">{{ getWarehouseName(emp.warehouse_id) }}</span>
+            <button class="btn-detail" (click)="$event.stopPropagation(); viewDetails(emp)">
+              Chi tiết →
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- List View -->
+      <div class="employees-list" *ngIf="viewMode === 'list'">
+        <div class="table-responsive">
+          <table class="employee-table">
+            <thead>
+              <tr>
+                <th style="width: 100px;">Mã NV</th>
+                <th style="width: 180px;">Họ tên</th>
+                <th style="width: 200px;">Email</th>
+                <th style="width: 120px;">SĐT</th>
+                <th style="width: 130px;">Phòng ban</th>
+                <th style="width: 130px;">Chức vụ</th>
+                <th style="width: 130px;">Kho</th>
+                <th style="width: 110px;">Ngày vào</th>
+                <th style="width: 120px;">Trạng thái</th>
+                <th style="width: 150px;" class="text-center">Thao tác</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let emp of employees" class="table-row">
+                <td>
+                  <span class="employee-code-cell">{{ emp.employee_code }}</span>
+                </td>
+                <td>
+                  <div class="name-cell">
+                    <span class="avatar-small">{{ (emp.first_name ? emp.first_name.charAt(0) : '') + (emp.last_name ? emp.last_name.charAt(0) : '') }}</span>
+                    <span class="employee-name-cell">{{ getFullName(emp) }}</span>
+                  </div>
+                </td>
+                <td>
+                  <span class="email-cell" [title]="emp.email">{{ emp.email || '—' }}</span>
+                </td>
+                <td>
+                  <span>{{ emp.phone_number || '—' }}</span>
+                </td>
+                <td>
+                  <span>{{ emp.department || '—' }}</span>
+                </td>
+                <td>
+                  <span>{{ emp.position || '—' }}</span>
+                </td>
+                <td>
+                  <span class="warehouse-tag-small">{{ getWarehouseName(emp.warehouse_id) }}</span>
+                </td>
+                <td>
+                  <span>{{ formatDate(emp.hire_date) }}</span>
+                </td>
+                <td>
+                  <span class="status-badge" [ngClass]="'status-' + emp.status.toLowerCase()">
+                    {{ getStatusLabel(emp.status) }}
+                  </span>
+                </td>
+                <td>
+                  <div class="action-buttons">
+                    <button class="btn-action btn-view" (click)="viewDetails(emp)" title="Xem chi tiết">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/>
+                        <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"/>
+                      </svg>
+                    </button>
+                    <button class="btn-action btn-edit" (click)="openEditModal(emp)" title="Chỉnh sửa">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
+                      </svg>
+                    </button>
+                    <button
+                      class="btn-action btn-delete"
+                      (click)="openDeleteConfirm(emp)"
+                      title="Cho nghỉ việc"
+                      *ngIf="emp.status !== EmployeeStatus.TERMINATED"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                      </svg>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Pagination -->
+      <div class="pagination" *ngIf="totalPages > 1">
+        <button class="btn-page" (click)="previousPage()" [disabled]="currentPage === 0">
+          ← Trước
+        </button>
+        <span class="page-info">
+          Trang {{ currentPage + 1 }} / {{ totalPages }}
+          <span class="total-items">({{ totalElements }} nhân viên)</span>
+        </span>
+        <button class="btn-page" (click)="nextPage()" [disabled]="currentPage >= totalPages - 1">
+          Sau →
+        </button>
+      </div>
+    </ng-container>
+  </div>
+
+  <!-- Employee Detail Modal -->
+  <div class="modal-overlay" *ngIf="selectedEmployee" (click)="selectedEmployee = null">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title-section">
+          <div>
+            <h2>{{ getFullName(selectedEmployee) }}</h2>
+            <span class="modal-code">{{ selectedEmployee.employee_code }}</span>
+          </div>
+        </div>
+        <button class="btn-close" (click)="selectedEmployee = null">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Personal Info -->
+        <div class="detail-section">
+          <h3>Thông tin cá nhân</h3>
+          <div class="detail-grid">
+            <div class="detail-item">
+              <label>Họ</label>
+              <span>{{ selectedEmployee.first_name || '—' }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Tên</label>
+              <span>{{ selectedEmployee.last_name || '—' }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Email</label>
+              <span>{{ selectedEmployee.email || '—' }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Số điện thoại</label>
+              <span>{{ selectedEmployee.phone_number || '—' }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Địa chỉ</label>
+              <span>{{ selectedEmployee.address || '—' }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Ngày sinh</label>
+              <span>{{ formatDate(selectedEmployee.date_of_birth) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Work Info -->
+        <div class="detail-section">
+          <h3>Thông tin công việc</h3>
+          <div class="detail-grid">
+            <div class="detail-item">
+              <label>Mã nhân viên</label>
+              <span>{{ selectedEmployee.employee_code }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Phòng ban</label>
+              <span>{{ selectedEmployee.department || '—' }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Chức vụ</label>
+              <span>{{ selectedEmployee.position || '—' }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Bậc lương</label>
+              <span>{{ selectedEmployee.salary_grade || '—' }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Kho phụ trách</label>
+              <span>{{ getWarehouseName(selectedEmployee.warehouse_id) }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Trạng thái</label>
+              <span class="status-badge" [ngClass]="'status-' + selectedEmployee.status.toLowerCase()">
+                {{ getStatusLabel(selectedEmployee.status) }}
+              </span>
+            </div>
+            <div class="detail-item">
+              <label>Ngày vào làm</label>
+              <span>{{ formatDate(selectedEmployee.hire_date) }}</span>
+            </div>
+            <div class="detail-item" *ngIf="selectedEmployee.termination_date">
+              <label>Ngày nghỉ việc</label>
+              <span>{{ formatDate(selectedEmployee.termination_date) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- System Info -->
+        <div class="detail-section">
+          <h3>Thông tin hệ thống</h3>
+          <div class="detail-grid">
+            <div class="detail-item">
+              <label>Ngày tạo</label>
+              <span>{{ formatDateTime(selectedEmployee.created_at) }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Cập nhật lần cuối</label>
+              <span>{{ formatDateTime(selectedEmployee.updated_at) }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeDetails()">Đóng</button>
+        <button class="btn btn-warning" (click)="openEditModal(selectedEmployee); closeDetails()">Chỉnh sửa</button>
+        <button
+          class="btn btn-danger"
+          (click)="openDeleteConfirm(selectedEmployee); closeDetails()"
+          *ngIf="selectedEmployee.status !== EmployeeStatus.TERMINATED"
+        >
+          Cho nghỉ việc
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create Employee Modal -->
+  <div class="modal-overlay" *ngIf="showCreateModal" (click)="closeCreateModal()">
+    <div class="modal-content modal-form modal-large" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Thêm Nhân viên Mới</h2>
+        <button class="btn-close" (click)="closeCreateModal()">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <form class="employee-form">
+          <!-- Account Section -->
+          <div class="form-section-title">Thông tin tài khoản</div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="create-username">Tên đăng nhập <span class="required">*</span></label>
+              <input
+                type="text"
+                id="create-username"
+                class="form-control"
+                [(ngModel)]="createForm.username"
+                name="username"
+                placeholder="Nhập tên đăng nhập"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label for="create-password">Mật khẩu <span class="required">*</span></label>
+              <input
+                type="password"
+                id="create-password"
+                class="form-control"
+                [(ngModel)]="createForm.password"
+                name="password"
+                placeholder="Tối thiểu 8 ký tự, có chữ hoa, thường, số, đặc biệt"
+                required
+              />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="create-role">Vai trò <span class="required">*</span></label>
+              <select
+                id="create-role"
+                class="form-control"
+                [(ngModel)]="createForm.role"
+                name="role"
+                required
+              >
+                <option *ngFor="let r of getRoleOptions()" [ngValue]="r">
+                  {{ getRoleLabel(r) }}
+                </option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="create-employee-code">Mã nhân viên <span class="required">*</span></label>
+              <input
+                type="text"
+                id="create-employee-code"
+                class="form-control"
+                [(ngModel)]="createForm.employee_code"
+                name="employee_code"
+                placeholder="VD: EMP001"
+                required
+              />
+            </div>
+          </div>
+
+          <!-- Personal Info Section -->
+          <div class="form-section-title">Thông tin cá nhân</div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="create-first-name">Họ <span class="required">*</span></label>
+              <input
+                type="text"
+                id="create-first-name"
+                class="form-control"
+                [(ngModel)]="createForm.first_name"
+                name="first_name"
+                placeholder="Nhập họ"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label for="create-last-name">Tên <span class="required">*</span></label>
+              <input
+                type="text"
+                id="create-last-name"
+                class="form-control"
+                [(ngModel)]="createForm.last_name"
+                name="last_name"
+                placeholder="Nhập tên"
+                required
+              />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="create-email">Email <span class="required">*</span></label>
+              <input
+                type="email"
+                id="create-email"
+                class="form-control"
+                [(ngModel)]="createForm.email"
+                name="email"
+                placeholder="example@company.com"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label for="create-phone">Số điện thoại</label>
+              <input
+                type="tel"
+                id="create-phone"
+                class="form-control"
+                [(ngModel)]="createForm.phone_number"
+                name="phone_number"
+                placeholder="VD: 0912345678"
+              />
+            </div>
+          </div>
+
+          <!-- Work Info Section -->
+          <div class="form-section-title">Thông tin công việc</div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="create-department">Phòng ban</label>
+              <input
+                type="text"
+                id="create-department"
+                class="form-control"
+                [(ngModel)]="createForm.department"
+                name="department"
+                placeholder="VD: Kho vận"
+              />
+            </div>
+            <div class="form-group">
+              <label for="create-position">Chức vụ</label>
+              <input
+                type="text"
+                id="create-position"
+                class="form-control"
+                [(ngModel)]="createForm.position"
+                name="position"
+                placeholder="VD: Nhân viên kho"
+              />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="create-hire-date">Ngày vào làm</label>
+              <input
+                type="date"
+                id="create-hire-date"
+                class="form-control"
+                [(ngModel)]="createForm.hire_date"
+                name="hire_date"
+              />
+            </div>
+            <div class="form-group">
+              <!-- Spacer -->
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeCreateModal()">Hủy</button>
+        <button class="btn btn-primary" (click)="submitCreate()">Tạo mới</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Employee Modal -->
+  <div class="modal-overlay" *ngIf="showEditModal" (click)="closeEditModal()">
+    <div class="modal-content modal-form" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Chỉnh sửa Nhân viên</h2>
+        <button class="btn-close" (click)="closeEditModal()">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="edit-employee-info" *ngIf="employeeToEdit">
+          <span class="edit-label">Nhân viên:</span>
+          <strong>{{ getFullName(employeeToEdit) }}</strong>
+          <span class="edit-code">({{ employeeToEdit.employee_code }})</span>
+        </div>
+
+        <form class="employee-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="edit-department">Phòng ban</label>
+              <input
+                type="text"
+                id="edit-department"
+                class="form-control"
+                [(ngModel)]="editForm.department"
+                name="department"
+                placeholder="Nhập phòng ban"
+              />
+            </div>
+            <div class="form-group">
+              <label for="edit-position">Chức vụ</label>
+              <input
+                type="text"
+                id="edit-position"
+                class="form-control"
+                [(ngModel)]="editForm.position"
+                name="position"
+                placeholder="Nhập chức vụ"
+              />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="edit-hire-date">Ngày vào làm</label>
+              <input
+                type="date"
+                id="edit-hire-date"
+                class="form-control"
+                [(ngModel)]="editForm.hire_date"
+                name="hire_date"
+              />
+            </div>
+            <div class="form-group">
+              <label for="edit-termination-date">Ngày nghỉ việc</label>
+              <input
+                type="date"
+                id="edit-termination-date"
+                class="form-control"
+                [(ngModel)]="editForm.termination_date"
+                name="termination_date"
+              />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="edit-salary-grade">Bậc lương</label>
+              <input
+                type="text"
+                id="edit-salary-grade"
+                class="form-control"
+                [(ngModel)]="editForm.salary_grade"
+                name="salary_grade"
+                placeholder="VD: A1, B2..."
+              />
+            </div>
+            <div class="form-group">
+              <label for="edit-warehouse">Kho phụ trách</label>
+              <select
+                id="edit-warehouse"
+                class="form-control"
+                [(ngModel)]="editForm.warehouse_id"
+                name="warehouse_id"
+              >
+                <option value="">Chưa gán kho</option>
+                <option *ngFor="let wh of warehouses" [value]="wh.id">
+                  {{ wh.name }} ({{ wh.code }})
+                </option>
+              </select>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeEditModal()">Hủy</button>
+        <button class="btn btn-warning" (click)="submitEdit()">Cập nhật</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div class="modal-overlay" *ngIf="showDeleteConfirm" (click)="closeDeleteConfirm()">
+    <div class="modal-content modal-small" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Xác nhận cho nghỉ việc</h2>
+        <button class="btn-close" (click)="closeDeleteConfirm()">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="confirm-message">
+          <svg class="warning-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+            <path fill-rule="evenodd" d="M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003zM12 8.25a.75.75 0 01.75.75v3.75a.75.75 0 01-1.5 0V9a.75.75 0 01.75-.75zm0 8.25a.75.75 0 100-1.5.75.75 0 000 1.5z" clip-rule="evenodd"/>
+          </svg>
+          <p>Bạn có chắc chắn muốn cho nhân viên <strong>{{ getFullName(employeeToDelete!) }}</strong> ({{ employeeToDelete?.employee_code }}) nghỉ việc?</p>
+          <p class="warning-text">Trạng thái nhân viên sẽ chuyển thành "Đã nghỉ việc"!</p>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeDeleteConfirm()">Hủy</button>
+        <button class="btn btn-danger" (click)="confirmDelete()">Xác nhận</button>
+      </div>
+    </div>
+  </div>
+</div>
