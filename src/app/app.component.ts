@@ -10,6 +10,7 @@ import { filter } from 'rxjs/operators';
 export class AppComponent implements OnInit {
   title = 'Ware House System';
   showLayout = false;
+  sidebarCollapsed = false;
 
   // Routes that should NOT show the layout (sidebar/header/footer)
   private routesWithoutLayout = ['/login', '/register'];
@@ -65,5 +66,9 @@ export class AppComponent implements OnInit {
     // Check if the component name includes 'NotFound'
     const componentName = route.component?.name || '';
     return componentName.includes('NotFound');
+  }
+
+  onSidebarCollapsedChange(collapsed: boolean): void {
+    this.sidebarCollapsed = collapsed;
   }
 }

@@ -70,15 +70,15 @@ export class HeaderComponent implements OnInit, OnDestroy {
   }
 
   viewProfile(): void {
-    this.toastr.info('Thông báo', 'Chức năng đang được phát triển');
+    this.router.navigate(['/account/profile']);
   }
 
   changePassword(): void {
-    this.toastr.info('Thông báo', 'Chức năng đang được phát triển');
+    this.router.navigate(['/account/change-password']);
   }
 
   settings(): void {
-    this.toastr.info('Thông báo', 'Chức năng đang được phát triển');
+    this.router.navigate(['/account/settings']);
   }
 
   logout(): void {

@@ -1,0 +1,235 @@
+<div class="profile-container">
+  <div class="account-topbar">
+    <div class="account-topbar-title">
+      <h1>Tài khoản của tôi</h1>
+      <p>Quản lý thông tin cá nhân và cài đặt bảo mật</p>
+    </div>
+    <div class="account-tabs">
+      <a routerLink="/account/profile" routerLinkActive="active" class="account-tab">Hồ sơ</a>
+      <a routerLink="/account/change-password" routerLinkActive="active" class="account-tab">Đổi mật khẩu</a>
+      <a routerLink="/account/settings" routerLinkActive="active" class="account-tab">Cài đặt</a>
+    </div>
+  </div>
+
+  <!-- Profile Header Card -->
+  <div class="profile-header-card">
+    <div class="profile-cover"></div>
+    <div class="profile-header-body">
+      <div class="profile-avatar-section">
+        <div class="profile-avatar">
+          <span>{{ avatarInitial }}</span>
+          <button class="avatar-edit-btn" title="Thay đổi ảnh đại diện">
+            <i class="fa-solid fa-camera" aria-hidden="true"></i>
+          </button>
+        </div>
+        <div class="profile-identity">
+          <h2 class="profile-name">{{ username }}</h2>
+          <div class="profile-role-badge">
+            <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+            <span>{{ roleDisplay }}</span>
+          </div>
+        </div>
+      </div>
+      <div class="profile-header-actions">
+        <button type="button" class="btn-action" *ngIf="!isEditing" (click)="toggleEdit()">
+          <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i>
+          <span>Chỉnh sửa</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="profile-content">
+    <!-- Info Summary Cards -->
+    <div class="info-cards-row">
+      <div class="info-card">
+        <div class="info-card-icon blue">
+          <i class="fa-solid fa-envelope" aria-hidden="true"></i>
+        </div>
+        <div class="info-card-text">
+          <span class="info-card-label">Email</span>
+          <span class="info-card-value">{{ email }}</span>
+        </div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-icon green">
+          <i class="fa-solid fa-building" aria-hidden="true"></i>
+        </div>
+        <div class="info-card-text">
+          <span class="info-card-label">Phòng ban</span>
+          <span class="info-card-value">Kho vận</span>
+        </div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-icon purple">
+          <i class="fa-solid fa-calendar-check" aria-hidden="true"></i>
+        </div>
+        <div class="info-card-text">
+          <span class="info-card-label">Ngày tham gia</span>
+          <span class="info-card-value">{{ joinDate }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Profile Form -->
+    <div class="profile-form-card">
+      <div class="form-card-header">
+        <div>
+          <h3 class="form-card-title">Thông tin cá nhân</h3>
+          <p class="form-card-subtitle">Quản lý thông tin tài khoản của bạn</p>
+        </div>
+        <div class="form-card-actions" *ngIf="isEditing">
+          <button type="button" class="btn-cancel" (click)="toggleEdit()">
+            <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+            Hủy
+          </button>
+          <button type="button" class="btn-save" (click)="onSubmit()" [disabled]="isLoading">
+            <i class="fa-solid fa-check" aria-hidden="true" *ngIf="!isLoading"></i>
+            <i class="fa-solid fa-spinner fa-spin" aria-hidden="true" *ngIf="isLoading"></i>
+            {{ isLoading ? 'Đang lưu...' : 'Lưu thay đổi' }}
+          </button>
+        </div>
+      </div>
+
+      <form [formGroup]="profileForm" class="profile-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">
+              <i class="fa-regular fa-user" aria-hidden="true"></i>
+              Họ
+            </label>
+            <input
+              type="text"
+              class="form-input"
+              formControlName="firstName"
+              placeholder="Nhập họ"
+              [readonly]="!isEditing"
+              [class.editing]="isEditing"
+            />
+            <span class="form-error" *ngIf="f['firstName'].touched && f['firstName'].errors?.['required']">
+              Vui lòng nhập họ
+            </span>
+          </div>
+          <div class="form-group">
+            <label class="form-label">
+              <i class="fa-regular fa-user" aria-hidden="true"></i>
+              Tên
+            </label>
+            <input
+              type="text"
+              class="form-input"
+              formControlName="lastName"
+              placeholder="Nhập tên"
+              [readonly]="!isEditing"
+              [class.editing]="isEditing"
+            />
+            <span class="form-error" *ngIf="f['lastName'].touched && f['lastName'].errors?.['required']">
+              Vui lòng nhập tên
+            </span>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">
+              <i class="fa-regular fa-envelope" aria-hidden="true"></i>
+              Email
+            </label>
+            <input
+              type="email"
+              class="form-input"
+              formControlName="email"
+              placeholder="Nhập email"
+              [readonly]="!isEditing"
+              [class.editing]="isEditing"
+            />
+            <span class="form-error" *ngIf="f['email'].touched && f['email'].errors?.['email']">
+              Email không hợp lệ
+            </span>
+          </div>
+          <div class="form-group">
+            <label class="form-label">
+              <i class="fa-solid fa-phone" aria-hidden="true"></i>
+              Số điện thoại
+            </label>
+            <input
+              type="text"
+              class="form-input"
+              formControlName="phone"
+              placeholder="Nhập số điện thoại"
+              [readonly]="!isEditing"
+              [class.editing]="isEditing"
+            />
+            <span class="form-error" *ngIf="f['phone'].touched && f['phone'].errors?.['pattern']">
+              Số điện thoại không hợp lệ
+            </span>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">
+              <i class="fa-solid fa-building" aria-hidden="true"></i>
+              Phòng ban
+            </label>
+            <input
+              type="text"
+              class="form-input disabled"
+              formControlName="department"
+            />
+          </div>
+          <div class="form-group">
+            <label class="form-label">
+              <i class="fa-solid fa-briefcase" aria-hidden="true"></i>
+              Chức vụ
+            </label>
+            <input
+              type="text"
+              class="form-input disabled"
+              formControlName="position"
+            />
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <!-- Activity Log -->
+    <div class="activity-card">
+      <div class="form-card-header">
+        <div>
+          <h3 class="form-card-title">Hoạt động gần đây</h3>
+          <p class="form-card-subtitle">Lịch sử đăng nhập và thay đổi tài khoản</p>
+        </div>
+      </div>
+      <div class="activity-list">
+        <div class="activity-item">
+          <div class="activity-icon login">
+            <i class="fa-solid fa-right-to-bracket" aria-hidden="true"></i>
+          </div>
+          <div class="activity-info">
+            <span class="activity-text">Đăng nhập thành công</span>
+            <span class="activity-time">Hôm nay, 08:30</span>
+          </div>
+        </div>
+        <div class="activity-item">
+          <div class="activity-icon edit">
+            <i class="fa-solid fa-pen" aria-hidden="true"></i>
+          </div>
+          <div class="activity-info">
+            <span class="activity-text">Cập nhật thông tin cá nhân</span>
+            <span class="activity-time">Hôm qua, 14:20</span>
+          </div>
+        </div>
+        <div class="activity-item">
+          <div class="activity-icon password">
+            <i class="fa-solid fa-key" aria-hidden="true"></i>
+          </div>
+          <div class="activity-info">
+            <span class="activity-text">Đổi mật khẩu</span>
+            <span class="activity-time">28/02/2026, 10:15</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

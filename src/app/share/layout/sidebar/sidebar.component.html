@@ -1,22 +1,56 @@
-<aside class="sidebar">
-  <div class="sidebar-logo">
-    <div class="logo-icon">
-      <img
-        src="assets/images/whs-logo-2.png"
-        alt="Warehouse System"
-      />
+<aside class="sidebar"
+       [class.collapsed]="!shouldExpand"
+       [class.pinned]="isPinnedExpanded"
+       (mouseenter)="onMouseEnter()"
+       (mouseleave)="onMouseLeave()">
+  <!-- Edge Toggle Button -->
+  <button class="sidebar-edge-toggle"
+          [class.is-expanded]="shouldExpand"
+          (click)="toggleSidebar()"
+          [title]="isPinnedExpanded ? 'Thu gọn sidebar' : 'Ghim sidebar mở rộng'">
+    <span class="edge-toggle-inner">
+      <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+    </span>
+    <span class="edge-toggle-ring"></span>
+  </button>
+
+  <!-- Header: Logo -->
+  <div class="sidebar-header">
+    <div class="sidebar-logo">
+      <div class="logo-icon">
+        <img src="assets/images/whs-logo-2.png" alt="Warehouse System" />
+      </div>
+      <div class="logo-text-wrapper" *ngIf="shouldExpand">
+        <span class="logo-text">WareHouse</span>
+        <span class="logo-subtext">Management System</span>
+      </div>
     </div>
-    <span class="logo-text">Ware House System</span>
+    <button class="sidebar-pin-btn"
+            *ngIf="shouldExpand"
+            (click)="toggleSidebar()"
+            [class.is-pinned]="isPinnedExpanded"
+            [title]="isPinnedExpanded ? 'Bỏ ghim' : 'Ghim sidebar'">
+      <i class="fa-solid fa-thumbtack" aria-hidden="true"></i>
+    </button>
   </div>
 
-  <ng-container *ngFor="let section of navSections">
-    <div class="nav-section-title">{{ section.title }}</div>
-    <nav class="sidebar-nav">
-      <a class="nav-item" *ngFor="let item of section.items" [routerLink]="item.route" routerLinkActive="active">
-        <span class="nav-icon"><i [class]="item.iconClass" aria-hidden="true"></i></span>
-        <span class="nav-label">{{ item.label }}</span>
-      </a>
-    </nav>
-  </ng-container>
-
+  <!-- Navigation -->
+  <div class="sidebar-scroll">
+    <ng-container *ngFor="let section of navSections">
+      <div class="nav-section-title" *ngIf="shouldExpand">{{ section.title }}</div>
+      <div class="nav-section-divider" *ngIf="!shouldExpand"></div>
+      <nav class="sidebar-nav">
+        <a class="nav-item"
+           *ngFor="let item of section.items"
+           [routerLink]="item.route"
+           routerLinkActive="active"
+           [title]="!shouldExpand ? item.label : ''">
+          <span class="nav-icon">
+            <i [class]="item.iconClass" aria-hidden="true"></i>
+          </span>
+          <span class="nav-label" *ngIf="shouldExpand">{{ item.label }}</span>
+        </a>
+      </nav>
+    </ng-container>
+  </div>
 </aside>
