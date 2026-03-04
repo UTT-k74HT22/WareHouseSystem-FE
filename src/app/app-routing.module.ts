@@ -18,6 +18,9 @@ import { OutboundComponent } from './pages/outbound/outbound.component';
 import { StockMovementsComponent,StockAdjustmentsComponent,StockTransfersComponent } from './pages/stock/stock.component';
 import { InventoryComponent } from './pages/inventory/inventory.component';
 import { EmployeeComponent } from './pages/employee/employee.component';
+import { ProfileComponent } from './pages/account/profile/profile.component';
+import { ChangePasswordComponent } from './pages/account/change-password/change-password.component';
+import { SettingsComponent } from './pages/account/settings/settings.component';
 import { AuthGuard } from './security/guards/auth.guard';
 import { GuestGuard } from './security/guards/guest.guard';
 
@@ -200,6 +203,35 @@ const routes: Routes = [
     data: {
       title: 'Nhân viên',
       subtitle: 'Quản lý thông tin nhân viên'
+    }
+  },
+
+  // ── Tài khoản cá nhân ──────────────────────────────
+  {
+    path: 'account/profile',
+    component: ProfileComponent,
+    canActivate: [AuthGuard],
+    data: {
+      title: 'Thông tin cá nhân',
+      subtitle: 'Quản lý hồ sơ tài khoản'
+    }
+  },
+  {
+    path: 'account/change-password',
+    component: ChangePasswordComponent,
+    canActivate: [AuthGuard],
+    data: {
+      title: 'Đổi mật khẩu',
+      subtitle: 'Cập nhật mật khẩu tài khoản'
+    }
+  },
+  {
+    path: 'account/settings',
+    component: SettingsComponent,
+    canActivate: [AuthGuard],
+    data: {
+      title: 'Cài đặt',
+      subtitle: 'Tùy chỉnh trải nghiệm sử dụng'
     }
   },
 

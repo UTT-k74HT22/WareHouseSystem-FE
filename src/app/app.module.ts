@@ -36,6 +36,10 @@ import { InventoryComponent } from './pages/inventory/inventory.component';
 import { StockMovementsComponent, StockAdjustmentsComponent, StockTransfersComponent } from './pages/stock/stock.component';
 // ── Employee ─────────────────────────────────────────────────
 import { EmployeeComponent } from './pages/employee/employee.component';
+// ── Account ──────────────────────────────────────────────────
+import { ProfileComponent } from './pages/account/profile/profile.component';
+import { ChangePasswordComponent } from './pages/account/change-password/change-password.component';
+import { SettingsComponent } from './pages/account/settings/settings.component';
 
 @NgModule({
   declarations: [
@@ -68,6 +72,10 @@ import { EmployeeComponent } from './pages/employee/employee.component';
     StockTransfersComponent,
     // ── Employee ─────────────────────────────────────────────
     EmployeeComponent,
+    // ── Account ──────────────────────────────────────────────
+    ProfileComponent,
+    ChangePasswordComponent,
+    SettingsComponent,
   ],
   imports: [
     BrowserModule,

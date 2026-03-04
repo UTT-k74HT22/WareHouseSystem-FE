@@ -1,0 +1,173 @@
+<div class="settings-container">
+  <div class="account-topbar">
+    <div class="account-topbar-title">
+      <h1>Tài khoản của tôi</h1>
+      <p>Quản lý thông tin cá nhân và cài đặt bảo mật</p>
+    </div>
+    <div class="account-tabs">
+      <a routerLink="/account/profile" routerLinkActive="active" class="account-tab">Hồ sơ</a>
+      <a routerLink="/account/change-password" routerLinkActive="active" class="account-tab">Đổi mật khẩu</a>
+      <a routerLink="/account/settings" routerLinkActive="active" class="account-tab">Cài đặt</a>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <div class="page-header-card">
+    <div class="page-header-icon">
+      <i class="fa-solid fa-gear" aria-hidden="true"></i>
+    </div>
+    <div>
+      <h2 class="page-header-title">Cài đặt</h2>
+      <p class="page-header-subtitle">Tùy chỉnh trải nghiệm sử dụng hệ thống</p>
+    </div>
+  </div>
+
+  <!-- General Settings -->
+  <div class="settings-card">
+    <div class="settings-card-header">
+      <div class="settings-icon-title">
+        <div class="settings-card-icon">
+          <i class="fa-solid fa-sliders" aria-hidden="true"></i>
+        </div>
+        <div>
+          <h3 class="settings-card-title">Cài đặt chung</h3>
+          <p class="settings-card-subtitle">Ngôn ngữ, giao diện và hiển thị</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-body">
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-icon">
+            <i class="fa-solid fa-globe" aria-hidden="true"></i>
+          </div>
+          <div>
+            <span class="setting-label">Ngôn ngữ</span>
+            <span class="setting-desc">Chọn ngôn ngữ hiển thị cho hệ thống</span>
+          </div>
+        </div>
+        <select class="setting-select" [(ngModel)]="selectedLanguage">
+          <option value="vi">🇻🇳 Tiếng Việt</option>
+          <option value="en">🇺🇸 English</option>
+        </select>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-icon">
+            <i class="fa-solid fa-palette" aria-hidden="true"></i>
+          </div>
+          <div>
+            <span class="setting-label">Giao diện</span>
+            <span class="setting-desc">Chọn chế độ hiển thị sáng hoặc tối</span>
+          </div>
+        </div>
+        <div class="theme-selector">
+          <button
+            class="theme-option"
+            [class.selected]="selectedTheme === 'light'"
+            (click)="selectedTheme = 'light'"
+          >
+            <i class="fa-regular fa-sun" aria-hidden="true"></i>
+            Sáng
+          </button>
+          <button
+            class="theme-option"
+            [class.selected]="selectedTheme === 'dark'"
+            (click)="selectedTheme = 'dark'"
+          >
+            <i class="fa-regular fa-moon" aria-hidden="true"></i>
+            Tối
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notification Settings -->
+  <div class="settings-card">
+    <div class="settings-card-header">
+      <div class="settings-icon-title">
+        <div class="settings-card-icon notification">
+          <i class="fa-regular fa-bell" aria-hidden="true"></i>
+        </div>
+        <div>
+          <h3 class="settings-card-title">Thông báo</h3>
+          <p class="settings-card-subtitle">Tùy chỉnh cách bạn nhận thông báo</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-body">
+      <div class="setting-row" *ngFor="let setting of notificationSettings">
+        <div class="setting-info">
+          <div class="setting-icon">
+            <i [class]="setting.icon" aria-hidden="true"></i>
+          </div>
+          <div>
+            <span class="setting-label">{{ setting.label }}</span>
+            <span class="setting-desc">{{ setting.description }}</span>
+          </div>
+        </div>
+        <label class="toggle-switch">
+          <input
+            type="checkbox"
+            [checked]="setting.enabled"
+            (change)="toggleSetting(setting)"
+          />
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- Display Settings -->
+  <div class="settings-card">
+    <div class="settings-card-header">
+      <div class="settings-icon-title">
+        <div class="settings-card-icon display">
+          <i class="fa-solid fa-desktop" aria-hidden="true"></i>
+        </div>
+        <div>
+          <h3 class="settings-card-title">Hiển thị</h3>
+          <p class="settings-card-subtitle">Tùy chỉnh cách hiển thị nội dung</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-body">
+      <div class="setting-row" *ngFor="let setting of displaySettings">
+        <div class="setting-info">
+          <div class="setting-icon">
+            <i [class]="setting.icon" aria-hidden="true"></i>
+          </div>
+          <div>
+            <span class="setting-label">{{ setting.label }}</span>
+            <span class="setting-desc">{{ setting.description }}</span>
+          </div>
+        </div>
+        <label class="toggle-switch">
+          <input
+            type="checkbox"
+            [checked]="setting.enabled"
+            (change)="toggleSetting(setting)"
+          />
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div class="settings-actions">
+    <button class="btn-reset" (click)="resetSettings()">
+      <i class="fa-solid fa-rotate-left" aria-hidden="true"></i>
+      Khôi phục mặc định
+    </button>
+    <button class="btn-save" (click)="saveSettings()">
+      <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i>
+      Lưu cài đặt
+    </button>
+  </div>
+</div>

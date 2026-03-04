@@ -1,7 +1,7 @@
 <!-- Layout with sidebar/header/footer for authenticated pages -->
-<div class="app-shell" *ngIf="showLayout">
+<div class="app-shell" [class.sidebar-collapsed]="sidebarCollapsed" *ngIf="showLayout">
   <!-- Sidebar cố định bên trái -->
-  <app-sidebar></app-sidebar>
+  <app-sidebar (collapsedChange)="onSidebarCollapsedChange($event)"></app-sidebar>
 
   <!-- Main area bên phải -->
   <div class="main">
