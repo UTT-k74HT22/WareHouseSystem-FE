@@ -43,13 +43,17 @@ export class SidebarComponent implements OnInit, OnDestroy {
   }
 
   onMouseEnter(): void {
-    this.isHovered = true;
-    this.emitCollapsedState();
+    if (!this.isPinnedExpanded) {
+      this.isHovered = true;
+      this.emitCollapsedState();
+    }
   }
 
   onMouseLeave(): void {
-    this.isHovered = false;
-    this.emitCollapsedState();
+    if (!this.isPinnedExpanded) {
+      this.isHovered = false;
+      this.emitCollapsedState();
+    }
   }
 
   toggleSidebar(): void {
@@ -59,9 +63,10 @@ export class SidebarComponent implements OnInit, OnDestroy {
   }
 
   private resetSidebarState(): void {
-    this.isPinnedExpanded = false;
-    this.isHovered = false;
-    this.emitCollapsedState();
+    if (!this.isPinnedExpanded) {
+      this.isHovered = false;
+      this.emitCollapsedState();
+    }
   }
 
   private emitCollapsedState(): void {
