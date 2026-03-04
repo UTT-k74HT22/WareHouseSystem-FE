@@ -73,6 +73,7 @@
       <thead>
         <tr>
           <th>#</th>
+          <th>Ảnh</th>
           <th>SKU</th>
           <th>Tên sản phẩm</th>
           <th>Danh mục</th>
@@ -85,6 +86,14 @@
       <tbody>
         <tr *ngFor="let product of products; let i = index">
           <td>{{ currentPage * pageSize + i + 1 }}</td>
+          <td>
+            <div class="product-thumb">
+              <img *ngIf="getProductImageUrl(product.id)" [src]="getProductImageUrl(product.id)" [alt]="product.name" />
+              <div *ngIf="!getProductImageUrl(product.id)" class="product-thumb__placeholder">
+                <i class="fa-regular fa-image"></i>
+              </div>
+            </div>
+          </td>
           <td><code>{{ product.sku }}</code></td>
           <td>
             <div class="cell-main">{{ product.name }}</div>
@@ -108,7 +117,7 @@
           </td>
         </tr>
         <tr *ngIf="products.length === 0">
-          <td colspan="8" class="empty-state">Không có sản phẩm nào</td>
+          <td colspan="9" class="empty-state">Không có sản phẩm nào</td>
         </tr>
       </tbody>
     </table>
@@ -116,6 +125,13 @@
 
   <div class="entity-grid" *ngIf="!loading && viewMode === 'grid'">
     <div class="entity-card" *ngFor="let product of products">
+      <div class="entity-card__image">
+        <img *ngIf="getProductImageUrl(product.id)" [src]="getProductImageUrl(product.id)" [alt]="product.name" />
+        <div *ngIf="!getProductImageUrl(product.id)" class="entity-card__image-placeholder">
+          <i class="fa-regular fa-image"></i>
+          <span>Chưa có ảnh</span>
+        </div>
+      </div>
       <h3 class="entity-card__title">{{ product.name }}</h3>
       <p class="entity-card__sub">{{ product.sku }}</p>
       <div class="entity-card__meta">
@@ -193,7 +209,31 @@
         <input type="checkbox" id="batchTracked" [(ngModel)]="createForm.is_batch_tracked" />
         <label for="batchTracked">Theo dõi theo lô (Batch Tracking)</label>
       </div>
-      <!-- TODO: Thêm upload ảnh, trọng lượng, kích thước -->
+      <!-- Upload ảnh sản phẩm -->
+      <div class="form-group">
+        <label>Ảnh sản phẩm</label>
+        <div class="image-upload-area">
+          <div class="image-preview" *ngIf="createImagePreview">
+            <img [src]="createImagePreview" alt="Preview" />
+            <div class="image-uploading-overlay" *ngIf="uploadingImage">
+              <i class="fa-solid fa-spinner fa-spin"></i>
+              <span>Đang tải lên...</span>
+            </div>
+            <button class="image-remove-btn" type="button" (click)="removeCreateImage()" title="Xoá ảnh" *ngIf="!uploadingImage">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+            <label class="image-change-btn" *ngIf="!uploadingImage" title="Đổi ảnh">
+              <input type="file" accept="image/*" (change)="onCreateImageSelected($event)" hidden />
+              <i class="fa-solid fa-camera"></i>
+            </label>
+          </div>
+          <label class="image-upload-trigger" *ngIf="!createImagePreview" [class.disabled]="uploadingImage">
+            <input type="file" accept="image/*" (change)="onCreateImageSelected($event)" hidden />
+            <i class="fa-solid fa-cloud-arrow-up"></i>
+            <span>Chọn ảnh hoặc kéo thả vào đây</span>
+          </label>
+        </div>
+      </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" (click)="closeAllModals()">Huỷ</button>
@@ -235,6 +275,31 @@
             <option value="INACTIVE">Ngừng hoạt động</option>
             <option value="DISCONTINUED">Ngừng kinh doanh</option>
           </select>
+        </div>
+      </div>
+      <!-- Upload ảnh sản phẩm (Edit) -->
+      <div class="form-group">
+        <label>Ảnh sản phẩm</label>
+        <div class="image-upload-area">
+          <div class="image-preview" *ngIf="editImagePreview">
+            <img [src]="editImagePreview" alt="Preview" />
+            <div class="image-uploading-overlay" *ngIf="uploadingImage">
+              <i class="fa-solid fa-spinner fa-spin"></i>
+              <span>Đang tải lên...</span>
+            </div>
+            <button class="image-remove-btn" type="button" (click)="removeEditImage()" title="Xoá ảnh" *ngIf="!uploadingImage">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+            <label class="image-change-btn" *ngIf="!uploadingImage" title="Đổi ảnh">
+              <input type="file" accept="image/*" (change)="onEditImageSelected($event)" hidden />
+              <i class="fa-solid fa-camera"></i>
+            </label>
+          </div>
+          <label class="image-upload-trigger" *ngIf="!editImagePreview" [class.disabled]="uploadingImage">
+            <input type="file" accept="image/*" (change)="onEditImageSelected($event)" hidden />
+            <i class="fa-solid fa-cloud-arrow-up"></i>
+            <span>Chọn ảnh hoặc kéo thả vào đây</span>
+          </label>
         </div>
       </div>
       <!-- TODO: Thêm các field khác -->
