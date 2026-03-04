@@ -26,3 +26,5 @@ tmp/
 Thumbs.db
 
 .codex/
+.copilot/
+.gemini/
