@@ -1,0 +1,7 @@
+export enum StockTransferReason {
+  REORG = 'REORG',
+  PICKING_PREP = 'PICKING_PREP',
+  OVERFLOW = 'OVERFLOW',
+  CONSOLIDATION = 'CONSOLIDATION',
+  OTHER = 'OTHER'
+}

@@ -4,7 +4,7 @@
       <div class="hero-accent"></div>
       <div class="hero-text">
         <h1 class="hero-title"><i class="fa-solid fa-right-left" aria-hidden="true"></i> Chuyển vị trí kho</h1>
-        <p class="hero-subtitle">Di chuyển hàng hoá giữa các vị trí trong kho</p>
+        <p class="hero-subtitle">Tạo phiếu nháp, xem chi tiết và hoàn tất chuyển kho đúng theo flow BE.</p>
       </div>
     </div>
     <div class="hero-actions">
@@ -23,7 +23,31 @@
   <div class="stats-grid">
     <div class="stat-item stat-total">
       <div class="stat-bar"></div>
-      <div class="stat-body"><div class="stat-label">Tổng phiếu</div><div class="stat-value">{{ totalElements }}</div></div>
+      <div class="stat-body">
+        <div class="stat-label">Tổng phiếu</div>
+        <div class="stat-value">{{ totalElements }}</div>
+      </div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-bar stat-bar--draft"></div>
+      <div class="stat-body">
+        <div class="stat-label">Nháp</div>
+        <div class="stat-value">{{ draftCount }}</div>
+      </div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-bar stat-bar--success"></div>
+      <div class="stat-body">
+        <div class="stat-label">Hoàn tất</div>
+        <div class="stat-value">{{ completedCount }}</div>
+      </div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-bar stat-bar--danger"></div>
+      <div class="stat-body">
+        <div class="stat-label">Đã huỷ</div>
+        <div class="stat-value">{{ cancelledCount }}</div>
+      </div>
     </div>
   </div>
 
@@ -35,34 +59,64 @@
         <tr>
           <th>#</th>
           <th>Mã phiếu</th>
+          <th>Kho</th>
           <th>Sản phẩm</th>
-          <th>Từ vị trí</th>
-          <th>Đến vị trí</th>
-          <th>Số lô</th>
+          <th>Tuyến chuyển</th>
+          <th>Lý do</th>
           <th>Số lượng</th>
           <th>Trạng thái</th>
-          <th>Ghi chú</th>
           <th>Ngày tạo</th>
+          <th>Thao tác</th>
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let t of transfers; let i = index">
+        <tr *ngFor="let transfer of transfers; let i = index">
           <td>{{ currentPage * pageSize + i + 1 }}</td>
-          <td><code>{{ t.transfer_number }}</code></td>
-          <td>{{ t.product_name }}</td>
-          <td>{{ t.from_location_code }} <small>{{ t.from_location_name }}</small></td>
-          <td>{{ t.to_location_code }} <small>{{ t.to_location_name }}</small></td>
-          <td>{{ t.batch_number ?? '—' }}</td>
-          <td><strong>{{ t.quantity }}</strong></td>
           <td>
-            <span class="badge" [ngClass]="{
-              'badge-draft': t.status === 'PENDING',
-              'badge-active': t.status === 'COMPLETED',
-              'badge-inactive': t.status === 'CANCELLED'
-            }">{{ t.status }}</span>
+            <code>{{ transfer.transfer_number }}</code>
+            <div class="cell-subtext" *ngIf="transfer.batch_number">Lô: {{ transfer.batch_number }}</div>
           </td>
-          <td>{{ t.notes ?? '—' }}</td>
-          <td><small>{{ t.created_at | date:'dd/MM/yyyy' }}</small></td>
+          <td>
+            <div>{{ transfer.warehouse_code || transfer.warehouse_name }}</div>
+            <div class="cell-subtext">{{ transfer.warehouse_name }}</div>
+          </td>
+          <td>
+            <div>{{ transfer.product_name }}</div>
+            <div class="cell-subtext" *ngIf="transfer.product_sku">{{ transfer.product_sku }}</div>
+          </td>
+          <td>
+            <div>{{ transfer.from_location_code }} → {{ transfer.to_location_code }}</div>
+            <div class="cell-subtext">{{ transfer.from_location_name }} → {{ transfer.to_location_name }}</div>
+          </td>
+          <td>{{ getReasonLabel(transfer.reason) }}</td>
+          <td>
+            <strong>{{ transfer.quantity }}</strong>
+            <div class="cell-subtext" *ngIf="transfer.uom_code">{{ transfer.uom_code }}</div>
+          </td>
+          <td>
+            <span class="badge" [ngClass]="getStatusClass(transfer.status)">{{ getStatusLabel(transfer.status) }}</span>
+          </td>
+          <td>
+            <div>{{ transfer.created_at | date:'dd/MM/yyyy' }}</div>
+            <div class="cell-subtext">{{ transfer.created_at | date:'HH:mm' }}</div>
+          </td>
+          <td>
+            <div class="table-actions">
+              <button class="btn btn-ghost action-btn" (click)="openDetailModal(transfer)">Chi tiết</button>
+              <button
+                *ngIf="canUpdateTransfer(transfer)"
+                class="btn btn-primary action-btn"
+                (click)="openCompleteModal(transfer)">
+                Hoàn tất
+              </button>
+              <button
+                *ngIf="canUpdateTransfer(transfer)"
+                class="btn btn-danger action-btn"
+                (click)="openCancelModal(transfer)">
+                Huỷ
+              </button>
+            </div>
+          </td>
         </tr>
         <tr *ngIf="transfers.length === 0">
           <td colspan="10" class="empty-state">Chưa có phiếu chuyển kho nào</td>
@@ -72,19 +126,32 @@
   </div>
 
   <div class="entity-grid" *ngIf="!loading && viewMode === 'grid'">
-    <div class="entity-card" *ngFor="let t of transfers">
-      <h3 class="entity-card__title">{{ t.transfer_number }}</h3>
-      <p class="entity-card__sub">{{ t.product_name }}</p>
+    <div class="entity-card" *ngFor="let transfer of transfers">
+      <h3 class="entity-card__title">{{ transfer.transfer_number }}</h3>
+      <p class="entity-card__sub">{{ transfer.product_name }}</p>
       <div class="entity-card__meta">
-        <div class="entity-card__row">Từ: {{ t.from_location_code }} → {{ t.to_location_code }}</div>
-        <div class="entity-card__row">Số lượng: {{ t.quantity }}</div>
+        <div class="entity-card__row">Kho: {{ transfer.warehouse_code || transfer.warehouse_name }}</div>
+        <div class="entity-card__row">Tuyến: {{ transfer.from_location_code }} → {{ transfer.to_location_code }}</div>
+        <div class="entity-card__row">Lý do: {{ getReasonLabel(transfer.reason) }}</div>
+        <div class="entity-card__row">Số lượng: {{ transfer.quantity }} {{ transfer.uom_code }}</div>
         <div class="entity-card__row">
-          <span class="badge" [ngClass]="{
-            'badge-draft': t.status === 'PENDING',
-            'badge-active': t.status === 'COMPLETED',
-            'badge-inactive': t.status === 'CANCELLED'
-          }">{{ t.status }}</span>
+          <span class="badge" [ngClass]="getStatusClass(transfer.status)">{{ getStatusLabel(transfer.status) }}</span>
         </div>
+      </div>
+      <div class="entity-card__actions">
+        <button class="btn btn-ghost action-btn" (click)="openDetailModal(transfer)">Chi tiết</button>
+        <button
+          *ngIf="canUpdateTransfer(transfer)"
+          class="btn btn-primary action-btn"
+          (click)="openCompleteModal(transfer)">
+          Hoàn tất
+        </button>
+        <button
+          *ngIf="canUpdateTransfer(transfer)"
+          class="btn btn-danger action-btn"
+          (click)="openCancelModal(transfer)">
+          Huỷ
+        </button>
       </div>
     </div>
   </div>
@@ -96,54 +163,244 @@
   </div>
 </div>
 
-<!-- MODAL: TẠO PHIẾU CHUYỂN -->
 <div class="modal-overlay" *ngIf="showCreateModal" (click)="closeAllModals()">
-  <div class="modal-box" (click)="$event.stopPropagation()">
-    <div class="modal-header"><h3>Tạo phiếu chuyển kho</h3><button class="modal-close" (click)="closeAllModals()">✕</button></div>
+  <div class="modal-box modal-lg" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Tạo phiếu chuyển kho</h3>
+      <button class="modal-close" (click)="closeAllModals()">✕</button>
+    </div>
+
     <div class="modal-body">
-      <div class="form-group">
-        <label>Sản phẩm *</label>
-        <select class="form-control" [(ngModel)]="createForm.product_id" required>
-          <option value="">-- Chọn sản phẩm --</option>
-          <option *ngFor="let p of products" [value]="p.id">{{ p.sku }} - {{ p.name }}</option>
-        </select>
+      <div class="callout callout-info">
+        API create chỉ tạo phiếu ở trạng thái nháp. Tồn kho chỉ thay đổi khi thực hiện hành động hoàn tất.
       </div>
+
       <div class="form-row">
         <div class="form-group">
-          <label>Từ vị trí *</label>
-          <select class="form-control" [(ngModel)]="createForm.from_location_id" required>
-            <option value="">-- Chọn vị trí nguồn --</option>
-            <option *ngFor="let l of locations" [value]="l.id">{{ l.code }} - {{ l.name }}</option>
+          <label>Kho *</label>
+          <select class="form-control" [(ngModel)]="createForm.warehouse_id" (ngModelChange)="onWarehouseChange()" [disabled]="submitting">
+            <option value="">Chọn kho</option>
+            <option *ngFor="let warehouse of warehouses" [value]="warehouse.id">
+              {{ getWarehouseLabel(warehouse.id) }}
+            </option>
           </select>
         </div>
+
         <div class="form-group">
-          <label>Đến vị trí *</label>
-          <select class="form-control" [(ngModel)]="createForm.to_location_id" required>
-            <option value="">-- Chọn vị trí đích --</option>
-            <option *ngFor="let l of locations" [value]="l.id">{{ l.code }} - {{ l.name }}</option>
+          <label>Tồn nguồn *</label>
+          <select class="form-control" [(ngModel)]="selectedSourceInventoryId" (ngModelChange)="onSourceInventoryChange()" [disabled]="!createForm.warehouse_id || loadingCreateOptions || submitting">
+            <option value="">Chọn tồn nguồn</option>
+            <option *ngFor="let inventory of sourceInventories" [value]="inventory.id">
+              {{ inventory.location_code }} | {{ inventory.product_sku }} | Khả dụng: {{ inventory.quantity_available }} {{ inventory.uom_code }}{{ inventory.batch_number ? ' | Lô: ' + inventory.batch_number : '' }}
+            </option>
           </select>
+          <div class="form-hint" *ngIf="loadingCreateOptions">Đang tải tồn nguồn và danh sách vị trí của kho...</div>
         </div>
       </div>
+
+      <div class="summary-panel" *ngIf="selectedSourceInventory">
+        <div class="summary-grid">
+          <div>
+            <span class="summary-label">Sản phẩm</span>
+            <strong>{{ selectedSourceInventory.product_name }}</strong>
+            <div class="cell-subtext">{{ selectedSourceInventory.product_sku }}</div>
+          </div>
+          <div>
+            <span class="summary-label">Nguồn</span>
+            <strong>{{ selectedSourceInventory.location_code }}</strong>
+            <div class="cell-subtext">{{ selectedSourceInventory.location_name }}</div>
+          </div>
+          <div>
+            <span class="summary-label">Tồn khả dụng</span>
+            <strong>{{ selectedSourceInventory.quantity_available }} {{ selectedSourceInventory.uom_code }}</strong>
+            <div class="cell-subtext">
+              On hand: {{ selectedSourceInventory.quantity_on_hand }} | Reserved: {{ selectedSourceInventory.quantity_reserved }}
+            </div>
+          </div>
+          <div>
+            <span class="summary-label">Lô</span>
+            <strong>{{ selectedSourceInventory.batch_number || 'Không theo lô' }}</strong>
+            <div class="cell-subtext" *ngIf="selectedSourceInventory.batch_id">{{ selectedSourceInventory.batch_id }}</div>
+          </div>
+        </div>
+      </div>
+
       <div class="form-row">
         <div class="form-group">
-          <label>Số lượng *</label>
-          <input class="form-control" type="number" [(ngModel)]="createForm.quantity" min="1" required />
+          <label>Vị trí đích *</label>
+          <select class="form-control" [(ngModel)]="createForm.to_location_id" [disabled]="!selectedSourceInventory || submitting">
+            <option value="">Chọn vị trí đích</option>
+            <option *ngFor="let location of destinationLocations" [value]="location.id">
+              {{ location.code }} - {{ location.name }}
+            </option>
+          </select>
         </div>
+
         <div class="form-group">
-          <label>Số lô (tuỳ chọn)</label>
-          <input class="form-control" type="text" [(ngModel)]="createForm.batch_id" placeholder="ID lô hàng" />
+          <label>Số lượng chuyển *</label>
+          <input class="form-control" type="number" min="0.01" step="0.01" [(ngModel)]="createForm.quantity" [disabled]="submitting" />
         </div>
       </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Lý do chuyển *</label>
+          <select class="form-control" [(ngModel)]="createForm.reason" [disabled]="submitting">
+            <option *ngFor="let reason of transferReasons" [value]="reason">{{ getReasonLabel(reason) }}</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Batch ID</label>
+          <input class="form-control" type="text" [value]="createForm.batch_id || 'Không có'" readonly />
+        </div>
+      </div>
+
+      <div class="callout callout-warning" *ngIf="quantityPreviewWarning">
+        {{ quantityPreviewWarning }}
+      </div>
+
       <div class="form-group">
         <label>Ghi chú</label>
-        <textarea class="form-control" [(ngModel)]="createForm.notes" rows="2" placeholder="Ghi chú (tuỳ chọn)"></textarea>
+        <textarea class="form-control" [(ngModel)]="createForm.notes" rows="3" maxlength="2000" [disabled]="submitting" placeholder="Mô tả thêm cho phiếu chuyển (không quá 2000 ký tự)"></textarea>
       </div>
     </div>
+
     <div class="modal-footer">
-      <button class="btn btn-ghost" (click)="closeAllModals()">Huỷ</button>
-      <button class="btn btn-primary" (click)="onCreateSubmit()">Tạo phiếu</button>
+      <button class="btn btn-ghost" (click)="closeAllModals()" [disabled]="submitting">Đóng</button>
+      <button class="btn btn-primary" (click)="onCreateSubmit()" [disabled]="submitting">
+        {{ submitting ? 'Đang tạo...' : 'Tạo phiếu nháp' }}
+      </button>
     </div>
   </div>
 </div>
 
+<div class="modal-overlay" *ngIf="showDetailModal && selectedTransfer" (click)="closeAllModals()">
+  <div class="modal-box modal-lg" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Chi tiết phiếu chuyển</h3>
+      <button class="modal-close" (click)="closeAllModals()">✕</button>
+    </div>
 
+    <div class="modal-body">
+      <div class="detail-grid">
+        <div>
+          <span class="summary-label">Mã phiếu</span>
+          <div><code>{{ selectedTransfer.transfer_number }}</code></div>
+        </div>
+        <div>
+          <span class="summary-label">Trạng thái</span>
+          <div><span class="badge" [ngClass]="getStatusClass(selectedTransfer.status)">{{ getStatusLabel(selectedTransfer.status) }}</span></div>
+        </div>
+        <div>
+          <span class="summary-label">Kho</span>
+          <div>{{ selectedTransfer.warehouse_code || selectedTransfer.warehouse_name }}</div>
+        </div>
+        <div>
+          <span class="summary-label">Lý do</span>
+          <div>{{ getReasonLabel(selectedTransfer.reason) }}</div>
+        </div>
+        <div>
+          <span class="summary-label">Sản phẩm</span>
+          <div>{{ selectedTransfer.product_name }}</div>
+          <div class="cell-subtext">{{ selectedTransfer.product_sku }}</div>
+        </div>
+        <div>
+          <span class="summary-label">Số lượng</span>
+          <div>{{ selectedTransfer.quantity }} {{ selectedTransfer.uom_code }}</div>
+        </div>
+        <div>
+          <span class="summary-label">Từ vị trí</span>
+          <div>{{ selectedTransfer.from_location_code }}</div>
+          <div class="cell-subtext">{{ selectedTransfer.from_location_name }}</div>
+        </div>
+        <div>
+          <span class="summary-label">Đến vị trí</span>
+          <div>{{ selectedTransfer.to_location_code }}</div>
+          <div class="cell-subtext">{{ selectedTransfer.to_location_name }}</div>
+        </div>
+        <div>
+          <span class="summary-label">Lô hàng</span>
+          <div>{{ selectedTransfer.batch_number || 'Không theo lô' }}</div>
+        </div>
+        <div>
+          <span class="summary-label">Người tạo</span>
+          <div>{{ selectedTransfer.created_by }}</div>
+        </div>
+        <div>
+          <span class="summary-label">Ngày tạo</span>
+          <div>{{ selectedTransfer.created_at | date:'dd/MM/yyyy HH:mm' }}</div>
+        </div>
+        <div>
+          <span class="summary-label">Cập nhật cuối</span>
+          <div>{{ selectedTransfer.updated_at | date:'dd/MM/yyyy HH:mm' }}</div>
+          <div class="cell-subtext" *ngIf="selectedTransfer.updated_by">Bởi: {{ selectedTransfer.updated_by }}</div>
+        </div>
+        <div *ngIf="selectedTransfer.completed_at">
+          <span class="summary-label">Hoàn tất lúc</span>
+          <div>{{ selectedTransfer.completed_at | date:'dd/MM/yyyy HH:mm' }}</div>
+        </div>
+        <div class="detail-full">
+          <span class="summary-label">Ghi chú</span>
+          <div>{{ selectedTransfer.notes || 'Không có ghi chú' }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-ghost" (click)="closeAllModals()">Đóng</button>
+      <button *ngIf="canUpdateTransfer(selectedTransfer)" class="btn btn-danger" (click)="openCancelModal(selectedTransfer)">Huỷ phiếu</button>
+      <button *ngIf="canUpdateTransfer(selectedTransfer)" class="btn btn-primary" (click)="openCompleteModal(selectedTransfer)">Hoàn tất phiếu</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" *ngIf="showCompleteModal && actionTransfer" (click)="closeAllModals()">
+  <div class="modal-box modal-sm" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Hoàn tất phiếu chuyển</h3>
+      <button class="modal-close" (click)="closeAllModals()">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="callout callout-info">
+        Hành động này sẽ cập nhật tồn kho nguồn/đích và tạo lịch sử chuyển kho `TRANSFER_OUT` và `TRANSFER_IN`.
+      </div>
+      <p><strong>{{ actionTransfer.transfer_number }}</strong></p>
+      <p>{{ actionTransfer.product_name }} | {{ actionTransfer.quantity }} {{ actionTransfer.uom_code }}</p>
+      <p>{{ actionTransfer.from_location_code }} → {{ actionTransfer.to_location_code }}</p>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-ghost" (click)="closeAllModals()" [disabled]="submitting">Đóng</button>
+      <button class="btn btn-primary" (click)="onCompleteConfirm()" [disabled]="submitting">
+        {{ submitting ? 'Đang xử lý...' : 'Xác nhận hoàn tất' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" *ngIf="showCancelModal && actionTransfer" (click)="closeAllModals()">
+  <div class="modal-box modal-sm" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Huỷ phiếu chuyển</h3>
+      <button class="modal-close" (click)="closeAllModals()">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="callout callout-warning">
+        Chỉ phiếu đang ở trạng thái nháp mới được huỷ. Huỷ phiếu không thay đổi tồn kho vì chuyển chưa được thực thi.
+      </div>
+      <p><strong>{{ actionTransfer.transfer_number }}</strong></p>
+      <p>{{ actionTransfer.product_name }} | {{ actionTransfer.quantity }} {{ actionTransfer.uom_code }}</p>
+      <p>{{ actionTransfer.from_location_code }} → {{ actionTransfer.to_location_code }}</p>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-ghost" (click)="closeAllModals()" [disabled]="submitting">Đóng</button>
+      <button class="btn btn-danger" (click)="onCancelConfirm()" [disabled]="submitting">
+        {{ submitting ? 'Đang xử lý...' : 'Xác nhận huỷ' }}
+      </button>
+    </div>
+  </div>
+</div>
