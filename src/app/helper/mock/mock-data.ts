@@ -35,7 +35,8 @@ import { OrderStatus } from '../enums/OrderStatus';
 import { InboundReceiptStatus } from '../enums/InboundReceiptStatus';
 import { OutboundShipmentStatus } from '../enums/OutboundShipmentStatus';
 import { StockMovementType } from '../enums/StockMovementType';
-import { StockAdjustmentType } from '../enums/StockAdjustmentType';
+import { ReasonType } from '../enums/ReasonType';
+import { StockAdjustmentsStatus } from '../enums/StockAdjustmentsStatus';
 import { WareHouseStatus } from '../enums/WareHouseStatus';
 import { WareHouseType } from '../enums/WareHouseType';
 
@@ -177,8 +178,66 @@ export const MOCK_STOCK_MOVEMENTS: StockMovementResponse[] = [
 // STOCK ADJUSTMENT - Điều chỉnh tồn kho
 // ════════════════════════════════════════════════════════════
 export const MOCK_STOCK_ADJUSTMENTS: StockAdjustmentResponse[] = [
-  { id: 'sa-001', adjustment_number: 'SA-2025-0001', type: StockAdjustmentType.DAMAGE, product_id: 'prod-003', product_name: 'Nước rửa tay Lifebuoy 500ml', product_sku: 'SP-CLEAN-003', location_id: 'loc-004', location_code: 'C-01-01', batch_id: 'bat-002', batch_number: 'LOT-2025-002', quantity_before: 20, quantity_adjusted: -15, quantity_after: 5, uom_code: 'LIT', reason: 'Hàng vỡ trong kho', notes: 'Phát hiện khi kiểm kê', created_by: 'admin', created_at: '2025-02-20T11:00:00' },
-  { id: 'sa-002', adjustment_number: 'SA-2025-0002', type: StockAdjustmentType.FOUND, product_id: 'prod-004', product_name: 'Bút bi Thiên Long TL-027', product_sku: 'SP-PEN-004', location_id: 'loc-005', location_code: 'D-01-01', batch_id: null, batch_number: null, quantity_before: 1950, quantity_adjusted: 50, quantity_after: 2000, uom_code: 'BOX', reason: 'Tìm thấy hàng khi dọn kho', notes: '', created_by: 'admin', created_at: '2025-02-22T09:00:00' },
+  {
+    id: 'sa-001',
+    adjustment_number: 'ADJ-20250220110000-A1B2C3D4',
+    inventory_id: 'inv-004',
+    product_id: 'prod-003',
+    warehouse_id: 'wh-001',
+    location_id: 'loc-004',
+    batch_id: 'bat-002',
+    quantity_before: 20,
+    quantity_after: 5,
+    adjustment_quantity: -15,
+    reason: ReasonType.DAMAGE,
+    status: StockAdjustmentsStatus.APPROVED,
+    notes: 'Kiểm kê phát hiện 15 chai bị vỡ.',
+    requires_approval: false,
+    approved_at: '2025-02-20T11:05:00',
+    rejection_reason: null,
+    created_at: '2025-02-20T11:00:00',
+    updated_at: '2025-02-20T11:05:00'
+  },
+  {
+    id: 'sa-002',
+    adjustment_number: 'ADJ-20250222090000-E5F6G7H8',
+    inventory_id: 'inv-005',
+    product_id: 'prod-004',
+    warehouse_id: 'wh-002',
+    location_id: 'loc-005',
+    batch_id: null,
+    quantity_before: 2000,
+    quantity_after: 1980,
+    adjustment_quantity: -20,
+    reason: ReasonType.THEFT,
+    status: StockAdjustmentsStatus.PENDING_APPROVAL,
+    notes: 'Ca trực đêm báo thiếu 20 hộp sau đối chiếu camera.',
+    requires_approval: true,
+    approved_at: null,
+    rejection_reason: null,
+    created_at: '2025-02-22T09:00:00',
+    updated_at: '2025-02-22T09:00:00'
+  },
+  {
+    id: 'sa-003',
+    adjustment_number: 'ADJ-20250223103000-K9L0M1N2',
+    inventory_id: 'inv-002',
+    product_id: 'prod-002',
+    warehouse_id: 'wh-001',
+    location_id: 'loc-002',
+    batch_id: 'bat-001',
+    quantity_before: 300,
+    quantity_after: 295,
+    adjustment_quantity: -5,
+    reason: ReasonType.QUALITY_ISSUE,
+    status: StockAdjustmentsStatus.REJECTED,
+    notes: 'Đề nghị loại bỏ 5kg do nghi ngờ ẩm mốc.',
+    requires_approval: true,
+    approved_at: '2025-02-23T11:00:00',
+    rejection_reason: 'Chưa có biên bản QC kèm theo.',
+    created_at: '2025-02-23T10:30:00',
+    updated_at: '2025-02-23T11:00:00'
+  },
 ];
 
 // ════════════════════════════════════════════════════════════

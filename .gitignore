@@ -26,3 +26,6 @@ tmp/
 Thumbs.db
 
 .codex/
+.copilot/
+.gemini/
+.gemini/settings.json

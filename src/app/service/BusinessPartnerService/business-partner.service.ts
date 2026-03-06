@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { BaseURL } from '../../../environments/BaseURL';
 import { ApiResponse } from '../../dto/response/ApiResponse';
@@ -36,8 +36,9 @@ export class BusinessPartnerService {
 
   /** PATCH /api/v1/business-partners/:id/status */
   changeStatus(id: string, status: BusinessPartnerStatus): Observable<ApiResponse<BusinessPartnerResponse>> {
+    const params = new HttpParams().set('status', status);
     return this.http.patch<ApiResponse<BusinessPartnerResponse>>(
-      `${this.apiUrl}/${id}/status`, { status }
+      `${this.apiUrl}/${id}/status`, null, { params }
     );
   }
 

@@ -3,6 +3,7 @@ import { ProductResponse } from '../../dto/response/Product/ProductResponse';
 import { ProductService } from '../../service/ProductService/product.service';
 import { CategoryService } from '../../service/CategoryService/category.service';
 import { UOMService } from '../../service/UOMService/uom.service';
+import { StorageService } from '../../service/StorageService/storage.service';
 import { ToastrService } from '../../service/SystemService/toastr.service';
 import { ProductStatus } from '../../helper/enums/ProductStatus';
 import { CategoryResponse } from '../../dto/response/Category/CategoryResponse';
@@ -48,6 +49,12 @@ export class ProductComponent implements OnInit {
   createForm: CreateProductRequest = this.initCreateForm();
   editForm: UpdateProductRequest = {};
 
+  // ─── Image ───────────────────────────────────────────────────────
+  imageUrlMap: Map<string, string> = new Map();  // productId → presigned URL
+  createImagePreview: string | null = null;       // preview trước khi tạo
+  editImagePreview: string | null = null;         // preview khi chỉnh sửa
+  uploadingImage = false;
+
   // ─── Enums (dùng trong template) ────────────────────────────────
   ProductStatus = ProductStatus;
 
@@ -55,6 +62,7 @@ export class ProductComponent implements OnInit {
     private productService: ProductService,
     private categoryService: CategoryService,
     private uomService: UOMService,
+    private storageService: StorageService,
     private toastr: ToastrService
   ) {}
 
@@ -76,6 +84,7 @@ export class ProductComponent implements OnInit {
           this.products = res.data.content;
           this.totalElements = res.data.total_elements;
           this.totalPages = res.data.total_pages;
+          this.resolveProductImages(this.products);
         }
         this.loading = false;
       },
@@ -121,6 +130,7 @@ export class ProductComponent implements OnInit {
           this.products = res.data.content;
           this.totalElements = res.data.total_elements;
           this.totalPages = res.data.total_pages;
+          this.resolveProductImages(this.products);
         }
         this.loading = false;
       },
@@ -146,6 +156,7 @@ export class ProductComponent implements OnInit {
   // ══════════════════════════════════════════════════
   openCreateModal(): void {
     this.createForm = this.initCreateForm();
+    this.createImagePreview = null;
     this.showCreateModal = true;
   }
 
@@ -170,8 +181,9 @@ export class ProductComponent implements OnInit {
       category_id: product.category_id,
       uom_id: product.uom_id,
       status: product.status,
-      // TODO: fill thêm các field khác
+      image_url: product.image_url,
     };
+    this.editImagePreview = this.imageUrlMap.get(product.id) || null;
     this.showEditModal = true;
   }
 
@@ -212,6 +224,8 @@ export class ProductComponent implements OnInit {
     this.showDeleteConfirm = false;
     this.productToDelete = null;
     this.selectedProduct = null;
+    this.createImagePreview = null;
+    this.editImagePreview = null;
   }
 
   // ══════════════════════════════════════════════════
@@ -248,6 +262,140 @@ export class ProductComponent implements OnInit {
 
   getActiveCount(): number {
     return this.products.filter(p => p.status === ProductStatus.ACTIVE).length;
+  }
+
+  // ══════════════════════════════════════════════════
+  // IMAGE — MinIO presigned URL & Upload
+  // ══════════════════════════════════════════════════
+
+  /**
+   * Lấy presigned URL cho tất cả sản phẩm có image_url (MinIO object name).
+   * Cache kết quả vào imageUrlMap để tránh gọi API lặp lại.
+   */
+  private resolveProductImages(products: ProductResponse[]): void {
+    products.forEach(p => {
+      if (p.image_url && !this.imageUrlMap.has(p.id)) {
+        this.storageService.getPresignedUrl(p.image_url).subscribe({
+          next: (res) => {
+            if (res.success && res.data?.presignedUrl) {
+              this.imageUrlMap.set(p.id, res.data.presignedUrl);
+            }
+          },
+          error: () => { /* MinIO không khả dụng, bỏ qua */ }
+        });
+      }
+    });
+  }
+
+  /** Lấy presigned URL đã cache cho 1 product */
+  getProductImageUrl(productId: string): string | null {
+    return this.imageUrlMap.get(productId) || null;
+  }
+
+  /**
+   * Upload ảnh lên MinIO khi chọn file trong form Create.
+   * Sau khi upload thành công:
+   *  - Gán object_name vào createForm.image_url
+   *  - Hiện preview bằng presigned_url từ response
+   */
+  onCreateImageSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (!input.files || input.files.length === 0) return;
+    const file = input.files[0];
+
+    // Validate phía client
+    if (!file.type.startsWith('image/')) {
+      this.toastr.error('Chỉ chấp nhận file ảnh (JPEG, PNG, GIF, WebP)');
+      return;
+    }
+    if (file.size > 50 * 1024 * 1024) {
+      this.toastr.error('Dung lượng file tối đa 50MB');
+      return;
+    }
+
+    // Hiện preview ngay lập tức bằng local URL
+    this.createImagePreview = URL.createObjectURL(file);
+
+    this.uploadingImage = true;
+    this.storageService.uploadFile(file, 'products').subscribe({
+      next: (res) => {
+        if (res.success && res.data) {
+          this.createForm.image_url = res.data.object_name;
+          // Thay preview local bằng presigned URL từ server
+          if (res.data.presigned_url) {
+            URL.revokeObjectURL(this.createImagePreview!);
+            this.createImagePreview = res.data.presigned_url;
+          }
+          this.toastr.success('Tải ảnh lên thành công!');
+        }
+        this.uploadingImage = false;
+      },
+      error: () => {
+        this.toastr.error('Tải ảnh lên thất bại');
+        // Giữ preview local để user thấy ảnh đã chọn
+        this.uploadingImage = false;
+      }
+    });
+  }
+
+  /**
+   * Upload ảnh lên MinIO khi chọn file trong form Edit.
+   */
+  onEditImageSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (!input.files || input.files.length === 0) return;
+    const file = input.files[0];
+
+    if (!file.type.startsWith('image/')) {
+      this.toastr.error('Chỉ chấp nhận file ảnh (JPEG, PNG, GIF, WebP)');
+      return;
+    }
+    if (file.size > 50 * 1024 * 1024) {
+      this.toastr.error('Dung lượng file tối đa 50MB');
+      return;
+    }
+
+    // Hiện preview ngay lập tức bằng local URL
+    this.editImagePreview = URL.createObjectURL(file);
+
+    this.uploadingImage = true;
+    this.storageService.uploadFile(file, 'products').subscribe({
+      next: (res) => {
+        if (res.success && res.data) {
+          this.editForm.image_url = res.data.object_name;
+          // Thay preview local bằng presigned URL từ server
+          if (res.data.presigned_url) {
+            URL.revokeObjectURL(this.editImagePreview!);
+            this.editImagePreview = res.data.presigned_url;
+          }
+          this.toastr.success('Tải ảnh lên thành công!');
+        }
+        this.uploadingImage = false;
+      },
+      error: () => {
+        this.toastr.error('Tải ảnh lên thất bại');
+        // Giữ preview local để user thấy ảnh đã chọn
+        this.uploadingImage = false;
+      }
+    });
+  }
+
+  /** Xoá ảnh trong form Create */
+  removeCreateImage(): void {
+    if (this.createImagePreview?.startsWith('blob:')) {
+      URL.revokeObjectURL(this.createImagePreview);
+    }
+    this.createForm.image_url = undefined;
+    this.createImagePreview = null;
+  }
+
+  /** Xoá ảnh trong form Edit */
+  removeEditImage(): void {
+    if (this.editImagePreview?.startsWith('blob:')) {
+      URL.revokeObjectURL(this.editImagePreview);
+    }
+    this.editForm.image_url = undefined;
+    this.editImagePreview = null;
   }
 }
 

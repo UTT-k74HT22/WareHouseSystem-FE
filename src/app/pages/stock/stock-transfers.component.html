@@ -102,17 +102,26 @@
     <div class="modal-header"><h3>Tạo phiếu chuyển kho</h3><button class="modal-close" (click)="closeAllModals()">✕</button></div>
     <div class="modal-body">
       <div class="form-group">
-        <label>Sản phẩm (ID) *</label>
-        <input class="form-control" type="text" [(ngModel)]="createForm.product_id" placeholder="ID sản phẩm" required />
+        <label>Sản phẩm *</label>
+        <select class="form-control" [(ngModel)]="createForm.product_id" required>
+          <option value="">-- Chọn sản phẩm --</option>
+          <option *ngFor="let p of products" [value]="p.id">{{ p.sku }} - {{ p.name }}</option>
+        </select>
       </div>
       <div class="form-row">
         <div class="form-group">
-          <label>Từ vị trí (ID) *</label>
-          <input class="form-control" type="text" [(ngModel)]="createForm.from_location_id" placeholder="ID vị trí nguồn" required />
+          <label>Từ vị trí *</label>
+          <select class="form-control" [(ngModel)]="createForm.from_location_id" required>
+            <option value="">-- Chọn vị trí nguồn --</option>
+            <option *ngFor="let l of locations" [value]="l.id">{{ l.code }} - {{ l.name }}</option>
+          </select>
         </div>
         <div class="form-group">
-          <label>Đến vị trí (ID) *</label>
-          <input class="form-control" type="text" [(ngModel)]="createForm.to_location_id" placeholder="ID vị trí đích" required />
+          <label>Đến vị trí *</label>
+          <select class="form-control" [(ngModel)]="createForm.to_location_id" required>
+            <option value="">-- Chọn vị trí đích --</option>
+            <option *ngFor="let l of locations" [value]="l.id">{{ l.code }} - {{ l.name }}</option>
+          </select>
         </div>
       </div>
       <div class="form-row">
