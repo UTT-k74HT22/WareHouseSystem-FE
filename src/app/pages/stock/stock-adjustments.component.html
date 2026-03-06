@@ -4,11 +4,11 @@
       <div class="hero-accent"></div>
       <div class="hero-text">
         <h1 class="hero-title"><i class="fa-solid fa-sliders" aria-hidden="true"></i> Điều chỉnh tồn kho</h1>
-        <p class="hero-subtitle">Tạo phiếu điều chỉnh tồn kho (tăng/giảm/hỏng/thất thoát)</p>
+        <p class="hero-subtitle">Đồng bộ theo backend: danh sách, chi tiết, tạo phiếu, phê duyệt và từ chối.</p>
       </div>
     </div>
     <div class="hero-actions">
-      <button class="btn btn-primary" (click)="openCreateModal()">+ Tạo điều chỉnh</button>
+      <button class="btn btn-primary" (click)="openCreateModal()">+ Tạo điều chỉnh kho</button>
       <div class="view-toggle">
         <button class="btn-view-toggle" [class.active]="viewMode === 'grid'" (click)="viewMode = 'grid'" title="Chế độ lưới">
           <i class="fa-solid fa-grip" aria-hidden="true"></i>
@@ -23,8 +23,63 @@
   <div class="stats-grid">
     <div class="stat-item stat-total">
       <div class="stat-bar"></div>
-      <div class="stat-body"><div class="stat-label">Tổng phiếu</div><div class="stat-value">{{ totalElements }}</div></div>
+      <div class="stat-body">
+        <div class="stat-label">Tổng phiếu</div>
+        <div class="stat-value">{{ totalElements }}</div>
+      </div>
     </div>
+    <div class="stat-item stat-maintenance">
+      <div class="stat-bar"></div>
+      <div class="stat-body">
+        <div class="stat-label">Chờ duyệt hiển thị</div>
+        <div class="stat-value">{{ pendingCount }}</div>
+      </div>
+    </div>
+    <div class="stat-item stat-active">
+      <div class="stat-bar"></div>
+      <div class="stat-body">
+        <div class="stat-label">Đã duyệt hiển thị</div>
+        <div class="stat-value">{{ approvedCount }}</div>
+      </div>
+    </div>
+    <div class="stat-item stat-inactive">
+      <div class="stat-bar"></div>
+      <div class="stat-body">
+        <div class="stat-label">Đã từ chối hiển thị</div>
+        <div class="stat-value">{{ rejectedCount }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="filter-section">
+    <input
+      class="search-input search-input--compact"
+      type="text"
+      [(ngModel)]="filters.adjustment_number"
+      placeholder="Tìm theo mã phiếu..."
+      (keyup.enter)="onSearch()"
+    />
+    <select class="filter-select" [(ngModel)]="filters.status">
+      <option value="">Tất cả trạng thái</option>
+      <option [value]="StockAdjustmentsStatus.PENDING_APPROVAL">Chờ duyệt</option>
+      <option [value]="StockAdjustmentsStatus.APPROVED">Đã duyệt</option>
+      <option [value]="StockAdjustmentsStatus.REJECTED">Đã từ chối</option>
+    </select>
+    <select class="filter-select" [(ngModel)]="filters.warehouse_id">
+      <option value="">Tất cả kho</option>
+      <option *ngFor="let warehouse of warehouses" [value]="warehouse.id">{{ warehouse.code }} - {{ warehouse.name }}</option>
+    </select>
+    <input
+      class="search-input search-input--compact"
+      type="text"
+      [(ngModel)]="filters.inventory_id"
+      placeholder="Inventory ID"
+      (keyup.enter)="onSearch()"
+    />
+    <input class="search-input search-input--datetime" type="datetime-local" [(ngModel)]="filters.created_from" />
+    <input class="search-input search-input--datetime" type="datetime-local" [(ngModel)]="filters.created_to" />
+    <button class="btn btn-primary" (click)="onSearch()">Lọc</button>
+    <button class="btn btn-ghost" (click)="onResetFilters()">Xoá lọc</button>
   </div>
 
   <div class="loading-state" *ngIf="loading"><span>Đang tải...</span></div>
@@ -35,51 +90,101 @@
         <tr>
           <th>#</th>
           <th>Mã phiếu</th>
-          <th>Loại</th>
           <th>Sản phẩm</th>
           <th>Vị trí</th>
-          <th>SL trước</th>
-          <th>Điều chỉnh</th>
-          <th>SL sau</th>
           <th>Lý do</th>
+          <th>Trạng thái</th>
+          <th>SL trước</th>
+          <th>SL sau</th>
+          <th>Biến động</th>
           <th>Ngày tạo</th>
+          <th>Thao tác</th>
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let a of adjustments; let i = index">
+        <tr *ngFor="let adjustment of adjustments; let i = index">
           <td>{{ currentPage * pageSize + i + 1 }}</td>
-          <td><code>{{ a.adjustment_number }}</code></td>
           <td>
-            <span class="badge" [ngClass]="{
-              'badge-inbound': a.type === StockAdjustmentType.INCREASE || a.type === StockAdjustmentType.FOUND,
-              'badge-outbound': a.type === StockAdjustmentType.DECREASE || a.type === StockAdjustmentType.LOSS || a.type === StockAdjustmentType.DAMAGE
-            }">{{ getTypeLabel(a.type) }}</span>
+            <div class="cell-main"><code>{{ adjustment.adjustment_number }}</code></div>
+            <div class="cell-sub">{{ adjustment.inventory_id }}</div>
           </td>
-          <td>{{ a.product_name }}</td>
-          <td>{{ a.location_code }}</td>
-          <td>{{ a.quantity_before }}</td>
-          <td [ngClass]="a.quantity_adjusted >= 0 ? 'text-success' : 'text-danger'">
-            {{ a.quantity_adjusted >= 0 ? '+' : '' }}{{ a.quantity_adjusted }}
+          <td>
+            <div class="cell-main">{{ getProductDisplay(adjustment) }}</div>
+            <div class="cell-sub">{{ getBatchDisplay(adjustment) }}</div>
           </td>
-          <td><strong>{{ a.quantity_after }}</strong></td>
-          <td>{{ a.reason }}</td>
-          <td><small>{{ a.created_at | date:'dd/MM/yyyy' }}</small></td>
+          <td>
+            <div class="cell-main">{{ getLocationDisplay(adjustment) }}</div>
+            <div class="cell-sub">{{ getWarehouseDisplay(adjustment) }}</div>
+          </td>
+          <td>{{ getReasonLabel(adjustment.reason) }}</td>
+          <td><span class="badge" [ngClass]="getStatusClass(adjustment.status)">{{ getStatusLabel(adjustment.status) }}</span></td>
+          <td>{{ adjustment.quantity_before }}</td>
+          <td><strong>{{ adjustment.quantity_after }}</strong></td>
+          <td [ngClass]="getAdjustmentQuantityClass(adjustment.adjustment_quantity)">
+            {{ getSignedQuantity(adjustment.adjustment_quantity) }}
+          </td>
+          <td><small>{{ adjustment.created_at | date:'dd/MM/yyyy HH:mm' }}</small></td>
+          <td class="actions">
+            <button class="btn-icon" title="Chi tiết" (click)="openDetailModal(adjustment)">
+              <i class="fa-regular fa-eye" aria-hidden="true"></i>
+            </button>
+            <button
+              *ngIf="isAdminReviewer && adjustment.status === StockAdjustmentsStatus.PENDING_APPROVAL"
+              class="btn-icon btn-approve"
+              title="Phê duyệt"
+              (click)="openApproveModal(adjustment)"
+            >
+              <i class="fa-solid fa-check" aria-hidden="true"></i>
+            </button>
+            <button
+              *ngIf="isAdminReviewer && adjustment.status === StockAdjustmentsStatus.PENDING_APPROVAL"
+              class="btn-icon btn-delete"
+              title="Từ chối"
+              (click)="openRejectModal(adjustment)"
+            >
+              <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+            </button>
+          </td>
         </tr>
         <tr *ngIf="adjustments.length === 0">
-          <td colspan="10" class="empty-state">Chưa có phiếu điều chỉnh nào</td>
+          <td colspan="11" class="empty-state">Không có phiếu điều chỉnh phù hợp.</td>
         </tr>
       </tbody>
     </table>
   </div>
 
   <div class="entity-grid" *ngIf="!loading && viewMode === 'grid'">
-    <div class="entity-card" *ngFor="let a of adjustments">
-      <h3 class="entity-card__title">{{ a.adjustment_number }}</h3>
-      <p class="entity-card__sub">{{ a.product_name }} - {{ a.location_code }}</p>
+    <div class="entity-card" *ngFor="let adjustment of adjustments">
+      <div class="entity-card__header">
+        <h3 class="entity-card__title">{{ adjustment.adjustment_number }}</h3>
+        <span class="badge" [ngClass]="getStatusClass(adjustment.status)">{{ getStatusLabel(adjustment.status) }}</span>
+      </div>
+      <p class="entity-card__sub">{{ getProductDisplay(adjustment) }}</p>
       <div class="entity-card__meta">
-        <div class="entity-card__row">{{ getTypeLabel(a.type) }}</div>
-        <div class="entity-card__row">SL trước/sau: {{ a.quantity_before }} / {{ a.quantity_after }}</div>
-        <div class="entity-card__row">Điều chỉnh: {{ a.quantity_adjusted >= 0 ? '+' : '' }}{{ a.quantity_adjusted }}</div>
+        <div class="entity-card__row"><strong>Vị trí:</strong> {{ getLocationDisplay(adjustment) }}</div>
+        <div class="entity-card__row"><strong>Kho:</strong> {{ getWarehouseDisplay(adjustment) }}</div>
+        <div class="entity-card__row"><strong>Lý do:</strong> {{ getReasonLabel(adjustment.reason) }}</div>
+        <div class="entity-card__row"><strong>Trước/Sau:</strong> {{ adjustment.quantity_before }} / {{ adjustment.quantity_after }}</div>
+        <div class="entity-card__row" [ngClass]="getAdjustmentQuantityClass(adjustment.adjustment_quantity)">
+          <strong>Biến động:</strong> {{ getSignedQuantity(adjustment.adjustment_quantity) }}
+        </div>
+      </div>
+      <div class="entity-card__actions">
+        <button class="btn btn-ghost btn-card" (click)="openDetailModal(adjustment)">Chi tiết</button>
+        <button
+          *ngIf="isAdminReviewer && adjustment.status === StockAdjustmentsStatus.PENDING_APPROVAL"
+          class="btn btn-primary btn-card"
+          (click)="openApproveModal(adjustment)"
+        >
+          Phê duyệt
+        </button>
+        <button
+          *ngIf="isAdminReviewer && adjustment.status === StockAdjustmentsStatus.PENDING_APPROVAL"
+          class="btn btn-danger btn-card"
+          (click)="openRejectModal(adjustment)"
+        >
+          Từ chối
+        </button>
       </div>
     </div>
   </div>
@@ -91,51 +196,260 @@
   </div>
 </div>
 
-<!-- MODAL: TẠO ĐIỀU CHỈNH -->
 <div class="modal-overlay" *ngIf="showCreateModal" (click)="closeAllModals()">
-  <div class="modal-box" (click)="$event.stopPropagation()">
-    <div class="modal-header"><h3>Tạo phiếu điều chỉnh</h3><button class="modal-close" (click)="closeAllModals()">✕</button></div>
+  <div class="modal-box modal-lg" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Tạo phiếu điều chỉnh</h3>
+      <button class="modal-close" (click)="closeAllModals()">✕</button>
+    </div>
     <div class="modal-body">
       <div class="form-row">
         <div class="form-group">
-          <label>Loại điều chỉnh *</label>
-          <select class="form-control" [(ngModel)]="createForm.type" required>
-            <option [value]="StockAdjustmentType.INCREASE">Tăng tồn</option>
-            <option [value]="StockAdjustmentType.DECREASE">Giảm tồn</option>
-            <option [value]="StockAdjustmentType.DAMAGE">Hàng hỏng</option>
-            <option [value]="StockAdjustmentType.LOSS">Thất thoát</option>
-            <option [value]="StockAdjustmentType.FOUND">Tìm thấy</option>
+          <label>Kho</label>
+          <select class="form-control" [(ngModel)]="createWarehouseId" (ngModelChange)="onCreateWarehouseChange()">
+            <option value="">Tất cả kho</option>
+            <option *ngFor="let warehouse of warehouses" [value]="warehouse.id">{{ warehouse.code }} - {{ warehouse.name }}</option>
           </select>
         </div>
         <div class="form-group">
-          <label>Sản phẩm (ID) *</label>
-          <input class="form-control" type="text" [(ngModel)]="createForm.product_id" placeholder="ID sản phẩm" required />
+          <label>Tìm tồn kho *</label>
+          <input
+            class="form-control"
+            type="text"
+            [ngModel]="inventorySearchKeyword"
+            (ngModelChange)="onInventorySearchKeywordChange($event)"
+            placeholder="Tìm theo SKU, tên sản phẩm, vị trí, lô..."
+          />
+          <small *ngIf="inventoryLoading">Đang tải danh sách tồn kho...</small>
         </div>
       </div>
+
+      <div class="form-group">
+        <label>Tồn kho cần điều chỉnh *</label>
+        <select class="form-control" [(ngModel)]="createForm.inventory_id" (ngModelChange)="onInventorySelected($event)">
+          <option value="">-- Chọn tồn kho --</option>
+          <option *ngFor="let inventory of inventoryOptions" [value]="inventory.id">{{ getInventoryOptionLabel(inventory) }}</option>
+        </select>
+        <small *ngIf="!inventoryLoading && inventoryOptions.length === 0">Không tìm thấy tồn kho phù hợp.</small>
+      </div>
+
+      <div class="inventory-preview" *ngIf="selectedInventory">
+        <div class="detail-grid detail-grid--dense">
+          <div class="detail-item">
+            <span class="detail-label">Sản phẩm</span>
+            <span>{{ selectedInventory.product_sku }} - {{ selectedInventory.product_name }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Kho</span>
+            <span>{{ selectedInventory.warehouse_name }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Vị trí</span>
+            <span>{{ selectedInventory.location_code }} - {{ selectedInventory.location_name }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Lô</span>
+            <span>{{ selectedInventory.batch_number || 'Không có lô' }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Tồn hiện tại</span>
+            <span>{{ selectedInventory.quantity_on_hand }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Đã giữ chỗ</span>
+            <span>{{ selectedInventory.quantity_reserved }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Có thể dùng</span>
+            <span>{{ selectedInventory.quantity_available }}</span>
+          </div>
+        </div>
+      </div>
+
       <div class="form-row">
         <div class="form-group">
-          <label>Vị trí (ID) *</label>
-          <input class="form-control" type="text" [(ngModel)]="createForm.location_id" placeholder="ID vị trí" required />
+          <label>Số lượng sau điều chỉnh *</label>
+          <input class="form-control" type="number" min="0" step="0.01" [(ngModel)]="createForm.quantity_after" />
+          <small *ngIf="quantityDeltaPreview !== null" [ngClass]="getAdjustmentQuantityClass(quantityDeltaPreview)">
+            Biến động dự kiến: {{ getSignedQuantity(quantityDeltaPreview) }}
+          </small>
         </div>
         <div class="form-group">
-          <label>Số lượng điều chỉnh *</label>
-          <input class="form-control" type="number" [(ngModel)]="createForm.quantity_adjusted" min="1" required />
+          <label>Lý do *</label>
+          <select class="form-control" [(ngModel)]="createForm.reason">
+            <option [value]="ReasonType.DAMAGE">Hư hỏng</option>
+            <option [value]="ReasonType.THEFT">Thất thoát / mất cắp</option>
+            <option [value]="ReasonType.COUNT_ERROR">Sai lệch kiểm đếm</option>
+            <option [value]="ReasonType.EXPIRED">Hết hạn</option>
+            <option [value]="ReasonType.QUALITY_ISSUE">Vấn đề chất lượng</option>
+            <option [value]="ReasonType.SYSTEM_ERROR">Lỗi hệ thống</option>
+            <option [value]="ReasonType.OTHER">Khác</option>
+          </select>
         </div>
       </div>
-      <div class="form-group">
-        <label>Lý do *</label>
-        <textarea class="form-control" [(ngModel)]="createForm.reason" rows="3" placeholder="Nhập lý do điều chỉnh..." required></textarea>
-      </div>
+
       <div class="form-group">
         <label>Ghi chú</label>
-        <textarea class="form-control" [(ngModel)]="createForm.notes" rows="2" placeholder="Ghi chú thêm (tuỳ chọn)"></textarea>
+        <textarea class="form-control" rows="3" [(ngModel)]="createForm.notes" placeholder="Mô tả chi tiết bối cảnh điều chỉnh..."></textarea>
+      </div>
+
+      <div class="info-box">
+        {{ createFlowMessage }}
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-ghost" (click)="closeAllModals()">Huỷ</button>
-      <button class="btn btn-primary" (click)="onCreateSubmit()">Tạo phiếu</button>
+      <button class="btn btn-ghost" (click)="closeAllModals()" [disabled]="actionLoading">Huỷ</button>
+      <button class="btn btn-primary" (click)="onCreateSubmit()" [disabled]="actionLoading">
+        {{ actionLoading ? 'Đang xử lý...' : 'Tạo phiếu' }}
+      </button>
     </div>
   </div>
 </div>
 
+<div class="modal-overlay" *ngIf="showDetailModal && selectedAdjustment" (click)="closeAllModals()">
+  <div class="modal-box modal-lg" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Chi tiết phiếu điều chỉnh</h3>
+      <button class="modal-close" (click)="closeAllModals()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="detail-grid">
+        <div class="detail-item">
+          <span class="detail-label">Mã phiếu</span>
+          <span><code>{{ selectedAdjustment.adjustment_number }}</code></span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Trạng thái</span>
+          <span class="badge" [ngClass]="getStatusClass(selectedAdjustment.status)">{{ getStatusLabel(selectedAdjustment.status) }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Lý do</span>
+          <span>{{ getReasonLabel(selectedAdjustment.reason) }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Inventory ID</span>
+          <span>{{ selectedAdjustment.inventory_id }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Sản phẩm</span>
+          <span>{{ getProductDisplay(selectedAdjustment) }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Kho</span>
+          <span>{{ getWarehouseDisplay(selectedAdjustment) }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Vị trí</span>
+          <span>{{ getLocationDisplay(selectedAdjustment) }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Lô</span>
+          <span>{{ getBatchDisplay(selectedAdjustment) }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Số lượng trước</span>
+          <span>{{ selectedAdjustment.quantity_before }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Số lượng sau</span>
+          <span>{{ selectedAdjustment.quantity_after }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Biến động</span>
+          <span [ngClass]="getAdjustmentQuantityClass(selectedAdjustment.adjustment_quantity)">
+            {{ getSignedQuantity(selectedAdjustment.adjustment_quantity) }}
+          </span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Ngày tạo</span>
+          <span>{{ selectedAdjustment.created_at | date:'dd/MM/yyyy HH:mm' }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Phê duyệt lúc</span>
+          <span>{{ selectedAdjustment.approved_at ? (selectedAdjustment.approved_at | date:'dd/MM/yyyy HH:mm') : 'Chưa phê duyệt' }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Cần phê duyệt?</span>
+          <span>{{ selectedAdjustment.requires_approval ? 'Có' : 'Không' }}</span>
+        </div>
+      </div>
 
+      <div class="detail-block" *ngIf="selectedAdjustment.notes">
+        <div class="detail-label">Ghi chú</div>
+        <p class="detail-text">{{ selectedAdjustment.notes }}</p>
+      </div>
+
+      <div class="detail-block detail-block--danger" *ngIf="selectedAdjustment.rejection_reason">
+        <div class="detail-label">Lý do từ chối</div>
+        <p class="detail-text">{{ selectedAdjustment.rejection_reason }}</p>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" (click)="closeAllModals()">Đóng</button>
+      <button
+        *ngIf="isAdminReviewer && selectedAdjustment.status === StockAdjustmentsStatus.PENDING_APPROVAL"
+        class="btn btn-primary"
+        (click)="openApproveModal(selectedAdjustment)"
+      >
+        Phê duyệt
+      </button>
+      <button
+        *ngIf="isAdminReviewer && selectedAdjustment.status === StockAdjustmentsStatus.PENDING_APPROVAL"
+        class="btn btn-danger"
+        (click)="openRejectModal(selectedAdjustment)"
+      >
+        Từ chối
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" *ngIf="showApproveModal && selectedAdjustment" (click)="closeAllModals()">
+  <div class="modal-box modal-sm" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Phê duyệt phiếu điều chỉnh</h3>
+      <button class="modal-close" (click)="closeAllModals()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p>
+        Bạn sắp phê duyệt <strong>{{ selectedAdjustment.adjustment_number }}</strong>
+        với biến động <strong>{{ getSignedQuantity(selectedAdjustment.adjustment_quantity) }}</strong>.
+      </p>
+      <div class="form-group">
+        <label>Ghi chú phê duyệt</label>
+        <textarea class="form-control" rows="3" [(ngModel)]="approveForm.approval_note" placeholder="Không bắt buộc"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" (click)="closeAllModals()" [disabled]="actionLoading">Huỷ</button>
+      <button class="btn btn-primary" (click)="onApproveSubmit()" [disabled]="actionLoading">
+        {{ actionLoading ? 'Đang xử lý...' : 'Xác nhận phê duyệt' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" *ngIf="showRejectModal && selectedAdjustment" (click)="closeAllModals()">
+  <div class="modal-box modal-sm" (click)="$event.stopPropagation()">
+    <div class="modal-header modal-header-danger">
+      <h3>Từ chối phiếu điều chỉnh</h3>
+      <button class="modal-close" (click)="closeAllModals()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p>
+        Bạn đang từ chối <strong>{{ selectedAdjustment.adjustment_number }}</strong>.
+        Backend bắt buộc phải có lý do từ chối.
+      </p>
+      <div class="form-group">
+        <label>Lý do từ chối *</label>
+        <textarea class="form-control" rows="4" [(ngModel)]="rejectForm.rejection_reason" placeholder="Nhập lý do từ chối..." required></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" (click)="closeAllModals()" [disabled]="actionLoading">Huỷ</button>
+      <button class="btn btn-danger" (click)="onRejectSubmit()" [disabled]="actionLoading">
+        {{ actionLoading ? 'Đang xử lý...' : 'Xác nhận từ chối' }}
+      </button>
+    </div>
+  </div>
+</div>

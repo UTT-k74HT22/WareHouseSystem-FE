@@ -1,5 +1,5 @@
 export enum StockAdjustmentsStatus {
-  PENDING = 'PENDING',
+  PENDING_APPROVAL = 'PENDING_APPROVAL',
   APPROVED = 'APPROVED',
   REJECTED = 'REJECTED'
 }
