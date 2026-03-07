@@ -191,7 +191,7 @@
           <select class="form-control" [(ngModel)]="selectedSourceInventoryId" (ngModelChange)="onSourceInventoryChange()" [disabled]="!createForm.warehouse_id || loadingCreateOptions || submitting">
             <option value="">Chọn tồn nguồn</option>
             <option *ngFor="let inventory of sourceInventories" [value]="inventory.id">
-              {{ inventory.location_code }} | {{ inventory.product_sku }} | Khả dụng: {{ inventory.quantity_available }} {{ inventory.uom_code }}{{ inventory.batch_number ? ' | Lô: ' + inventory.batch_number : '' }}
+              {{ inventory.location_code }} | {{ inventory.product_sku }} | Khả dụng: {{ inventory.available_quantity }} {{ inventory.uom_code }}{{ inventory.batch_number ? ' | Lô: ' + inventory.batch_number : '' }}
             </option>
           </select>
           <div class="form-hint" *ngIf="loadingCreateOptions">Đang tải tồn nguồn và danh sách vị trí của kho...</div>
@@ -208,13 +208,13 @@
           <div>
             <span class="summary-label">Nguồn</span>
             <strong>{{ selectedSourceInventory.location_code }}</strong>
-            <div class="cell-subtext">{{ selectedSourceInventory.location_name }}</div>
+            <div class="cell-subtext">{{ selectedSourceInventory.location_name ?? '—' }}</div>
           </div>
           <div>
             <span class="summary-label">Tồn khả dụng</span>
-            <strong>{{ selectedSourceInventory.quantity_available }} {{ selectedSourceInventory.uom_code }}</strong>
+            <strong>{{ selectedSourceInventory.available_quantity }} {{ selectedSourceInventory.uom_code }}</strong>
             <div class="cell-subtext">
-              On hand: {{ selectedSourceInventory.quantity_on_hand }} | Reserved: {{ selectedSourceInventory.quantity_reserved }}
+              On hand: {{ selectedSourceInventory.on_hand_quantity }} | Reserved: {{ selectedSourceInventory.reserved_quantity }}
             </div>
           </div>
           <div>

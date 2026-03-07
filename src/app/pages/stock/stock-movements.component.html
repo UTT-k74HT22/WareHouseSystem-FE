@@ -17,7 +17,7 @@
   </div>
 
   <div class="filter-section">
-    <input class="search-input" type="text" [(ngModel)]="searchKeyword" placeholder="Mã giao dịch, sản phẩm..." (keyup.enter)="onSearch()" />
+    <input class="search-input" type="text" [(ngModel)]="searchKeyword" placeholder="Mã tham chiếu, sản phẩm..." (keyup.enter)="onSearch()" />
     <select class="filter-select" [(ngModel)]="selectedType">
       <option value="">-- Tất cả loại --</option>
       <option *ngFor="let t of StockMovementType | keyvalue" [value]="t.value">{{ getTypeLabel(t.value) }}</option>
@@ -41,13 +41,13 @@
       <thead>
         <tr>
           <th>#</th>
-          <th>Mã giao dịch</th>
+          <th>Mã hiển thị</th>
           <th>Loại</th>
           <th>Sản phẩm</th>
-          <th>Từ vị trí</th>
-          <th>Đến vị trí</th>
+          <th>Kho</th>
+          <th>Vị trí</th>
           <th>Số lô</th>
-          <th>Số lượng</th>
+          <th>Biến động</th>
           <th>Tham chiếu</th>
           <th>Thời gian</th>
         </tr>
@@ -55,15 +55,15 @@
       <tbody>
         <tr *ngFor="let m of movements; let i = index">
           <td>{{ currentPage * pageSize + i + 1 }}</td>
-          <td><code>{{ m.movement_number }}</code></td>
-          <td><span class="badge" [ngClass]="getTypeClass(m.type)">{{ getTypeLabel(m.type) }}</span></td>
-          <td>{{ m.product_name }} <small>({{ m.product_sku }})</small></td>
-          <td>{{ m.from_location_code ?? '—' }}</td>
-          <td>{{ m.to_location_code ?? '—' }}</td>
+          <td><code>{{ getMovementDisplayCode(m) }}</code></td>
+          <td><span class="badge" [ngClass]="getTypeClass(m.movement_type)">{{ getTypeLabel(m.movement_type) }}</span></td>
+          <td>{{ m.product_name ?? m.product_id }} <small *ngIf="m.product_sku">({{ m.product_sku }})</small></td>
+          <td>{{ m.warehouse_name ?? m.warehouse_id }}</td>
+          <td>{{ m.location_code ?? m.location_id }}</td>
           <td>{{ m.batch_number ?? '—' }}</td>
-          <td><strong>{{ m.quantity }}</strong> {{ m.uom_code }}</td>
-          <td><small>{{ m.reference_type }} #{{ m.reference_id }}</small></td>
-          <td><small>{{ m.created_at | date:'dd/MM/yyyy HH:mm' }}</small></td>
+          <td><strong>{{ m.quantity_change }}</strong> {{ m.uom_code ?? '' }}</td>
+          <td><small>{{ m.reference_type }} #{{ m.reference_number || m.reference_id }}</small></td>
+          <td><small>{{ m.movement_date | date:'dd/MM/yyyy HH:mm' }}</small></td>
         </tr>
         <tr *ngIf="movements.length === 0">
           <td colspan="10" class="empty-state">Chưa có giao dịch nào</td>
@@ -74,12 +74,13 @@
 
   <div class="entity-grid" *ngIf="!loading && viewMode === 'grid'">
     <div class="entity-card" *ngFor="let m of movements">
-      <h3 class="entity-card__title">{{ m.movement_number }}</h3>
-      <p class="entity-card__sub">{{ m.product_name }} ({{ m.product_sku }})</p>
+      <h3 class="entity-card__title">{{ getMovementDisplayCode(m) }}</h3>
+      <p class="entity-card__sub">{{ m.product_name ?? m.product_id }}<span *ngIf="m.product_sku"> ({{ m.product_sku }})</span></p>
       <div class="entity-card__meta">
-        <div class="entity-card__row"><span class="badge" [ngClass]="getTypeClass(m.type)">{{ getTypeLabel(m.type) }}</span></div>
-        <div class="entity-card__row">Số lượng: {{ m.quantity }} {{ m.uom_code }}</div>
-        <div class="entity-card__row">Thời gian: {{ m.created_at | date:'dd/MM/yyyy HH:mm' }}</div>
+        <div class="entity-card__row"><span class="badge" [ngClass]="getTypeClass(m.movement_type)">{{ getTypeLabel(m.movement_type) }}</span></div>
+        <div class="entity-card__row">Vị trí: {{ m.location_code ?? m.location_id }}</div>
+        <div class="entity-card__row">Biến động: {{ m.quantity_change }} {{ m.uom_code ?? '' }}</div>
+        <div class="entity-card__row">Thời gian: {{ m.movement_date | date:'dd/MM/yyyy HH:mm' }}</div>
       </div>
     </div>
   </div>

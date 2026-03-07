@@ -24,17 +24,6 @@ import { StockAdjustmentsStatus } from '../../helper/enums/StockAdjustmentsStatu
 import { StockMovementType } from '../../helper/enums/StockMovementType';
 import { StockTransferReason } from '../../helper/enums/StockTransferReason';
 import { StockTransferStatus } from '../../helper/enums/StockTransferStatus';
-import {
-  MOCK_BATCHES,
-  MOCK_INVENTORIES,
-  MOCK_LOCATIONS,
-  MOCK_PRODUCTS,
-  MOCK_STOCK_ADJUSTMENTS,
-  MOCK_STOCK_MOVEMENTS,
-  MOCK_STOCK_TRANSFERS,
-  MOCK_WAREHOUSES,
-  mockPage,
-} from '../../helper/mock/mock-data';
 import { AuthService } from '../../service/AuthService/auth-service.service';
 import { BatchService } from '../../service/BatchService/batch.service';
 import { InventoryService } from '../../service/InventoryService/inventory.service';
@@ -125,6 +114,10 @@ export class StockMovementsComponent implements OnInit {
 
   movements: StockMovementResponse[] = [];
   private allMovements: StockMovementResponse[] = [];
+  private products: ProductResponse[] = [];
+  private warehouses: WareHouseResponse[] = [];
+  private locations: LocationResponse[] = [];
+  private batches: BatchResponse[] = [];
 
   loading = false;
   viewMode: ViewMode = 'list';
@@ -138,11 +131,44 @@ export class StockMovementsComponent implements OnInit {
 
   constructor(
     private readonly stockMovementService: StockMovementService,
+    private readonly productService: ProductService,
+    private readonly warehouseService: WarehouseService,
+    private readonly locationService: LocationService,
+    private readonly batchService: BatchService,
     private readonly toastr: ToastrService
   ) {}
 
   ngOnInit(): void {
+    this.loadLookupData();
     this.loadMovements();
+  }
+
+  private loadLookupData(): void {
+    forkJoin({
+      products: this.productService.getAll(0, 200).pipe(
+        map((response) => response.data.content),
+        catchError(() => of([]))
+      ),
+      warehouses: this.warehouseService.getList().pipe(
+        map((response) => response.data),
+        catchError(() => of([]))
+      ),
+      locations: this.locationService.getAll(0, 200).pipe(
+        map((response) => response.data.content),
+        catchError(() => of([]))
+      ),
+      batches: this.batchService.getAll(0, 200).pipe(
+        map((response) => response.data.content),
+        catchError(() => of([]))
+      ),
+    }).subscribe((result) => {
+      this.products = result.products;
+      this.warehouses = result.warehouses;
+      this.locations = result.locations;
+      this.batches = result.batches;
+      this.allMovements = this.allMovements.map((movement) => this.enrichMovement(movement));
+      this.applyFilters();
+    });
   }
 
   loadMovements(): void {
@@ -153,19 +179,36 @@ export class StockMovementsComponent implements OnInit {
       .pipe(
         map((response) => response.data.content),
         catchError((error) => {
-          this.toastr.warning(
-            errorMessage(error, 'Khong tai duoc lich su kho tu backend. Dang dung du lieu mock.'),
+          this.toastr.error(
+            errorMessage(error, 'Không tải được lịch sử kho từ backend.'),
             'Stock Movement'
           );
-          return of(MOCK_STOCK_MOVEMENTS);
+          return of([]);
         })
       )
       .subscribe((movements) => {
-        this.allMovements = movements;
+        this.allMovements = movements.map((movement) => this.enrichMovement(movement));
         this.currentPage = 0;
         this.applyFilters();
         this.loading = false;
       });
+  }
+
+  private enrichMovement(movement: StockMovementResponse): StockMovementResponse {
+    const product = this.products.find((item) => item.id === movement.product_id);
+    const warehouse = this.warehouses.find((item) => item.id === movement.warehouse_id);
+    const location = this.locations.find((item) => item.id === movement.location_id);
+    const batch = this.batches.find((item) => item.id === movement.batch_id);
+
+    return {
+      ...movement,
+      product_name: product?.name || movement.product_name,
+      product_sku: product?.sku || movement.product_sku,
+      warehouse_name: warehouse?.name || movement.warehouse_name,
+      location_code: location?.code || movement.location_code,
+      batch_number: batch?.batch_number || movement.batch_number,
+      uom_code: product?.uom_code || movement.uom_code,
+    };
   }
 
   applyFilters(): void {
@@ -176,7 +219,8 @@ export class StockMovementsComponent implements OnInit {
       filtered = filtered.filter((movement) =>
         matchesKeyword(
           [
-            movement.movement_number,
+            movement.reference_number,
+            movement.id,
             movement.product_name,
             movement.product_sku,
             movement.reference_id,
@@ -189,7 +233,7 @@ export class StockMovementsComponent implements OnInit {
     }
 
     if (this.selectedType) {
-      filtered = filtered.filter((movement) => movement.type === this.selectedType);
+      filtered = filtered.filter((movement) => movement.movement_type === this.selectedType);
     }
 
     this.totalElements = filtered.length;
@@ -201,6 +245,10 @@ export class StockMovementsComponent implements OnInit {
 
     const start = this.currentPage * this.pageSize;
     this.movements = filtered.slice(start, start + this.pageSize);
+  }
+
+  getMovementDisplayCode(movement: StockMovementResponse): string {
+    return movement.reference_number || movement.id;
   }
 
   onSearch(): void {
@@ -381,30 +429,30 @@ export class StockAdjustmentsComponent implements OnInit, OnDestroy {
     forkJoin({
       warehouses: this.warehouseService.getList().pipe(
         map((response) => response.data),
-        catchError(() => of(MOCK_WAREHOUSES))
+        catchError(() => of([]))
       ),
       products: this.productService.getAll(0, 100).pipe(
         map((response) => response.data.content),
-        catchError(() => of(MOCK_PRODUCTS))
+        catchError(() => of([]))
       ),
       locations: this.locationService.getAll(0, 100).pipe(
         map((response) => response.data.content),
-        catchError(() => of(MOCK_LOCATIONS))
+        catchError(() => of([]))
       ),
       batches: this.batchService.getAll(0, 100).pipe(
         map((response) => response.data.content),
-        catchError(() => of(MOCK_BATCHES))
+        catchError(() => of([]))
       ),
       inventories: this.inventoryService.getAll(0, 100).pipe(
         map((response) => response.data.content),
-        catchError(() => of(MOCK_INVENTORIES))
+        catchError(() => of([]))
       ),
     }).subscribe((result) => {
       this.warehouses = result.warehouses;
       this.products = result.products;
       this.locations = result.locations;
       this.batches = result.batches;
-      this.allInventories = result.inventories;
+      this.allInventories = result.inventories.map((inventory) => this.enrichInventory(inventory));
       this.applyInventoryFilter();
       this.adjustments = this.adjustments.map((adjustment) => this.enrichAdjustment(adjustment));
     });
@@ -435,33 +483,16 @@ export class StockAdjustmentsComponent implements OnInit, OnDestroy {
     return Object.keys(filters).length > 0 ? filters : undefined;
   }
 
-  private getMockAdjustmentsPage(page: number): PageResponse<StockAdjustmentResponse> {
-    let items = [...MOCK_STOCK_ADJUSTMENTS];
-
-    if (this.filters.status) {
-      items = items.filter((adjustment) => adjustment.status === this.filters.status);
-    }
-    if (this.filters.warehouse_id) {
-      items = items.filter((adjustment) => adjustment.warehouse_id === this.filters.warehouse_id);
-    }
-    if (this.filters.inventory_id) {
-      const keyword = normalizeKeyword(this.filters.inventory_id);
-      items = items.filter((adjustment) => adjustment.inventory_id.toLowerCase().includes(keyword));
-    }
-    if (this.filters.adjustment_number) {
-      const keyword = normalizeKeyword(this.filters.adjustment_number);
-      items = items.filter((adjustment) => adjustment.adjustment_number.toLowerCase().includes(keyword));
-    }
-    if (this.filters.created_from) {
-      const createdFrom = new Date(this.filters.created_from).getTime();
-      items = items.filter((adjustment) => new Date(adjustment.created_at).getTime() >= createdFrom);
-    }
-    if (this.filters.created_to) {
-      const createdTo = new Date(this.filters.created_to).getTime();
-      items = items.filter((adjustment) => new Date(adjustment.created_at).getTime() <= createdTo);
-    }
-
-    return mockPage(items, page, this.pageSize);
+  private emptyAdjustmentsPage(page: number): PageResponse<StockAdjustmentResponse> {
+    return {
+      content: [],
+      page,
+      size: this.pageSize,
+      total_elements: 0,
+      total_pages: 0,
+      is_first: true,
+      is_last: true,
+    };
   }
 
   loadAdjustments(page = this.currentPage): void {
@@ -472,11 +503,11 @@ export class StockAdjustmentsComponent implements OnInit, OnDestroy {
       .pipe(
         map((response) => response.data),
         catchError((error) => {
-          this.toastr.warning(
-            errorMessage(error, 'Khong tai duoc danh sach stock adjustment tu backend. Dang dung du lieu mock.'),
+          this.toastr.error(
+            errorMessage(error, 'Không tải được danh sách stock adjustment từ backend.'),
             'Stock Adjustment'
           );
-          return of(this.getMockAdjustmentsPage(page));
+          return of(this.emptyAdjustmentsPage(page));
         })
       )
       .subscribe((pageResponse) => {
@@ -514,6 +545,17 @@ export class StockAdjustmentsComponent implements OnInit, OnDestroy {
       location_code: inventory?.location_code || location?.code || '',
       batch_number: inventory?.batch_number || batch?.batch_number || null,
       uom_code: inventory?.uom_code || product?.uom_code || '',
+    };
+  }
+
+  private enrichInventory(inventory: InventoryResponse): InventoryResponse {
+    const location = this.locations.find((item) => item.id === inventory.location_id);
+    const product = this.products.find((item) => item.id === inventory.product_id);
+
+    return {
+      ...inventory,
+      location_name: location?.name || inventory.location_name,
+      uom_code: product?.uom_code || inventory.uom_code,
     };
   }
 
@@ -616,17 +658,15 @@ export class StockAdjustmentsComponent implements OnInit, OnDestroy {
       .getAll(0, 100, filters)
       .pipe(
         map((response) => response.data.content),
-        catchError(() => {
-          const fallback = this.createWarehouseId
-            ? MOCK_INVENTORIES.filter((inventory) => inventory.warehouse_id === this.createWarehouseId)
-            : MOCK_INVENTORIES;
-          return of(fallback);
+        catchError((error) => {
+          this.toastr.error(errorMessage(error, 'Không tải được inventory để tạo phiếu điều chỉnh.'));
+          return of([]);
         })
       )
       .subscribe((inventories) => {
         this.inventoryLoading = false;
-        this.inventoryPool = inventories;
-        this.mergeInventories(inventories);
+        this.inventoryPool = inventories.map((inventory) => this.enrichInventory(inventory));
+        this.mergeInventories(this.inventoryPool);
         this.applyInventoryFilter();
       });
   }
@@ -684,7 +724,7 @@ export class StockAdjustmentsComponent implements OnInit, OnDestroy {
       null;
 
     if (this.selectedInventory && this.createForm.quantity_after === null) {
-      this.createForm.quantity_after = this.selectedInventory.quantity_on_hand;
+      this.createForm.quantity_after = this.selectedInventory.on_hand_quantity;
     }
   }
 
@@ -693,7 +733,7 @@ export class StockAdjustmentsComponent implements OnInit, OnDestroy {
       return null;
     }
 
-    return Number(this.createForm.quantity_after) - Number(this.selectedInventory.quantity_on_hand);
+    return Number(this.createForm.quantity_after) - Number(this.selectedInventory.on_hand_quantity);
   }
 
   get requiresApprovalPreview(): boolean {
@@ -748,12 +788,12 @@ export class StockAdjustmentsComponent implements OnInit, OnDestroy {
       return;
     }
 
-    if (quantityAfter < this.selectedInventory.quantity_reserved) {
+    if (quantityAfter < this.selectedInventory.reserved_quantity) {
       this.toastr.error('Số lượng sau điều chỉnh không được nhỏ hơn số lượng đã giữ chỗ.');
       return;
     }
 
-    if (quantityAfter === this.selectedInventory.quantity_on_hand) {
+    if (quantityAfter === this.selectedInventory.on_hand_quantity) {
       this.toastr.error('Backend không chấp nhận điều chỉnh có biến động bằng 0.');
       return;
     }
@@ -865,7 +905,7 @@ export class StockAdjustmentsComponent implements OnInit, OnDestroy {
 
   getInventoryOptionLabel(inventory: InventoryResponse): string {
     const batchSegment = inventory.batch_number ? ` | Lo: ${inventory.batch_number}` : '';
-    return `${inventory.product_sku} | ${inventory.location_code} | On hand: ${inventory.quantity_on_hand} | Reserved: ${inventory.quantity_reserved}${batchSegment}`;
+    return `${inventory.product_sku} | ${inventory.location_code} | On hand: ${inventory.on_hand_quantity} | Reserved: ${inventory.reserved_quantity}${batchSegment}`;
   }
 
   getProductDisplay(adjustment: StockAdjustmentViewModel): string {
@@ -1031,19 +1071,19 @@ export class StockTransfersComponent implements OnInit {
     forkJoin({
       warehouses: this.warehouseService.getList().pipe(
         map((response) => response.data),
-        catchError(() => of(MOCK_WAREHOUSES))
+        catchError(() => of([]))
       ),
       products: this.productService.getAll(0, 100).pipe(
         map((response) => response.data.content),
-        catchError(() => of(MOCK_PRODUCTS))
+        catchError(() => of([]))
       ),
       locations: this.locationService.getAll(0, 100).pipe(
         map((response) => response.data.content),
-        catchError(() => of(MOCK_LOCATIONS))
+        catchError(() => of([]))
       ),
       batches: this.batchService.getAll(0, 100).pipe(
         map((response) => response.data.content),
-        catchError(() => of(MOCK_BATCHES))
+        catchError(() => of([]))
       ),
     }).subscribe((result) => {
       this.warehouses = result.warehouses;
@@ -1054,8 +1094,16 @@ export class StockTransfersComponent implements OnInit {
     });
   }
 
-  private getMockTransfersPage(page: number): PageResponse<StockTransferResponse> {
-    return mockPage(MOCK_STOCK_TRANSFERS, page, this.pageSize);
+  private emptyTransfersPage(page: number): PageResponse<StockTransferResponse> {
+    return {
+      content: [],
+      page,
+      size: this.pageSize,
+      total_elements: 0,
+      total_pages: 0,
+      is_first: true,
+      is_last: true,
+    };
   }
 
   loadTransfers(page = this.currentPage): void {
@@ -1066,11 +1114,11 @@ export class StockTransfersComponent implements OnInit {
       .pipe(
         map((response) => response.data),
         catchError((error) => {
-          this.toastr.warning(
-            errorMessage(error, 'Khong tai duoc danh sach stock transfer tu backend. Dang dung du lieu mock.'),
+          this.toastr.error(
+            errorMessage(error, 'Không tải được danh sách stock transfer từ backend.'),
             'Stock Transfer'
           );
-          return of(this.getMockTransfersPage(page));
+          return of(this.emptyTransfersPage(page));
         })
       )
       .subscribe((pageResponse) => {
@@ -1108,6 +1156,17 @@ export class StockTransfersComponent implements OnInit {
       to_location_code: toLocation?.code || '',
       batch_number: batch?.batch_number || null,
       uom_code: product?.uom_code || '',
+    };
+  }
+
+  private enrichInventory(inventory: InventoryResponse): InventoryResponse {
+    const product = this.products.find((item) => item.id === inventory.product_id);
+    const location = this.locations.find((item) => item.id === inventory.location_id);
+
+    return {
+      ...inventory,
+      uom_code: product?.uom_code || inventory.uom_code,
+      location_name: location?.name || inventory.location_name,
     };
   }
 
@@ -1206,14 +1265,20 @@ export class StockTransfersComponent implements OnInit {
     forkJoin({
       inventories: this.inventoryService.getAll(0, 100, { warehouse_id: this.createForm.warehouse_id }).pipe(
         map((response) => response.data.content),
-        catchError(() => of(MOCK_INVENTORIES.filter((item) => item.warehouse_id === this.createForm.warehouse_id)))
+        catchError((error) => {
+          this.toastr.error(errorMessage(error, 'Không tải được inventory nguồn cho chuyển kho.'));
+          return of([]);
+        })
       ),
       locations: this.locationService.getByWarehouse(this.createForm.warehouse_id, 0, 100).pipe(
         map((response) => response.data.content),
-        catchError(() => of(MOCK_LOCATIONS.filter((item) => item.warehouse_id === this.createForm.warehouse_id)))
+        catchError((error) => {
+          this.toastr.error(errorMessage(error, 'Không tải được vị trí đích cho chuyển kho.'));
+          return of([]);
+        })
       ),
     }).subscribe((result) => {
-      this.sourceInventories = result.inventories;
+      this.sourceInventories = result.inventories.map((inventory) => this.enrichInventory(inventory));
       this.warehouseLocations = result.locations;
       this.destinationLocations = [];
       this.loadingCreateOptions = false;
@@ -1248,7 +1313,7 @@ export class StockTransfersComponent implements OnInit {
       return '';
     }
 
-    if (this.createForm.quantity > this.selectedSourceInventory.quantity_available) {
+    if (this.createForm.quantity > this.selectedSourceInventory.available_quantity) {
       return 'Số lượng đang nhập lớn hơn tồn khả dụng hiện tại. Backend chỉ kiểm tra tồn thật ở bước complete, vì vậy create vẫn có thể thành công nhưng complete có thể bị chặn.';
     }
 
@@ -1412,7 +1477,7 @@ export class StockTransfersComponent implements OnInit {
   getStatusLabel(status: StockTransferStatus): string {
     switch (status) {
       case StockTransferStatus.DRAFT:
-        return 'Nhap';
+        return 'Nháp';
       case StockTransferStatus.COMPLETED:
         return 'Hoan tat';
       case StockTransferStatus.CANCELLED:

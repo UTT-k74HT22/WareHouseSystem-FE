@@ -7,7 +7,6 @@ import { OrderStatus } from '../../helper/enums/OrderStatus';
 import { BusinessPartnerResponse } from '../../dto/response/BusinessPartner/BusinessPartnerResponse';
 import { WareHouseResponse } from '../../dto/response/WareHouse/WareHouseResponse';
 import { CreateSalesOrderRequest } from '../../dto/request/SalesOrder/SalesOrderRequest';
-import { MOCK_SALES_ORDERS, MOCK_BUSINESS_PARTNERS, MOCK_WAREHOUSES, mockPage } from '../../helper/mock/mock-data';
 
 @Component({
   selector: 'app-sales-order',
@@ -15,6 +14,8 @@ import { MOCK_SALES_ORDERS, MOCK_BUSINESS_PARTNERS, MOCK_WAREHOUSES, mockPage } 
   styleUrls: ['./sales-order.component.css']
 })
 export class SalesOrderComponent implements OnInit {
+  readonly backendReady = false;
+
   orders: SalesOrderResponse[] = [];
   customers: BusinessPartnerResponse[] = [];
   warehouses: WareHouseResponse[] = [];
@@ -45,37 +46,22 @@ export class SalesOrderComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.loadOrders();
     this.loadCustomers();
   }
 
   loadOrders(): void {
-    this.loading = true;
-    this.soService.getAll(this.currentPage, this.pageSize).subscribe({
-      next: (res) => {
-        if (res.success) {
-          this.orders = res.data.content;
-          this.totalElements = res.data.total_elements;
-          this.totalPages = res.data.total_pages;
-        }
-        this.loading = false;
-      },
-      error: () => {
-        const page = mockPage(MOCK_SALES_ORDERS, this.currentPage, this.pageSize);
-        this.orders = page.content;
-        this.totalElements = page.total_elements;
-        this.totalPages = page.total_pages;
-        this.loading = false;
-      }
-    });
+    this.orders = [];
+    this.totalElements = 0;
+    this.totalPages = 0;
+    this.loading = false;
   }
 
   loadCustomers(): void {
     this.bpService.getAll().subscribe({
       next: (res) => { if (res.success) this.customers = res.data; },
       error: () => {
-        this.customers = MOCK_BUSINESS_PARTNERS;
-        this.warehouses = MOCK_WAREHOUSES as any;
+        this.customers = [];
+        this.warehouses = [];
       }
     });
   }
@@ -90,6 +76,10 @@ export class SalesOrderComponent implements OnInit {
   }
 
   openCreateModal(): void {
+    if (!this.backendReady) {
+      this.toastr.info('Sales order API chưa được backend triển khai.');
+      return;
+    }
     this.createForm = this.initCreateForm();
     this.showCreateModal = true;
   }
@@ -107,11 +97,19 @@ export class SalesOrderComponent implements OnInit {
   }
 
   openDetailModal(order: SalesOrderResponse): void {
+    if (!this.backendReady) {
+      this.toastr.info('Sales order API chưa được backend triển khai.');
+      return;
+    }
     this.selectedOrder = order;
     this.showDetailModal = true;
   }
 
   openDeleteConfirm(order: SalesOrderResponse): void {
+    if (!this.backendReady) {
+      this.toastr.info('Sales order API chưa được backend triển khai.');
+      return;
+    }
     this.orderToDelete = order;
     this.showDeleteConfirm = true;
   }
@@ -145,6 +143,7 @@ export class SalesOrderComponent implements OnInit {
     const labels: Record<OrderStatus, string> = {
       [OrderStatus.DRAFT]: 'Nháp',
       [OrderStatus.CONFIRMED]: 'Đã xác nhận',
+      [OrderStatus.PARTIALLY_RECEIVED]: 'Nhận một phần',
       [OrderStatus.IN_PROGRESS]: 'Đang xử lý',
       [OrderStatus.COMPLETED]: 'Hoàn thành',
       [OrderStatus.CANCELLED]: 'Đã huỷ'
@@ -156,6 +155,7 @@ export class SalesOrderComponent implements OnInit {
     const classes: Record<OrderStatus, string> = {
       [OrderStatus.DRAFT]: 'badge-draft',
       [OrderStatus.CONFIRMED]: 'badge-confirmed',
+      [OrderStatus.PARTIALLY_RECEIVED]: 'badge-progress',
       [OrderStatus.IN_PROGRESS]: 'badge-progress',
       [OrderStatus.COMPLETED]: 'badge-completed',
       [OrderStatus.CANCELLED]: 'badge-cancelled'

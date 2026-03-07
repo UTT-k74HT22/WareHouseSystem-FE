@@ -7,7 +7,6 @@ import { InboundReceiptStatus } from '../../helper/enums/InboundReceiptStatus';
 import { BusinessPartnerResponse } from '../../dto/response/BusinessPartner/BusinessPartnerResponse';
 import { WareHouseResponse } from '../../dto/response/WareHouse/WareHouseResponse';
 import { CreateInboundReceiptRequest } from '../../dto/request/InboundReceipt/InboundReceiptRequest';
-import { MOCK_INBOUND_RECEIPTS, MOCK_BUSINESS_PARTNERS, MOCK_WAREHOUSES, mockPage } from '../../helper/mock/mock-data';
 
 @Component({
   selector: 'app-inbound',
@@ -15,6 +14,8 @@ import { MOCK_INBOUND_RECEIPTS, MOCK_BUSINESS_PARTNERS, MOCK_WAREHOUSES, mockPag
   styleUrls: ['./inbound.component.css']
 })
 export class InboundComponent implements OnInit {
+  readonly backendReady = false;
+
   receipts: InboundReceiptResponse[] = [];
   suppliers: BusinessPartnerResponse[] = [];
   warehouses: WareHouseResponse[] = [];
@@ -45,37 +46,22 @@ export class InboundComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.loadReceipts();
     this.loadDropdowns();
   }
 
   loadReceipts(): void {
-    this.loading = true;
-    this.inboundService.getAll(this.currentPage, this.pageSize).subscribe({
-      next: (res) => {
-        if (res.success) {
-          this.receipts = res.data.content;
-          this.totalElements = res.data.total_elements;
-          this.totalPages = res.data.total_pages;
-        }
-        this.loading = false;
-      },
-      error: () => {
-        const page = mockPage(MOCK_INBOUND_RECEIPTS, this.currentPage, this.pageSize);
-        this.receipts = page.content;
-        this.totalElements = page.total_elements;
-        this.totalPages = page.total_pages;
-        this.loading = false;
-      }
-    });
+    this.receipts = [];
+    this.totalElements = 0;
+    this.totalPages = 0;
+    this.loading = false;
   }
 
   loadDropdowns(): void {
     this.bpService.getAll().subscribe({
       next: (res) => { if (res.success) this.suppliers = res.data; },
       error: () => {
-        this.suppliers = MOCK_BUSINESS_PARTNERS;
-        this.warehouses = MOCK_WAREHOUSES as any;
+        this.suppliers = [];
+        this.warehouses = [];
       }
     });
   }
@@ -90,6 +76,10 @@ export class InboundComponent implements OnInit {
   }
 
   openCreateModal(): void {
+    if (!this.backendReady) {
+      this.toastr.info('Inbound receipt API chưa được backend triển khai.');
+      return;
+    }
     this.createForm = this.initCreateForm();
     this.showCreateModal = true;
   }
@@ -107,11 +97,19 @@ export class InboundComponent implements OnInit {
   }
 
   openDetailModal(receipt: InboundReceiptResponse): void {
+    if (!this.backendReady) {
+      this.toastr.info('Inbound receipt API chưa được backend triển khai.');
+      return;
+    }
     this.selectedReceipt = receipt;
     this.showDetailModal = true;
   }
 
   openDeleteConfirm(receipt: InboundReceiptResponse): void {
+    if (!this.backendReady) {
+      this.toastr.info('Inbound receipt API chưa được backend triển khai.');
+      return;
+    }
     this.receiptToDelete = receipt;
     this.showDeleteConfirm = true;
   }

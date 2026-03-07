@@ -4,7 +4,7 @@ import { UOMService } from '../../service/UOMService/uom.service';
 import { ToastrService } from '../../service/SystemService/toastr.service';
 import { CreateUOMRequest } from '../../dto/request/UOM/CreateUOMRequest';
 import { UpdateUOMRequest } from '../../dto/request/UOM/UpdateUOMRequest';
-import { MOCK_UOMS } from '../../helper/mock/mock-data';
+import { UnitsOfMeasureType } from '../../helper/enums/UnitsOfMeasureType';
 
 @Component({
   selector: 'app-uom',
@@ -12,6 +12,9 @@ import { MOCK_UOMS } from '../../helper/mock/mock-data';
   styleUrls: ['./uom.component.css']
 })
 export class UomComponent implements OnInit {
+  readonly UnitsOfMeasureType = UnitsOfMeasureType;
+  readonly typeOptions = Object.values(UnitsOfMeasureType);
+
   uomList: UnitsOfMeasureResponse[] = [];
   filteredList: UnitsOfMeasureResponse[] = [];
   loading = false;
@@ -24,7 +27,7 @@ export class UomComponent implements OnInit {
   selectedUOM: UnitsOfMeasureResponse | null = null;
   uomToDelete: UnitsOfMeasureResponse | null = null;
 
-  createForm: CreateUOMRequest = { code: '', name: '' };
+  createForm: CreateUOMRequest = { code: '', name: '', type: UnitsOfMeasureType.COUNT };
   editForm: UpdateUOMRequest = {};
 
   constructor(
@@ -46,9 +49,10 @@ export class UomComponent implements OnInit {
         }
         this.loading = false;
       },
-      error: () => {
-        this.uomList = MOCK_UOMS;
-        this.applyFilter();
+      error: (error) => {
+        this.uomList = [];
+        this.filteredList = [];
+        this.toastr.error(error?.error?.message || 'Không tải được danh sách đơn vị tính.');
         this.loading = false;
       }
     });
@@ -66,7 +70,7 @@ export class UomComponent implements OnInit {
   onResetFilter(): void { this.searchKeyword = ''; this.applyFilter(); }
 
   openCreateModal(): void {
-    this.createForm = { code: '', name: '' };
+    this.createForm = { code: '', name: '', type: UnitsOfMeasureType.COUNT };
     this.showCreateModal = true;
   }
 
@@ -84,7 +88,7 @@ export class UomComponent implements OnInit {
 
   openEditModal(uom: UnitsOfMeasureResponse): void {
     this.selectedUOM = uom;
-    this.editForm = { name: uom.name, description: uom.description ?? undefined };
+    this.editForm = { name: uom.name, description: uom.description ?? undefined, type: uom.type };
     this.showEditModal = true;
   }
 
@@ -125,6 +129,17 @@ export class UomComponent implements OnInit {
     this.showDeleteConfirm = false;
     this.selectedUOM = null;
     this.uomToDelete = null;
+  }
+
+  getTypeLabel(type: UnitsOfMeasureType): string {
+    const labels: Record<UnitsOfMeasureType, string> = {
+      [UnitsOfMeasureType.COUNT]: 'Đếm',
+      [UnitsOfMeasureType.LENGTH]: 'Chiều dài',
+      [UnitsOfMeasureType.WEIGHT]: 'Khối lượng',
+      [UnitsOfMeasureType.VOLUME]: 'Thể tích',
+    };
+
+    return labels[type];
   }
 }
 

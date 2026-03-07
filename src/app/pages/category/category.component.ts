@@ -5,7 +5,7 @@ import { ToastrService } from '../../service/SystemService/toastr.service';
 import { CategoryStatus } from '../../helper/enums/CategoryStatus';
 import { CreateCategoryRequest } from '../../dto/request/Category/CreateCategoryRequest';
 import { UpdateCategoryRequest } from '../../dto/request/Category/UpdateCategoryRequest';
-import { MOCK_CATEGORIES, mockPage } from '../../helper/mock/mock-data';
+import { UpdateCategoryStatusRequest } from '../../dto/request/Category/UpdateCategoryStatusRequest';
 
 @Component({
   selector: 'app-category',
@@ -14,6 +14,7 @@ import { MOCK_CATEGORIES, mockPage } from '../../helper/mock/mock-data';
 })
 export class CategoryComponent implements OnInit {
   // ─── Dữ liệu ────────────────────────────────────────────────────
+  allCategories: CategoryResponse[] = [];
   categories: CategoryResponse[] = [];
 
   // ─── Phân trang ─────────────────────────────────────────────────
@@ -38,6 +39,7 @@ export class CategoryComponent implements OnInit {
   // ─── Form ────────────────────────────────────────────────────────
   createForm: CreateCategoryRequest = this.initCreateForm();
   editForm: UpdateCategoryRequest = {};
+  editStatus: CategoryStatus = CategoryStatus.ACTIVE;
 
   // ─── Enums ──────────────────────────────────────────────────────
   CategoryStatus = CategoryStatus;
@@ -53,27 +55,27 @@ export class CategoryComponent implements OnInit {
 
   loadCategories(): void {
     this.loading = true;
-    this.categoryService.getAll(this.currentPage, this.pageSize).subscribe({
+    this.categoryService.getAll(0, 200, this.selectedStatus || undefined).subscribe({
       next: (res) => {
         if (res.success) {
-          this.categories = res.data.content;
-          this.totalElements = res.data.total_elements;
-          this.totalPages = res.data.total_pages;
+          this.allCategories = res.data.content;
+          this.applyFilter();
         }
         this.loading = false;
       },
-      error: () => {
-        const page = mockPage(MOCK_CATEGORIES, this.currentPage, this.pageSize);
-        this.categories = page.content;
-        this.totalElements = page.total_elements;
-        this.totalPages = page.total_pages;
+      error: (error) => {
+        this.allCategories = [];
+        this.categories = [];
+        this.totalElements = 0;
+        this.totalPages = 0;
+        this.toastr.error(error?.error?.message || 'Không tải được danh mục.');
         this.loading = false;
       }
     });
   }
 
   onSearch(): void {
-    // TODO: Gọi API search khi BE implement
+    this.currentPage = 0;
     this.loadCategories();
   }
 
@@ -86,7 +88,7 @@ export class CategoryComponent implements OnInit {
   onPageChange(page: number): void {
     if (page < 0 || page >= this.totalPages) return;
     this.currentPage = page;
-    this.loadCategories();
+    this.applyFilter();
   }
 
   openCreateModal(): void {
@@ -109,22 +111,41 @@ export class CategoryComponent implements OnInit {
   openEditModal(category: CategoryResponse): void {
     this.selectedCategory = category;
     this.editForm = {
+      code: category.code,
       name: category.name,
-      description: category.description ?? undefined,
-      status: category.status
+      description: category.description ?? undefined
     };
+    this.editStatus = category.status;
     this.showEditModal = true;
   }
 
   onEditSubmit(): void {
     if (!this.selectedCategory) return;
-    this.categoryService.update(this.selectedCategory.id, this.editForm).subscribe({
+    const selectedCategory = this.selectedCategory;
+    const statusRequest: UpdateCategoryStatusRequest = { status: this.editStatus || selectedCategory.status };
+
+    this.categoryService.update(selectedCategory.id, this.editForm).subscribe({
       next: (res) => {
-        if (res.success) {
-          this.toastr.success('Cập nhật danh mục thành công!');
-          this.showEditModal = false;
-          this.loadCategories();
+        if (!res.success) {
+          return;
         }
+
+        if (statusRequest.status !== selectedCategory.status) {
+          this.categoryService.changeStatus(selectedCategory.id, statusRequest).subscribe({
+            next: (statusRes) => {
+              if (statusRes.success) {
+                this.toastr.success('Cập nhật danh mục thành công!');
+                this.showEditModal = false;
+                this.loadCategories();
+              }
+            }
+          });
+          return;
+        }
+
+        this.toastr.success('Cập nhật danh mục thành công!');
+        this.showEditModal = false;
+        this.loadCategories();
       }
     });
   }
@@ -136,10 +157,11 @@ export class CategoryComponent implements OnInit {
 
   onDeleteConfirm(): void {
     if (!this.categoryToDelete) return;
-    this.categoryService.delete(this.categoryToDelete.id).subscribe({
+    const request: UpdateCategoryStatusRequest = { status: CategoryStatus.INACTIVE };
+    this.categoryService.changeStatus(this.categoryToDelete.id, request).subscribe({
       next: (res) => {
         if (res.success) {
-          this.toastr.success('Xoá danh mục thành công!');
+          this.toastr.success('Đã ngừng hoạt động danh mục.');
           this.showDeleteConfirm = false;
           this.loadCategories();
         }
@@ -153,10 +175,30 @@ export class CategoryComponent implements OnInit {
     this.showDeleteConfirm = false;
     this.selectedCategory = null;
     this.categoryToDelete = null;
+    this.editStatus = CategoryStatus.ACTIVE;
   }
 
   private initCreateForm(): CreateCategoryRequest {
     return { code: '', name: '', status: CategoryStatus.ACTIVE };
+  }
+
+  private applyFilter(): void {
+    const keyword = this.searchKeyword.trim().toLowerCase();
+    let filtered = [...this.allCategories];
+
+    if (keyword) {
+      filtered = filtered.filter((category) =>
+        category.name.toLowerCase().includes(keyword)
+        || category.code.toLowerCase().includes(keyword)
+        || (category.description || '').toLowerCase().includes(keyword)
+      );
+    }
+
+    this.totalElements = filtered.length;
+    this.totalPages = this.totalElements === 0 ? 0 : Math.ceil(this.totalElements / this.pageSize);
+
+    const start = this.currentPage * this.pageSize;
+    this.categories = filtered.slice(start, start + this.pageSize);
   }
 
   getStatusLabel(status: CategoryStatus): string {

@@ -78,7 +78,7 @@
           <td><code>{{ p.code }}</code></td>
           <td>
             <div class="cell-main">{{ p.name }}</div>
-            <div class="cell-sub" *ngIf="p.tax_code">MST: {{ p.tax_code }}</div>
+            <div class="cell-sub" *ngIf="p.tax_id">MST: {{ p.tax_id }}</div>
           </td>
           <td><span class="badge" [ngClass]="getTypeClass(p.type)">{{ getTypeLabel(p.type) }}</span></td>
           <td>{{ p.email ?? '—' }}</td>
@@ -158,11 +158,21 @@
       <div class="form-row">
         <div class="form-group">
           <label>Mã số thuế</label>
-          <input type="text" [(ngModel)]="createForm.tax_code" />
+          <input type="text" [(ngModel)]="createForm.tax_id" />
         </div>
         <div class="form-group">
           <label>Người liên hệ</label>
           <input type="text" [(ngModel)]="createForm.contact_person" />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Thành phố</label>
+          <input type="text" [(ngModel)]="createForm.city" />
+        </div>
+        <div class="form-group">
+          <label>Quốc gia</label>
+          <input type="text" [(ngModel)]="createForm.country" />
         </div>
       </div>
       <div class="form-group">
@@ -192,6 +202,10 @@
         <div class="form-group"><label>Điện thoại</label><input type="text" [(ngModel)]="editForm.phone" /></div>
       </div>
       <div class="form-row">
+        <div class="form-group"><label>Người liên hệ</label><input type="text" [(ngModel)]="editForm.contact_person" /></div>
+        <div class="form-group"><label>Mã số thuế</label><input type="text" [(ngModel)]="editForm.tax_id" /></div>
+      </div>
+      <div class="form-row">
         <div class="form-group"><label>Loại</label>
           <select [(ngModel)]="editForm.type">
             <option value="SUPPLIER">Nhà cung cấp</option><option value="CUSTOMER">Khách hàng</option><option value="BOTH">Cả hai</option>
@@ -203,6 +217,11 @@
           </select>
         </div>
       </div>
+      <div class="form-row">
+        <div class="form-group"><label>Thành phố</label><input type="text" [(ngModel)]="editForm.city" /></div>
+        <div class="form-group"><label>Quốc gia</label><input type="text" [(ngModel)]="editForm.country" /></div>
+      </div>
+      <div class="form-group"><label>Địa chỉ</label><textarea [(ngModel)]="editForm.address" rows="2"></textarea></div>
       <div class="form-group"><label>Ghi chú</label><textarea [(ngModel)]="editForm.notes" rows="2"></textarea></div>
     </div>
     <div class="modal-footer">

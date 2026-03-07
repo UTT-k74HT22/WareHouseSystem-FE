@@ -52,9 +52,7 @@
           <th>#</th>
           <th>Mã</th>
           <th>Tên danh mục</th>
-          <th>Danh mục cha</th>
           <th>Mô tả</th>
-          <th>Số SP</th>
           <th>Trạng thái</th>
           <th>Thao tác</th>
         </tr>
@@ -64,9 +62,7 @@
           <td>{{ currentPage * pageSize + i + 1 }}</td>
           <td><code>{{ cat.code }}</code></td>
           <td>{{ cat.name }}</td>
-          <td>{{ cat.parent_name ?? '—' }}</td>
           <td>{{ cat.description ?? '—' }}</td>
-          <td>{{ cat.product_count }}</td>
           <td>
             <span class="badge" [ngClass]="getStatusClass(cat.status)">
               {{ getStatusLabel(cat.status) }}
@@ -74,11 +70,13 @@
           </td>
           <td class="actions">
             <button class="btn-icon btn-edit" (click)="openEditModal(cat)"><i class="fa-regular fa-pen-to-square" aria-hidden="true"></i></button>
-            <button class="btn-icon btn-delete" (click)="openDeleteConfirm(cat)"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></button>
+            <button class="btn-icon btn-delete" (click)="openDeleteConfirm(cat)" [disabled]="cat.status === CategoryStatus.INACTIVE">
+              <i class="fa-regular fa-trash-can" aria-hidden="true"></i>
+            </button>
           </td>
         </tr>
         <tr *ngIf="categories.length === 0">
-          <td colspan="8" class="empty-state">Không có danh mục nào</td>
+          <td colspan="6" class="empty-state">Không có danh mục nào</td>
         </tr>
       </tbody>
     </table>
@@ -89,8 +87,7 @@
       <h3 class="entity-card__title">{{ cat.name }}</h3>
       <p class="entity-card__sub">{{ cat.code }}</p>
       <div class="entity-card__meta">
-        <div class="entity-card__row">Danh mục cha: {{ cat.parent_name ?? '—' }}</div>
-        <div class="entity-card__row">Số sản phẩm: {{ cat.product_count }}</div>
+        <div class="entity-card__row">Mô tả: {{ cat.description ?? '—' }}</div>
         <div class="entity-card__row">
           <span class="badge" [ngClass]="getStatusClass(cat.status)">{{ getStatusLabel(cat.status) }}</span>
         </div>
@@ -132,13 +129,7 @@
         <label>Mô tả</label>
         <textarea [(ngModel)]="createForm.description" rows="3"></textarea>
       </div>
-      <div class="form-group">
-        <label>Danh mục cha</label>
-        <select [(ngModel)]="createForm.parent_id">
-          <option value="">-- Không có --</option>
-          <option *ngFor="let c of categories" [value]="c.id">{{ c.name }}</option>
-        </select>
-      </div>
+      <div class="info-box"><i class="fa-regular fa-lightbulb" aria-hidden="true"></i> Backend hiện quản lý danh mục phẳng, chưa hỗ trợ danh mục cha.</div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" (click)="closeAllModals()">Huỷ</button>
@@ -156,6 +147,10 @@
     </div>
     <div class="modal-body">
       <div class="form-group">
+        <label>Mã danh mục</label>
+        <input type="text" [(ngModel)]="editForm.code" />
+      </div>
+      <div class="form-group">
         <label>Tên danh mục</label>
         <input type="text" [(ngModel)]="editForm.name" />
       </div>
@@ -165,7 +160,7 @@
       </div>
       <div class="form-group">
         <label>Trạng thái</label>
-        <select [(ngModel)]="editForm.status">
+        <select [(ngModel)]="editStatus">
           <option value="ACTIVE">Đang hoạt động</option>
           <option value="INACTIVE">Ngừng hoạt động</option>
         </select>
@@ -186,11 +181,11 @@
       <button class="modal-close" (click)="closeAllModals()">✕</button>
     </div>
     <div class="modal-body">
-      <p>Xoá danh mục <strong>{{ categoryToDelete?.name }}</strong>?</p>
+      <p>Chuyển danh mục <strong>{{ categoryToDelete?.name }}</strong> sang trạng thái ngừng hoạt động?</p>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" (click)="closeAllModals()">Huỷ</button>
-      <button class="btn btn-danger" (click)="onDeleteConfirm()">Xoá</button>
+      <button class="btn btn-danger" (click)="onDeleteConfirm()">Ngừng hoạt động</button>
     </div>
   </div>
 </div>

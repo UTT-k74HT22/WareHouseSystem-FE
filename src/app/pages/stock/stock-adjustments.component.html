@@ -245,7 +245,7 @@
           </div>
           <div class="detail-item">
             <span class="detail-label">Vị trí</span>
-            <span>{{ selectedInventory.location_code }} - {{ selectedInventory.location_name }}</span>
+            <span>{{ selectedInventory.location_code }} - {{ selectedInventory.location_name ?? '—' }}</span>
           </div>
           <div class="detail-item">
             <span class="detail-label">Lô</span>
@@ -253,15 +253,15 @@
           </div>
           <div class="detail-item">
             <span class="detail-label">Tồn hiện tại</span>
-            <span>{{ selectedInventory.quantity_on_hand }}</span>
+            <span>{{ selectedInventory.on_hand_quantity }}</span>
           </div>
           <div class="detail-item">
             <span class="detail-label">Đã giữ chỗ</span>
-            <span>{{ selectedInventory.quantity_reserved }}</span>
+            <span>{{ selectedInventory.reserved_quantity }}</span>
           </div>
           <div class="detail-item">
             <span class="detail-label">Có thể dùng</span>
-            <span>{{ selectedInventory.quantity_available }}</span>
+            <span>{{ selectedInventory.available_quantity }}</span>
           </div>
         </div>
       </div>

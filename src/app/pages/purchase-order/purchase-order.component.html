@@ -30,12 +30,12 @@
   </div>
 
   <div class="filter-section">
-    <input class="search-input" type="text" [(ngModel)]="searchKeyword" placeholder="Tìm theo số đơn, nhà cung cấp..." (keyup.enter)="onSearch()" />
+    <input class="search-input" type="text" [(ngModel)]="searchKeyword" placeholder="Tìm theo số đơn mua hàng..." (keyup.enter)="onSearch()" />
     <select class="filter-select" [(ngModel)]="selectedStatus">
       <option value="">-- Tất cả trạng thái --</option>
       <option value="DRAFT">Nháp</option>
       <option value="CONFIRMED">Đã xác nhận</option>
-      <option value="IN_PROGRESS">Đang xử lý</option>
+      <option value="PARTIALLY_RECEIVED">Nhận một phần</option>
       <option value="COMPLETED">Hoàn thành</option>
       <option value="CANCELLED">Đã huỷ</option>
     </select>
@@ -71,15 +71,18 @@
       <tbody>
         <tr *ngFor="let order of orders; let i = index">
           <td>{{ currentPage * pageSize + i + 1 }}</td>
-          <td><a class="link" (click)="openDetailModal(order)">{{ order.order_number }}</a></td>
-          <td>{{ order.supplier_name }}</td>
-          <td>{{ order.warehouse_name }}</td>
+          <td><a class="link" (click)="openDetailModal(order)">{{ order.purchase_order_number }}</a></td>
+          <td>{{ order.supplier_name ?? order.supplier_id }}</td>
+          <td>{{ order.warehouse_name ?? order.warehouse_id }}</td>
           <td>{{ order.order_date | date:'dd/MM/yyyy' }}</td>
-          <td>{{ order.expected_date | date:'dd/MM/yyyy' }}</td>
+          <td>{{ order.expected_delivery_date ? (order.expected_delivery_date | date:'dd/MM/yyyy') : '—' }}</td>
           <td>{{ order.total_amount | number:'1.0-0' }} {{ order.currency }}</td>
           <td><span class="badge" [ngClass]="getStatusClass(order.status)">{{ getStatusLabel(order.status) }}</span></td>
           <td class="actions">
             <button class="btn-icon" title="Xem chi tiết" (click)="openDetailModal(order)"><i class="fa-regular fa-eye" aria-hidden="true"></i></button>
+            <button class="btn-icon" title="Xác nhận" (click)="confirmOrder(order)" [disabled]="order.status !== 'DRAFT'">
+              <i class="fa-solid fa-check" aria-hidden="true"></i>
+            </button>
             <button class="btn-icon btn-delete" title="Xoá" (click)="openDeleteConfirm(order)"
                     [disabled]="order.status !== 'DRAFT'"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></button>
           </td>
@@ -93,16 +96,17 @@
 
   <div class="entity-grid" *ngIf="!loading && viewMode === 'grid'">
     <div class="entity-card" *ngFor="let order of orders">
-      <h3 class="entity-card__title">{{ order.order_number }}</h3>
-      <p class="entity-card__sub">{{ order.supplier_name }}</p>
+      <h3 class="entity-card__title">{{ order.purchase_order_number }}</h3>
+      <p class="entity-card__sub">{{ order.supplier_name ?? order.supplier_id }}</p>
       <div class="entity-card__meta">
-        <div class="entity-card__row">Kho: {{ order.warehouse_name }}</div>
+        <div class="entity-card__row">Kho: {{ order.warehouse_name ?? order.warehouse_id }}</div>
         <div class="entity-card__row">Ngày đặt: {{ order.order_date | date:'dd/MM/yyyy' }}</div>
         <div class="entity-card__row">Tổng tiền: {{ order.total_amount | number:'1.0-0' }} {{ order.currency }}</div>
         <div class="entity-card__row"><span class="badge" [ngClass]="getStatusClass(order.status)">{{ getStatusLabel(order.status) }}</span></div>
       </div>
       <div class="entity-card__actions">
         <button class="btn-icon" title="Xem chi tiết" (click)="openDetailModal(order)"><i class="fa-regular fa-eye" aria-hidden="true"></i></button>
+        <button class="btn-icon" title="Xác nhận" (click)="confirmOrder(order)" [disabled]="order.status !== 'DRAFT'"><i class="fa-solid fa-check" aria-hidden="true"></i></button>
         <button class="btn-icon btn-delete" title="Xoá" (click)="openDeleteConfirm(order)" [disabled]="order.status !== 'DRAFT'"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></button>
       </div>
     </div>
@@ -126,7 +130,7 @@
           <label>Nhà cung cấp <span class="required">*</span></label>
           <select [(ngModel)]="createForm.supplier_id">
             <option value="">-- Chọn nhà cung cấp --</option>
-            <option *ngFor="let s of suppliers" [value]="s.id">{{ s.name }}</option>
+            <option *ngFor="let s of suppliers" [value]="s.id">{{ s.code }} - {{ s.name }}</option>
           </select>
         </div>
         <div class="form-group">
@@ -139,14 +143,27 @@
       </div>
       <div class="form-row">
         <div class="form-group">
+          <label>Ngày đặt đơn <span class="required">*</span></label>
+          <input type="date" [(ngModel)]="createForm.order_date" />
+        </div>
+        <div class="form-group">
           <label>Ngày dự kiến nhận</label>
-          <input type="date" [(ngModel)]="createForm.expected_date" />
+          <input type="date" [(ngModel)]="createForm.expected_delivery_date" />
         </div>
         <div class="form-group">
           <label>Tiền tệ</label>
-          <input type="text" [(ngModel)]="createForm.currency" placeholder="VND" />
+          <select [(ngModel)]="createForm.currency">
+            <option value="VND">VND</option>
+            <option value="USD">USD</option>
+            <option value="EUR">EUR</option>
+            <option value="JPY">JPY</option>
+          </select>
         </div>
       </div>
+      <div class="form-group">
+        <label>Điều khoản thanh toán</label>
+        <input type="text" [(ngModel)]="createForm.payment_terms" placeholder="VD: NET 30" />
+        </div>
       <div class="form-group">
         <label>Ghi chú</label>
         <textarea [(ngModel)]="createForm.notes" rows="3"></textarea>
@@ -164,15 +181,18 @@
 <!-- MODAL: CHI TIẾT -->
 <div class="modal-overlay" *ngIf="showDetailModal" (click)="closeAllModals()">
   <div class="modal-box modal-lg" (click)="$event.stopPropagation()">
-    <div class="modal-header"><h3>Chi tiết đơn hàng: {{ selectedOrder?.order_number }}</h3><button class="modal-close" (click)="closeAllModals()">✕</button></div>
+    <div class="modal-header"><h3>Chi tiết đơn hàng: {{ selectedOrder?.purchase_order_number }}</h3><button class="modal-close" (click)="closeAllModals()">✕</button></div>
     <div class="modal-body" *ngIf="selectedOrder">
       <div class="detail-grid">
-        <div class="detail-item"><span class="detail-label">Nhà cung cấp:</span><span>{{ selectedOrder.supplier_name }}</span></div>
-        <div class="detail-item"><span class="detail-label">Kho:</span><span>{{ selectedOrder.warehouse_name }}</span></div>
+        <div class="detail-item"><span class="detail-label">Nhà cung cấp:</span><span>{{ selectedOrder.supplier_name ?? selectedOrder.supplier_id }}</span></div>
+        <div class="detail-item"><span class="detail-label">Kho:</span><span>{{ selectedOrder.warehouse_name ?? selectedOrder.warehouse_id }}</span></div>
         <div class="detail-item"><span class="detail-label">Trạng thái:</span>
           <span class="badge" [ngClass]="getStatusClass(selectedOrder.status)">{{ getStatusLabel(selectedOrder.status) }}</span>
         </div>
         <div class="detail-item"><span class="detail-label">Tổng tiền:</span><span>{{ selectedOrder.total_amount | number:'1.0-0' }} {{ selectedOrder.currency }}</span></div>
+        <div class="detail-item"><span class="detail-label">Subtotal:</span><span>{{ selectedOrder.sub_total | number:'1.0-0' }} {{ selectedOrder.currency }}</span></div>
+        <div class="detail-item"><span class="detail-label">Thuế:</span><span>{{ selectedOrder.tax_amount | number:'1.0-0' }} {{ selectedOrder.currency }}</span></div>
+        <div class="detail-item"><span class="detail-label">Điều khoản TT:</span><span>{{ selectedOrder.payment_terms ?? '—' }}</span></div>
         <div class="detail-item"><span class="detail-label">Ghi chú:</span><span>{{ selectedOrder.notes ?? '—' }}</span></div>
       </div>
       <!-- TODO: Hiển thị bảng Order Lines -->
@@ -188,7 +208,7 @@
 <div class="modal-overlay" *ngIf="showDeleteConfirm" (click)="closeAllModals()">
   <div class="modal-box modal-sm" (click)="$event.stopPropagation()">
     <div class="modal-header modal-header-danger"><h3>Xác nhận xoá</h3><button class="modal-close" (click)="closeAllModals()">✕</button></div>
-    <div class="modal-body"><p>Xoá đơn hàng <strong>{{ orderToDelete?.order_number }}</strong>?</p></div>
+    <div class="modal-body"><p>Xoá đơn hàng <strong>{{ orderToDelete?.purchase_order_number }}</strong>?</p></div>
     <div class="modal-footer">
       <button class="btn btn-ghost" (click)="closeAllModals()">Huỷ</button>
       <button class="btn btn-danger" (click)="onDeleteConfirm()">Xoá</button>

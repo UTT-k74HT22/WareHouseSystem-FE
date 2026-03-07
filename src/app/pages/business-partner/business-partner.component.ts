@@ -6,7 +6,6 @@ import { BusinessPartnerType } from '../../helper/enums/BusinessPartnerType';
 import { BusinessPartnerStatus } from '../../helper/enums/BusinessPartnerStatus';
 import { CreateBusinessPartnerRequest } from '../../dto/request/BusinessPartner/CreateBusinessPartnerRequest';
 import { UpdateBusinessPartnerRequest } from '../../dto/request/BusinessPartner/UpdateBusinessPartnerRequest';
-import { MOCK_BUSINESS_PARTNERS } from '../../helper/mock/mock-data';
 
 @Component({
   selector: 'app-business-partner',
@@ -59,9 +58,10 @@ export class BusinessPartnerComponent implements OnInit {
         }
         this.loading = false;
       },
-      error: () => {
-        this.partners = MOCK_BUSINESS_PARTNERS;
-        this.applyFilter();
+      error: (error) => {
+        this.partners = [];
+        this.filteredPartners = [];
+        this.toastr.error(error?.error?.message || 'Không tải được danh sách đối tác.');
         this.loading = false;
       }
     });
@@ -108,11 +108,15 @@ export class BusinessPartnerComponent implements OnInit {
     this.editForm = {
       name: partner.name,
       type: partner.type,
+      contact_person: partner.contact_person ?? undefined,
       email: partner.email ?? undefined,
       phone: partner.phone ?? undefined,
-      address: partner.address,
-      tax_code: partner.tax_code,
-      contact_person: partner.contact_person ?? undefined,
+      address: partner.address ?? undefined,
+      city: partner.city ?? undefined,
+      country: partner.country ?? undefined,
+      tax_id: partner.tax_id ?? undefined,
+      payment_terms: partner.payment_terms ?? undefined,
+      credit_limit: partner.credit_limit ?? undefined,
       status: partner.status,
       notes: partner.notes ?? undefined
     };
@@ -163,6 +167,8 @@ export class BusinessPartnerComponent implements OnInit {
       code: '',
       name: '',
       type: BusinessPartnerType.SUPPLIER,
+      city: 'Vietnam',
+      country: 'Vietnam',
       status: BusinessPartnerStatus.ACTIVE
     };
   }

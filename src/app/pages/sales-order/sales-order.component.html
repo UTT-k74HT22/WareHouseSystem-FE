@@ -10,8 +10,12 @@
     </div>
     <div class="hero-actions">
       <button class="btn btn-ghost">Xuất Excel</button>
-      <button class="btn btn-primary" (click)="openCreateModal()">+ Tạo đơn bán</button>
+      <button class="btn btn-primary" (click)="openCreateModal()" [disabled]="!backendReady">+ Tạo đơn bán</button>
     </div>
+  </div>
+
+  <div class="info-box">
+    API `sales-orders` phía backend hiện chưa có method REST thực thi. FE đã khóa luồng tạo/xem/xóa để tránh gọi sai BE.
   </div>
 
   <div class="filter-section">
@@ -69,7 +73,7 @@
           </td>
         </tr>
         <tr *ngIf="orders.length === 0">
-          <td colspan="9" class="empty-state">Không có đơn bán hàng nào</td>
+          <td colspan="9" class="empty-state">Backend chưa sẵn sàng cho sales orders.</td>
         </tr>
       </tbody>
     </table>

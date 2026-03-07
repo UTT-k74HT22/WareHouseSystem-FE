@@ -6,15 +6,19 @@ export interface BusinessPartnerResponse {
   code: string;
   name: string;
   type: BusinessPartnerType;
+  contact_person: string | null;
   email: string | null;
   phone: string | null;
-  address: string;
-  tax_code: string;
-  contact_person: string | null;
+  address: string | null;
+  city: string | null;
+  country: string | null;
+  tax_id: string | null;
+  payment_terms: string | null;
+  credit_limit: number | null;
   status: BusinessPartnerStatus;
   notes: string | null;
-  created_by: string;
+  purchase_order_count: number | null;
+  sales_order_count: number | null;
   created_at: string;
-  updated_by: string;
   updated_at: string;
 }

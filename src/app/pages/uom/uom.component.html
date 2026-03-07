@@ -37,8 +37,8 @@
           <th>#</th>
           <th>Mã</th>
           <th>Tên đơn vị</th>
+          <th>Loại</th>
           <th>Mô tả</th>
-          <th>Ngày tạo</th>
           <th>Thao tác</th>
         </tr>
       </thead>
@@ -47,8 +47,8 @@
           <td>{{ i + 1 }}</td>
           <td><strong>{{ u.code }}</strong></td>
           <td>{{ u.name }}</td>
+          <td>{{ getTypeLabel(u.type) }}</td>
           <td>{{ u.description ?? '—' }}</td>
-          <td>{{ u.created_at | date:'dd/MM/yyyy' }}</td>
           <td class="actions">
             <button class="btn-icon btn-edit" (click)="openEditModal(u)"><i class="fa-regular fa-pen-to-square" aria-hidden="true"></i></button>
             <button class="btn-icon btn-delete" (click)="openDeleteConfirm(u)"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></button>
@@ -65,7 +65,7 @@
   <div class="entity-grid" *ngIf="!loading && viewMode === 'grid'">
     <div class="entity-card" *ngFor="let u of filteredList">
       <h3 class="entity-card__title">{{ u.code }} - {{ u.name }}</h3>
-      <p class="entity-card__sub">{{ u.created_at | date:'dd/MM/yyyy' }}</p>
+      <p class="entity-card__sub">{{ getTypeLabel(u.type) }}</p>
       <div class="entity-card__meta">
         <div class="entity-card__row">Mô tả: {{ u.description ?? '—' }}</div>
       </div>
@@ -85,6 +85,12 @@
     <div class="modal-body">
       <div class="form-group"><label>Mã <span class="required">*</span></label><input type="text" [(ngModel)]="createForm.code" placeholder="VD: KG, PCS, BOX" /></div>
       <div class="form-group"><label>Tên <span class="required">*</span></label><input type="text" [(ngModel)]="createForm.name" placeholder="VD: Kilogram, Cái, Thùng" /></div>
+      <div class="form-group">
+        <label>Loại <span class="required">*</span></label>
+        <select [(ngModel)]="createForm.type">
+          <option *ngFor="let type of typeOptions" [value]="type">{{ getTypeLabel(type) }}</option>
+        </select>
+      </div>
       <div class="form-group"><label>Mô tả</label><textarea [(ngModel)]="createForm.description" rows="2"></textarea></div>
     </div>
     <div class="modal-footer">
@@ -100,6 +106,12 @@
     <div class="modal-header"><h3>Chỉnh sửa đơn vị tính</h3><button class="modal-close" (click)="closeAllModals()">✕</button></div>
     <div class="modal-body">
       <div class="form-group"><label>Tên</label><input type="text" [(ngModel)]="editForm.name" /></div>
+      <div class="form-group">
+        <label>Loại <span class="required">*</span></label>
+        <select [(ngModel)]="editForm.type">
+          <option *ngFor="let type of typeOptions" [value]="type">{{ getTypeLabel(type) }}</option>
+        </select>
+      </div>
       <div class="form-group"><label>Mô tả</label><textarea [(ngModel)]="editForm.description" rows="2"></textarea></div>
     </div>
     <div class="modal-footer">
