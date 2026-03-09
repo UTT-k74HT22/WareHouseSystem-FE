@@ -4,17 +4,15 @@ export interface BatchResponse {
   id: string;
   batch_number: string;
   product_id: string;
-  product_name: string;
-  product_sku: string;
-  manufacture_date: string;
+  product_name?: string;
+  product_sku?: string;
+  manufacturing_date: string;
   expiry_date: string;
-  quantity: number;
+  supplier_batch_number: string | null;
   status: BatchStatus;
-  supplier_id: string;
-  supplier_name: string | null;
   notes: string | null;
-  created_by: string;
+  created_by: string | null;
   created_at: string;
-  updated_by: string;
+  updated_by: string | null;
   updated_at: string;
 }

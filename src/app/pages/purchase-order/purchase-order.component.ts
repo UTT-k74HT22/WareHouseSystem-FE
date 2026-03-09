@@ -8,7 +8,7 @@ import { OrderStatus } from '../../helper/enums/OrderStatus';
 import { BusinessPartnerResponse } from '../../dto/response/BusinessPartner/BusinessPartnerResponse';
 import { WareHouseResponse } from '../../dto/response/WareHouse/WareHouseResponse';
 import { CreatePurchaseOrderRequest } from '../../dto/request/PurchaseOrder/PurchaseOrderRequest';
-import { MOCK_PURCHASE_ORDERS, MOCK_BUSINESS_PARTNERS, MOCK_WAREHOUSES, mockPage } from '../../helper/mock/mock-data';
+import { PurchaseOrderFilters } from '../../service/PurchaseOrderService/purchase-order.service';
 
 @Component({
   selector: 'app-purchase-order',
@@ -55,20 +55,27 @@ export class PurchaseOrderComponent implements OnInit {
 
   loadOrders(): void {
     this.loading = true;
-    this.poService.getAll(this.currentPage, this.pageSize).subscribe({
+    const filters: PurchaseOrderFilters = {
+      purchaseOrderNumber: this.searchKeyword.trim() || undefined,
+      status: this.selectedStatus || undefined,
+      sortBy: 'updatedAt',
+      direction: 'DESC',
+    };
+
+    this.poService.getAll(this.currentPage, this.pageSize, filters).subscribe({
       next: (res) => {
         if (res.success) {
-          this.orders = res.data.content;
+          this.orders = res.data.content.map((order) => this.enrichOrder(order));
           this.totalElements = res.data.total_elements;
           this.totalPages = res.data.total_pages;
         }
         this.loading = false;
       },
-      error: () => {
-        const page = mockPage(MOCK_PURCHASE_ORDERS, this.currentPage, this.pageSize);
-        this.orders = page.content;
-        this.totalElements = page.total_elements;
-        this.totalPages = page.total_pages;
+      error: (error) => {
+        this.orders = [];
+        this.totalElements = 0;
+        this.totalPages = 0;
+        this.toastr.error(error?.error?.message || 'Không tải được danh sách purchase order.');
         this.loading = false;
       }
     });
@@ -76,15 +83,33 @@ export class PurchaseOrderComponent implements OnInit {
 
   loadSuppliers(): void {
     this.bpService.getAll().subscribe({
-      next: (res) => { if (res.success) this.suppliers = res.data; },
-      error: () => { this.suppliers = MOCK_BUSINESS_PARTNERS; }
+      next: (res) => {
+        if (res.success) {
+          this.suppliers = res.data.filter((partner) =>
+            partner.status === 'ACTIVE' && (partner.type === 'SUPPLIER' || partner.type === 'BOTH')
+          );
+          this.orders = this.orders.map((order) => this.enrichOrder(order));
+        }
+      },
+      error: () => {
+        this.suppliers = [];
+        this.toastr.error('Không tải được nhà cung cấp.');
+      }
     });
   }
 
   loadWarehouses(): void {
     this.warehouseService.getList().subscribe({
-      next: (res) => { if (res.success) this.warehouses = res.data; },
-      error: () => { this.warehouses = MOCK_WAREHOUSES as any; }
+      next: (res) => {
+        if (res.success) {
+          this.warehouses = res.data;
+          this.orders = this.orders.map((order) => this.enrichOrder(order));
+        }
+      },
+      error: () => {
+        this.warehouses = [];
+        this.toastr.error('Không tải được danh sách kho.');
+      }
     });
   }
 
@@ -146,13 +171,48 @@ export class PurchaseOrderComponent implements OnInit {
   }
 
   private initCreateForm(): CreatePurchaseOrderRequest {
-    return { supplier_id: '', warehouse_id: '', currency: 'VND' };
+    return {
+      supplier_id: '',
+      warehouse_id: '',
+      order_date: new Date().toISOString().slice(0, 10),
+      currency: 'VND',
+    };
+  }
+
+  confirmOrder(order: PurchaseOrderResponse): void {
+    this.poService.confirm(order.id).subscribe({
+      next: (res) => {
+        if (res.success) {
+          this.toastr.success('Đã xác nhận đơn mua hàng.');
+          this.orders = this.orders.map((item) => item.id === order.id ? this.enrichOrder(res.data) : item);
+          if (this.selectedOrder?.id === order.id) {
+            this.selectedOrder = this.enrichOrder(res.data);
+          }
+          this.loadOrders();
+        }
+      },
+      error: (error) => {
+        this.toastr.error(error?.error?.message || 'Xác nhận đơn mua hàng thất bại.');
+      }
+    });
+  }
+
+  private enrichOrder(order: PurchaseOrderResponse): PurchaseOrderResponse {
+    const supplier = this.suppliers.find((item) => item.id === order.supplier_id);
+    const warehouse = this.warehouses.find((item) => item.id === order.warehouse_id);
+
+    return {
+      ...order,
+      supplier_name: supplier?.name || order.supplier_name,
+      warehouse_name: warehouse?.name || order.warehouse_name,
+    };
   }
 
   getStatusLabel(status: OrderStatus): string {
     const labels: Record<OrderStatus, string> = {
       [OrderStatus.DRAFT]: 'Nháp',
       [OrderStatus.CONFIRMED]: 'Đã xác nhận',
+      [OrderStatus.PARTIALLY_RECEIVED]: 'Nhận một phần',
       [OrderStatus.IN_PROGRESS]: 'Đang xử lý',
       [OrderStatus.COMPLETED]: 'Hoàn thành',
       [OrderStatus.CANCELLED]: 'Đã huỷ'
@@ -164,6 +224,7 @@ export class PurchaseOrderComponent implements OnInit {
     const classes: Record<OrderStatus, string> = {
       [OrderStatus.DRAFT]: 'badge-draft',
       [OrderStatus.CONFIRMED]: 'badge-confirmed',
+      [OrderStatus.PARTIALLY_RECEIVED]: 'badge-progress',
       [OrderStatus.IN_PROGRESS]: 'badge-progress',
       [OrderStatus.COMPLETED]: 'badge-completed',
       [OrderStatus.CANCELLED]: 'badge-cancelled'

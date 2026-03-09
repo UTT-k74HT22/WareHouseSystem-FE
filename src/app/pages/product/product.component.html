@@ -50,6 +50,12 @@
       <option value="DISCONTINUED">Ngừng kinh doanh</option>
     </select>
 
+    <select class="filter-select" [(ngModel)]="isBatchTrackedFilter">
+      <option value="">-- Tất cả batch tracking --</option>
+      <option [ngValue]="true">Có</option>
+      <option [ngValue]="false">Không</option>
+    </select>
+
     <button class="btn btn-primary" (click)="onSearch()"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i> Tìm kiếm</button>
     <button class="btn btn-ghost" (click)="onResetFilter()"><i class="fa-solid fa-rotate-right" aria-hidden="true"></i> Reset</button>
     <div class="view-toggle">
@@ -102,8 +108,8 @@
           <td>{{ product.category_name }}</td>
           <td>{{ product.uom_code }}</td>
           <td>
-            <span [class]="product.is_batch_tracked ? 'badge badge-active' : 'badge badge-inactive'">
-              {{ product.is_batch_tracked ? 'Có' : 'Không' }}
+            <span [class]="product.requires_batch_tracking ? 'badge badge-active' : 'badge badge-inactive'">
+              {{ product.requires_batch_tracking ? 'Có' : 'Không' }}
             </span>
           </td>
           <td>
@@ -206,7 +212,7 @@
         </div>
       </div>
       <div class="form-group form-check">
-        <input type="checkbox" id="batchTracked" [(ngModel)]="createForm.is_batch_tracked" />
+        <input type="checkbox" id="batchTracked" [(ngModel)]="createForm.requires_batch_tracking" />
         <label for="batchTracked">Theo dõi theo lô (Batch Tracking)</label>
       </div>
       <!-- Upload ảnh sản phẩm -->
@@ -267,6 +273,19 @@
             <option value="">-- Chọn danh mục --</option>
             <option *ngFor="let c of categories" [value]="c.id">{{ c.name }}</option>
           </select>
+        </div>
+        <div class="form-group">
+          <label>Đơn vị tính</label>
+          <select [(ngModel)]="editForm.uom_id">
+            <option value="">-- Chọn đơn vị --</option>
+            <option *ngFor="let u of uomList" [value]="u.id">{{ u.code }} - {{ u.name }}</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group form-check">
+          <input type="checkbox" id="editBatchTracked" [(ngModel)]="editForm.requires_batch_tracking" />
+          <label for="editBatchTracked">Theo dõi theo lô</label>
         </div>
         <div class="form-group">
           <label>Trạng thái</label>

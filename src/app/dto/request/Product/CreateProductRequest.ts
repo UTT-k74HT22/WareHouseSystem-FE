@@ -7,13 +7,14 @@ export interface CreateProductRequest {
   category_id: string;
   uom_id: string;
   weight?: number;
-  length?: number;
-  width?: number;
-  height?: number;
+  dimensions?: string;
   min_stock_level?: number;
   max_stock_level?: number;
   reorder_point?: number;
-  is_batch_tracked?: boolean;
+  cost_price?: number;
+  selling_price?: number;
+  barcode?: string;
+  requires_batch_tracking?: boolean;
   status?: ProductStatus;
   image_url?: string;
 }

@@ -11,7 +11,6 @@ import { UnitsOfMeasureResponse } from '../../dto/response/UOM/UnitsOfMeasureRes
 import { CreateProductRequest } from '../../dto/request/Product/CreateProductRequest';
 import { UpdateProductRequest } from '../../dto/request/Product/UpdateProductRequest';
 import { SearchProductRequest } from '../../dto/request/Product/SearchProductRequest';
-import { MOCK_PRODUCTS, MOCK_CATEGORIES, MOCK_UOMS, mockPage } from '../../helper/mock/mock-data';
 
 @Component({
   selector: 'app-product',
@@ -77,8 +76,12 @@ export class ProductComponent implements OnInit {
   // ══════════════════════════════════════════════════
   loadProducts(): void {
     this.loading = true;
-    // TODO: dùng search() nếu có filter, getAll() nếu không
-    this.productService.getAll(this.currentPage, this.pageSize).subscribe({
+    const request = this.buildSearchRequest();
+    const action = this.hasActiveFilters()
+      ? this.productService.search(request, this.currentPage, this.pageSize)
+      : this.productService.getAll(this.currentPage, this.pageSize);
+
+    action.subscribe({
       next: (res) => {
         if (res.success) {
           this.products = res.data.content;
@@ -88,12 +91,11 @@ export class ProductComponent implements OnInit {
         }
         this.loading = false;
       },
-      error: () => {
-        // Fallback: dùng mock data khi BE chưa sẵn sàng
-        const page = mockPage(MOCK_PRODUCTS, this.currentPage, this.pageSize);
-        this.products = page.content;
-        this.totalElements = page.total_elements;
-        this.totalPages = page.total_pages;
+      error: (error) => {
+        this.products = [];
+        this.totalElements = 0;
+        this.totalPages = 0;
+        this.toastr.error(error?.error?.message || 'Không tải được danh sách sản phẩm.');
         this.loading = false;
       }
     });
@@ -102,14 +104,20 @@ export class ProductComponent implements OnInit {
   loadCategories(): void {
     this.categoryService.getAll(0, 100).subscribe({
       next: (res) => { if (res.success) this.categories = res.data.content; },
-      error: () => { this.categories = MOCK_CATEGORIES; }
+      error: () => {
+        this.categories = [];
+        this.toastr.error('Không tải được danh mục sản phẩm.');
+      }
     });
   }
 
   loadUOMs(): void {
     this.uomService.getAll().subscribe({
       next: (res) => { if (res.success) this.uomList = res.data; },
-      error: () => { this.uomList = MOCK_UOMS; }
+      error: () => {
+        this.uomList = [];
+        this.toastr.error('Không tải được đơn vị tính.');
+      }
     });
   }
 
@@ -118,30 +126,14 @@ export class ProductComponent implements OnInit {
   // ══════════════════════════════════════════════════
   onSearch(): void {
     this.currentPage = 0;
-    const request: SearchProductRequest = {
-      keyword: this.searchKeyword || undefined,
-      category_id: this.selectedCategoryId || undefined,
-      status: this.selectedStatus || undefined
-    };
-    this.loading = true;
-    this.productService.search(request, this.currentPage, this.pageSize).subscribe({
-      next: (res) => {
-        if (res.success) {
-          this.products = res.data.content;
-          this.totalElements = res.data.total_elements;
-          this.totalPages = res.data.total_pages;
-          this.resolveProductImages(this.products);
-        }
-        this.loading = false;
-      },
-      error: () => this.loading = false
-    });
+    this.loadProducts();
   }
 
   onResetFilter(): void {
     this.searchKeyword = '';
     this.selectedCategoryId = '';
     this.selectedStatus = '';
+    this.isBatchTrackedFilter = '';
     this.loadProducts();
   }
 
@@ -181,7 +173,8 @@ export class ProductComponent implements OnInit {
       category_id: product.category_id,
       uom_id: product.uom_id,
       status: product.status,
-      image_url: product.image_url,
+      image_url: product.image_url ?? undefined,
+      requires_batch_tracking: product.requires_batch_tracking ?? undefined,
     };
     this.editImagePreview = this.imageUrlMap.get(product.id) || null;
     this.showEditModal = true;
@@ -238,8 +231,26 @@ export class ProductComponent implements OnInit {
       category_id: '',
       uom_id: '',
       status: ProductStatus.ACTIVE,
-      is_batch_tracked: false
+      requires_batch_tracking: false
     };
+  }
+
+  private buildSearchRequest(): SearchProductRequest {
+    return {
+      category_id: this.selectedCategoryId || undefined,
+      status: this.selectedStatus || undefined,
+      requires_batch_tracking: this.isBatchTrackedFilter === '' ? undefined : this.isBatchTrackedFilter,
+      search_text: this.searchKeyword.trim() || undefined,
+    };
+  }
+
+  private hasActiveFilters(): boolean {
+    return Boolean(
+      this.searchKeyword.trim()
+      || this.selectedCategoryId
+      || this.selectedStatus
+      || this.isBatchTrackedFilter !== ''
+    );
   }
 
   getStatusLabel(status: ProductStatus): string {

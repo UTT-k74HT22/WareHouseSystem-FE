@@ -7,7 +7,6 @@ import { OutboundShipmentStatus } from '../../helper/enums/OutboundShipmentStatu
 import { BusinessPartnerResponse } from '../../dto/response/BusinessPartner/BusinessPartnerResponse';
 import { WareHouseResponse } from '../../dto/response/WareHouse/WareHouseResponse';
 import { CreateOutboundShipmentRequest } from '../../dto/request/OutboundShipment/OutboundShipmentRequest';
-import { MOCK_OUTBOUND_SHIPMENTS, MOCK_BUSINESS_PARTNERS, MOCK_WAREHOUSES, mockPage } from '../../helper/mock/mock-data';
 
 @Component({
   selector: 'app-outbound',
@@ -15,6 +14,8 @@ import { MOCK_OUTBOUND_SHIPMENTS, MOCK_BUSINESS_PARTNERS, MOCK_WAREHOUSES, mockP
   styleUrls: ['./outbound.component.css']
 })
 export class OutboundComponent implements OnInit {
+  readonly backendReady = false;
+
   shipments: OutboundShipmentResponse[] = [];
   customers: BusinessPartnerResponse[] = [];
   warehouses: WareHouseResponse[] = [];
@@ -45,37 +46,22 @@ export class OutboundComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.loadShipments();
     this.loadDropdowns();
   }
 
   loadShipments(): void {
-    this.loading = true;
-    this.outboundService.getAll(this.currentPage, this.pageSize).subscribe({
-      next: (res) => {
-        if (res.success) {
-          this.shipments = res.data.content;
-          this.totalElements = res.data.total_elements;
-          this.totalPages = res.data.total_pages;
-        }
-        this.loading = false;
-      },
-      error: () => {
-        const page = mockPage(MOCK_OUTBOUND_SHIPMENTS, this.currentPage, this.pageSize);
-        this.shipments = page.content;
-        this.totalElements = page.total_elements;
-        this.totalPages = page.total_pages;
-        this.loading = false;
-      }
-    });
+    this.shipments = [];
+    this.totalElements = 0;
+    this.totalPages = 0;
+    this.loading = false;
   }
 
   loadDropdowns(): void {
     this.bpService.getAll().subscribe({
       next: (res) => { if (res.success) this.customers = res.data; },
       error: () => {
-        this.customers = MOCK_BUSINESS_PARTNERS;
-        this.warehouses = MOCK_WAREHOUSES as any;
+        this.customers = [];
+        this.warehouses = [];
       }
     });
   }
@@ -90,6 +76,10 @@ export class OutboundComponent implements OnInit {
   }
 
   openCreateModal(): void {
+    if (!this.backendReady) {
+      this.toastr.info('Outbound shipment API chưa được backend triển khai.');
+      return;
+    }
     this.createForm = this.initCreateForm();
     this.showCreateModal = true;
   }
@@ -107,11 +97,19 @@ export class OutboundComponent implements OnInit {
   }
 
   openDetailModal(shipment: OutboundShipmentResponse): void {
+    if (!this.backendReady) {
+      this.toastr.info('Outbound shipment API chưa được backend triển khai.');
+      return;
+    }
     this.selectedShipment = shipment;
     this.showDetailModal = true;
   }
 
   openDeleteConfirm(shipment: OutboundShipmentResponse): void {
+    if (!this.backendReady) {
+      this.toastr.info('Outbound shipment API chưa được backend triển khai.');
+      return;
+    }
     this.shipmentToDelete = shipment;
     this.showDeleteConfirm = true;
   }

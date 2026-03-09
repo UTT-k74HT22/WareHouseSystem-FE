@@ -4,11 +4,15 @@ import { BusinessPartnerStatus } from '../../../helper/enums/BusinessPartnerStat
 export interface UpdateBusinessPartnerRequest {
   name?: string;
   type?: BusinessPartnerType;
+  contact_person?: string;
   email?: string;
   phone?: string;
   address?: string;
-  tax_code?: string;
-  contact_person?: string;
+  city?: string;
+  country?: string;
+  tax_id?: string;
+  payment_terms?: string;
+  credit_limit?: number;
   status?: BusinessPartnerStatus;
   notes?: string;
 }

@@ -34,6 +34,10 @@
       <option value="">-- Tất cả kho --</option>
       <option *ngFor="let w of warehouses" [value]="w.id">{{ w.name }}</option>
     </select>
+    <select class="filter-select" [(ngModel)]="selectedLocationId">
+      <option value="">-- Tất cả vị trí --</option>
+      <option *ngFor="let l of locations" [value]="l.id">{{ l.code }} - {{ l.name }}</option>
+    </select>
     <button class="btn btn-primary" (click)="onSearch()"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i> Tìm kiếm</button>
     <button class="btn btn-ghost" (click)="onResetFilter()"><i class="fa-solid fa-rotate-right" aria-hidden="true"></i> Reset</button>
     <div class="view-toggle">
@@ -73,12 +77,12 @@
           <td>{{ item.warehouse_name }}</td>
           <td>{{ item.location_code }}</td>
           <td>{{ item.batch_number ?? '—' }}</td>
-          <td><strong>{{ item.quantity_on_hand }}</strong></td>
-          <td>{{ item.quantity_reserved }}</td>
-          <td [ngClass]="item.quantity_available <= 0 ? 'text-danger' : ''">
-            <strong>{{ item.quantity_available }}</strong>
+          <td><strong>{{ item.on_hand_quantity }}</strong></td>
+          <td>{{ item.reserved_quantity }}</td>
+          <td [ngClass]="item.available_quantity <= 0 ? 'text-danger' : ''">
+            <strong>{{ item.available_quantity }}</strong>
           </td>
-          <td>{{ item.uom_code }}</td>
+          <td>{{ item.uom_code ?? '—' }}</td>
           <td class="actions">
             <button class="btn-icon" (click)="openDetailModal(item)"><i class="fa-regular fa-eye" aria-hidden="true"></i></button>
           </td>
@@ -97,8 +101,8 @@
       <div class="entity-card__meta">
         <div class="entity-card__row">Kho: {{ item.warehouse_name }}</div>
         <div class="entity-card__row">Vị trí: {{ item.location_code }}</div>
-        <div class="entity-card__row">Tồn kho: <strong>{{ item.quantity_on_hand }}</strong></div>
-        <div class="entity-card__row">Có thể xuất: <strong>{{ item.quantity_available }}</strong></div>
+        <div class="entity-card__row">Tồn kho: <strong>{{ item.on_hand_quantity }}</strong></div>
+        <div class="entity-card__row">Có thể xuất: <strong>{{ item.available_quantity }}</strong></div>
       </div>
       <div class="entity-card__actions">
         <button class="btn-icon" (click)="openDetailModal(item)"><i class="fa-regular fa-eye" aria-hidden="true"></i></button>
@@ -123,12 +127,12 @@
         <div class="detail-item"><span class="detail-label">Sản phẩm:</span><span>{{ selectedItem.product_name }}</span></div>
         <div class="detail-item"><span class="detail-label">SKU:</span><span><code>{{ selectedItem.product_sku }}</code></span></div>
         <div class="detail-item"><span class="detail-label">Kho:</span><span>{{ selectedItem.warehouse_name }}</span></div>
-        <div class="detail-item"><span class="detail-label">Vị trí:</span><span>{{ selectedItem.location_code }} - {{ selectedItem.location_name }}</span></div>
+        <div class="detail-item"><span class="detail-label">Vị trí:</span><span>{{ selectedItem.location_code }} - {{ selectedItem.location_name ?? '—' }}</span></div>
         <div class="detail-item"><span class="detail-label">Số lô:</span><span>{{ selectedItem.batch_number ?? '—' }}</span></div>
-        <div class="detail-item"><span class="detail-label">Tồn kho:</span><span>{{ selectedItem.quantity_on_hand }} {{ selectedItem.uom_code }}</span></div>
-        <div class="detail-item"><span class="detail-label">Đã đặt giữ:</span><span>{{ selectedItem.quantity_reserved }} {{ selectedItem.uom_code }}</span></div>
-        <div class="detail-item"><span class="detail-label">Có thể xuất:</span><span>{{ selectedItem.quantity_available }} {{ selectedItem.uom_code }}</span></div>
-        <div class="detail-item"><span class="detail-label">Kiểm kê lần cuối:</span><span>{{ selectedItem.last_counted_at | date:'dd/MM/yyyy HH:mm' }}</span></div>
+        <div class="detail-item"><span class="detail-label">Tồn kho:</span><span>{{ selectedItem.on_hand_quantity }} {{ selectedItem.uom_code ?? '' }}</span></div>
+        <div class="detail-item"><span class="detail-label">Đã đặt giữ:</span><span>{{ selectedItem.reserved_quantity }} {{ selectedItem.uom_code ?? '' }}</span></div>
+        <div class="detail-item"><span class="detail-label">Có thể xuất:</span><span>{{ selectedItem.available_quantity }} {{ selectedItem.uom_code ?? '' }}</span></div>
+        <div class="detail-item"><span class="detail-label">Biến động gần nhất:</span><span>{{ selectedItem.last_movement_at ? (selectedItem.last_movement_at | date:'dd/MM/yyyy HH:mm') : '—' }}</span></div>
       </div>
     </div>
     <div class="modal-footer"><button class="btn btn-ghost" (click)="closeAllModals()">Đóng</button></div>

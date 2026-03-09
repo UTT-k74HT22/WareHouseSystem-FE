@@ -21,6 +21,7 @@ import { SalesOrderResponse } from '../../dto/response/SalesOrder/SalesOrderResp
 import { InboundReceiptResponse } from '../../dto/response/InboundReceipt/InboundReceiptResponse';
 import { OutboundShipmentResponse } from '../../dto/response/OutboundShipment/OutboundShipmentResponse';
 import { InventoryResponse } from '../../dto/response/Inventory/InventoryResponse';
+import { LocationResponse } from '../../dto/response/Location/LocationResponse';
 import { StockMovementResponse } from '../../dto/response/Stock/StockMovementResponse';
 import { StockAdjustmentResponse } from '../../dto/response/Stock/StockAdjustmentResponse';
 import { StockTransferResponse } from '../../dto/response/Stock/StockTransferResponse';
@@ -34,7 +35,11 @@ import { BatchStatus } from '../enums/BatchStatus';
 import { OrderStatus } from '../enums/OrderStatus';
 import { InboundReceiptStatus } from '../enums/InboundReceiptStatus';
 import { OutboundShipmentStatus } from '../enums/OutboundShipmentStatus';
+import { LocationStatus } from '../enums/LocationStatus';
+import { LocationType } from '../enums/LocationType';
 import { StockMovementType } from '../enums/StockMovementType';
+import { StockTransferReason } from '../enums/StockTransferReason';
+import { StockTransferStatus } from '../enums/StockTransferStatus';
 import { ReasonType } from '../enums/ReasonType';
 import { StockAdjustmentsStatus } from '../enums/StockAdjustmentsStatus';
 import { WareHouseStatus } from '../enums/WareHouseStatus';
@@ -64,6 +69,18 @@ export const MOCK_WAREHOUSES: WareHouseResponse[] = [
   { id: 'wh-001', code: 'WH-MAIN', name: 'Kho chính Hà Nội', address: '123 Nguyễn Trãi, Thanh Xuân, Hà Nội', phone: '024-1234-5678', email: 'main@whs.vn', status: WareHouseStatus.ACTIVE, ware_house_type: WareHouseType.MAIN, manager_id: 'user-001' },
   { id: 'wh-002', code: 'WH-HCM', name: 'Kho TP.HCM', address: '456 Lê Văn Việt, Q.9, TP.HCM', phone: '028-8765-4321', email: 'hcm@whs.vn', status: WareHouseStatus.ACTIVE, ware_house_type: WareHouseType.SATELLITE, manager_id: 'user-002' },
   { id: 'wh-003', code: 'WH-DN', name: 'Kho Đà Nẵng', address: '789 Trần Phú, Hải Châu, Đà Nẵng', phone: '023-6543-2100', email: 'dn@whs.vn', status: WareHouseStatus.UNDER_MAINTENANCE, ware_house_type: WareHouseType.SATELLITE, manager_id: 'user-003' },
+];
+
+// ════════════════════════════════════════════════════════════
+// LOCATION - Vị trí lưu trữ
+// ════════════════════════════════════════════════════════════
+export const MOCK_LOCATIONS: LocationResponse[] = [
+  { id: 'loc-001', warehouse_id: 'wh-001', warehouse_code: 'WH-MAIN', warehouse_name: 'Kho chính Hà Nội', code: 'A-01-01', name: 'Kệ A, Tầng 1, Ô 1', zone: 'A', type: LocationType.STORAGE, capacity: 100, status: LocationStatus.ACTIVE, notes: '', created_by: 'admin', created_at: '2025-01-01T08:00:00', updated_by: 'admin', updated_at: '2025-01-01T08:00:00' },
+  { id: 'loc-002', warehouse_id: 'wh-001', warehouse_code: 'WH-MAIN', warehouse_name: 'Kho chính Hà Nội', code: 'B-01-01', name: 'Kệ B, Tầng 1, Ô 1', zone: 'B', type: LocationType.STORAGE, capacity: 200, status: LocationStatus.ACTIVE, notes: '', created_by: 'admin', created_at: '2025-01-01T08:00:00', updated_by: 'admin', updated_at: '2025-01-01T08:00:00' },
+  { id: 'loc-003', warehouse_id: 'wh-001', warehouse_code: 'WH-MAIN', warehouse_name: 'Kho chính Hà Nội', code: 'B-02-01', name: 'Kệ B, Tầng 2, Ô 1', zone: 'B', type: LocationType.STORAGE, capacity: 200, status: LocationStatus.ACTIVE, notes: '', created_by: 'admin', created_at: '2025-01-01T08:00:00', updated_by: 'admin', updated_at: '2025-01-01T08:00:00' },
+  { id: 'loc-004', warehouse_id: 'wh-001', warehouse_code: 'WH-MAIN', warehouse_name: 'Kho chính Hà Nội', code: 'C-01-01', name: 'Kệ C, Tầng 1, Ô 1', zone: 'C', type: LocationType.STORAGE, capacity: 120, status: LocationStatus.ACTIVE, notes: '', created_by: 'admin', created_at: '2025-01-01T08:00:00', updated_by: 'admin', updated_at: '2025-01-01T08:00:00' },
+  { id: 'loc-005', warehouse_id: 'wh-002', warehouse_code: 'WH-HCM', warehouse_name: 'Kho TP.HCM', code: 'D-01-01', name: 'Kệ D, Tầng 1, Ô 1', zone: 'D', type: LocationType.STORAGE, capacity: 250, status: LocationStatus.ACTIVE, notes: '', created_by: 'admin', created_at: '2025-01-01T08:00:00', updated_by: 'admin', updated_at: '2025-01-01T08:00:00' },
+  { id: 'loc-006', warehouse_id: 'wh-001', warehouse_code: 'WH-MAIN', warehouse_name: 'Kho chính Hà Nội', code: 'A-02-01', name: 'Kệ A, Tầng 2, Ô 1', zone: 'A', type: LocationType.STORAGE, capacity: 100, status: LocationStatus.ACTIVE, notes: '', created_by: 'admin', created_at: '2025-01-01T08:00:00', updated_by: 'admin', updated_at: '2025-01-01T08:00:00' },
 ];
 
 // ════════════════════════════════════════════════════════════
@@ -170,80 +187,24 @@ export const MOCK_INVENTORIES: InventoryResponse[] = [
 export const MOCK_STOCK_MOVEMENTS: StockMovementResponse[] = [
   { id: 'sm-001', movement_number: 'SM-2025-0001', type: StockMovementType.INBOUND, product_id: 'prod-002', product_name: 'Gạo ST25 túi 5kg', product_sku: 'SP-RICE-002', from_location_id: null, from_location_code: null, to_location_id: 'loc-002', to_location_code: 'B-01-01', batch_id: 'bat-001', batch_number: 'LOT-2025-001', quantity: 500, uom_code: 'KG', reference_type: 'INBOUND_RECEIPT', reference_id: 'inb-001', notes: '', created_by: 'admin', created_at: '2025-01-25T10:00:00' },
   { id: 'sm-002', movement_number: 'SM-2025-0002', type: StockMovementType.OUTBOUND, product_id: 'prod-002', product_name: 'Gạo ST25 túi 5kg', product_sku: 'SP-RICE-002', from_location_id: 'loc-002', from_location_code: 'B-01-01', to_location_id: null, to_location_code: null, batch_id: 'bat-001', batch_number: 'LOT-2025-001', quantity: 200, uom_code: 'KG', reference_type: 'OUTBOUND_SHIPMENT', reference_id: 'out-001', notes: '', created_by: 'admin', created_at: '2025-02-01T14:00:00' },
-  { id: 'sm-003', movement_number: 'SM-2025-0003', type: StockMovementType.TRANSFER, product_id: 'prod-001', product_name: 'Laptop Dell Inspiron 15', product_sku: 'SP-LAPTOP-001', from_location_id: 'loc-006', from_location_code: 'A-02-01', to_location_id: 'loc-001', to_location_code: 'A-01-01', batch_id: null, batch_number: null, quantity: 10, uom_code: 'PCS', reference_type: 'STOCK_TRANSFER', reference_id: 'st-001', notes: 'Chuyển hàng sang kệ chính', created_by: 'admin', created_at: '2025-02-15T09:00:00' },
-  { id: 'sm-004', movement_number: 'SM-2025-0004', type: StockMovementType.ADJUSTMENT, product_id: 'prod-003', product_name: 'Nước rửa tay Lifebuoy 500ml', product_sku: 'SP-CLEAN-003', from_location_id: null, from_location_code: null, to_location_id: 'loc-004', to_location_code: 'C-01-01', batch_id: 'bat-002', batch_number: 'LOT-2025-002', quantity: -15, uom_code: 'LIT', reference_type: 'STOCK_ADJUSTMENT', reference_id: 'sa-001', notes: 'Hàng hỏng do vỡ', created_by: 'admin', created_at: '2025-02-20T11:00:00' },
+  { id: 'sm-003', movement_number: 'SM-2025-0003', type: StockMovementType.TRANSFER_OUT, product_id: 'prod-001', product_name: 'Laptop Dell Inspiron 15', product_sku: 'SP-LAPTOP-001', from_location_id: 'loc-006', from_location_code: 'A-02-01', to_location_id: null, to_location_code: null, batch_id: null, batch_number: null, quantity: -10, uom_code: 'PCS', reference_type: 'STOCK_TRANSFER', reference_id: 'st-001', notes: 'Chuyển hàng sang kệ chính', created_by: 'admin', created_at: '2025-02-15T09:00:00' },
+  { id: 'sm-004', movement_number: 'SM-2025-0004', type: StockMovementType.TRANSFER_IN, product_id: 'prod-001', product_name: 'Laptop Dell Inspiron 15', product_sku: 'SP-LAPTOP-001', from_location_id: null, from_location_code: null, to_location_id: 'loc-001', to_location_code: 'A-01-01', batch_id: null, batch_number: null, quantity: 10, uom_code: 'PCS', reference_type: 'STOCK_TRANSFER', reference_id: 'st-001', notes: 'Chuyển hàng sang kệ chính', created_by: 'admin', created_at: '2025-02-15T09:00:00' },
+  { id: 'sm-005', movement_number: 'SM-2025-0005', type: StockMovementType.ADJUSTMENT_DECREASE, product_id: 'prod-003', product_name: 'Nước rửa tay Lifebuoy 500ml', product_sku: 'SP-CLEAN-003', from_location_id: null, from_location_code: null, to_location_id: 'loc-004', to_location_code: 'C-01-01', batch_id: 'bat-002', batch_number: 'LOT-2025-002', quantity: -15, uom_code: 'LIT', reference_type: 'STOCK_ADJUSTMENT', reference_id: 'sa-001', notes: 'Hàng hỏng do vỡ', created_by: 'admin', created_at: '2025-02-20T11:00:00' },
 ];
 
 // ════════════════════════════════════════════════════════════
 // STOCK ADJUSTMENT - Điều chỉnh tồn kho
 // ════════════════════════════════════════════════════════════
 export const MOCK_STOCK_ADJUSTMENTS: StockAdjustmentResponse[] = [
-  {
-    id: 'sa-001',
-    adjustment_number: 'ADJ-20250220110000-A1B2C3D4',
-    inventory_id: 'inv-004',
-    product_id: 'prod-003',
-    warehouse_id: 'wh-001',
-    location_id: 'loc-004',
-    batch_id: 'bat-002',
-    quantity_before: 20,
-    quantity_after: 5,
-    adjustment_quantity: -15,
-    reason: ReasonType.DAMAGE,
-    status: StockAdjustmentsStatus.APPROVED,
-    notes: 'Kiểm kê phát hiện 15 chai bị vỡ.',
-    requires_approval: false,
-    approved_at: '2025-02-20T11:05:00',
-    rejection_reason: null,
-    created_at: '2025-02-20T11:00:00',
-    updated_at: '2025-02-20T11:05:00'
-  },
-  {
-    id: 'sa-002',
-    adjustment_number: 'ADJ-20250222090000-E5F6G7H8',
-    inventory_id: 'inv-005',
-    product_id: 'prod-004',
-    warehouse_id: 'wh-002',
-    location_id: 'loc-005',
-    batch_id: null,
-    quantity_before: 2000,
-    quantity_after: 1980,
-    adjustment_quantity: -20,
-    reason: ReasonType.THEFT,
-    status: StockAdjustmentsStatus.PENDING_APPROVAL,
-    notes: 'Ca trực đêm báo thiếu 20 hộp sau đối chiếu camera.',
-    requires_approval: true,
-    approved_at: null,
-    rejection_reason: null,
-    created_at: '2025-02-22T09:00:00',
-    updated_at: '2025-02-22T09:00:00'
-  },
-  {
-    id: 'sa-003',
-    adjustment_number: 'ADJ-20250223103000-K9L0M1N2',
-    inventory_id: 'inv-002',
-    product_id: 'prod-002',
-    warehouse_id: 'wh-001',
-    location_id: 'loc-002',
-    batch_id: 'bat-001',
-    quantity_before: 300,
-    quantity_after: 295,
-    adjustment_quantity: -5,
-    reason: ReasonType.QUALITY_ISSUE,
-    status: StockAdjustmentsStatus.REJECTED,
-    notes: 'Đề nghị loại bỏ 5kg do nghi ngờ ẩm mốc.',
-    requires_approval: true,
-    approved_at: '2025-02-23T11:00:00',
-    rejection_reason: 'Chưa có biên bản QC kèm theo.',
-    created_at: '2025-02-23T10:30:00',
-    updated_at: '2025-02-23T11:00:00'
-  },
+  { id: 'sa-001', adjustment_number: 'SA-2025-0001', inventory_id: 'inv-004', product_id: 'prod-003', warehouse_id: 'wh-001', location_id: 'loc-004', batch_id: 'bat-002', quantity_before: 20, quantity_after: 5, adjustment_quantity: -15, reason: ReasonType.DAMAGE, status: StockAdjustmentsStatus.APPROVED, notes: 'Phát hiện khi kiểm kê', requires_approval: false, approved_at: '2025-02-20T11:05:00', rejection_reason: null, created_at: '2025-02-20T11:00:00', updated_at: '2025-02-20T11:05:00' },
+  { id: 'sa-002', adjustment_number: 'SA-2025-0002', inventory_id: 'inv-005', product_id: 'prod-004', warehouse_id: 'wh-002', location_id: 'loc-005', batch_id: null, quantity_before: 1950, quantity_after: 2000, adjustment_quantity: 50, reason: ReasonType.COUNT_ERROR, status: StockAdjustmentsStatus.PENDING_APPROVAL, notes: '', requires_approval: true, approved_at: null, rejection_reason: null, created_at: '2025-02-22T09:00:00', updated_at: '2025-02-22T09:00:00' },
+  { id: 'sa-003', adjustment_number: 'SA-2025-0003', inventory_id: 'inv-002', product_id: 'prod-002', warehouse_id: 'wh-001', location_id: 'loc-002', batch_id: 'bat-001', quantity_before: 300, quantity_after: 280, adjustment_quantity: -20, reason: ReasonType.QUALITY_ISSUE, status: StockAdjustmentsStatus.REJECTED, notes: 'Nghi ngờ chất lượng lô', requires_approval: true, approved_at: null, rejection_reason: 'Chưa đủ bằng chứng kiểm đếm và biên bản QC.', created_at: '2025-02-25T14:00:00', updated_at: '2025-02-25T15:30:00' },
 ];
 
 // ════════════════════════════════════════════════════════════
 // STOCK TRANSFER - Chuyển kho
 // ════════════════════════════════════════════════════════════
 export const MOCK_STOCK_TRANSFERS: StockTransferResponse[] = [
-  { id: 'st-001', transfer_number: 'ST-2025-0001', product_id: 'prod-001', product_name: 'Laptop Dell Inspiron 15', product_sku: 'SP-LAPTOP-001', from_location_id: 'loc-006', from_location_code: 'A-02-01', from_location_name: 'Kệ A, Tầng 2, Ô 1', to_location_id: 'loc-001', to_location_code: 'A-01-01', to_location_name: 'Kệ A, Tầng 1, Ô 1', batch_id: null, batch_number: null, quantity: 10, uom_code: 'PCS', status: 'COMPLETED', notes: 'Chuyển hàng xuống tầng 1', created_by: 'admin', created_at: '2025-02-15T09:00:00', updated_at: '2025-02-15T09:30:00' },
-  { id: 'st-002', transfer_number: 'ST-2025-0002', product_id: 'prod-002', product_name: 'Gạo ST25 túi 5kg', product_sku: 'SP-RICE-002', from_location_id: 'loc-002', from_location_code: 'B-01-01', from_location_name: 'Kệ B, Tầng 1, Ô 1', to_location_id: 'loc-003', to_location_code: 'B-02-01', to_location_name: 'Kệ B, Tầng 2, Ô 1', batch_id: 'bat-003', batch_number: 'LOT-2025-003', quantity: 200, uom_code: 'KG', status: 'PENDING', notes: 'Phân bổ lại kho', created_by: 'admin', created_at: '2025-02-26T14:00:00', updated_at: '2025-02-26T14:00:00' },
+  { id: 'st-001', transfer_number: 'TRF-20250215090000-A1B2C3D4', product_id: 'prod-001', warehouse_id: 'wh-001', from_location_id: 'loc-006', to_location_id: 'loc-001', batch_id: null, quantity: 10, reason: StockTransferReason.REORG, notes: 'Chuyển hàng xuống tầng 1', status: StockTransferStatus.COMPLETED, completed_at: '2025-02-15T09:30:00', created_by: 'admin', created_at: '2025-02-15T09:00:00', updated_by: 'admin', updated_at: '2025-02-15T09:30:00' },
+  { id: 'st-002', transfer_number: 'TRF-20250226140000-E5F6G7H8', product_id: 'prod-002', warehouse_id: 'wh-001', from_location_id: 'loc-002', to_location_id: 'loc-003', batch_id: 'bat-003', quantity: 200, reason: StockTransferReason.CONSOLIDATION, notes: 'Phân bổ lại kho', status: StockTransferStatus.DRAFT, completed_at: null, created_by: 'admin', created_at: '2025-02-26T14:00:00', updated_by: 'admin', updated_at: '2025-02-26T14:00:00' },
 ];

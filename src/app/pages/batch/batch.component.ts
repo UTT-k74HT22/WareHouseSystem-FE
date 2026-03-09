@@ -3,8 +3,9 @@ import { BatchResponse } from '../../dto/response/Batch/BatchResponse';
 import { BatchService } from '../../service/BatchService/batch.service';
 import { ToastrService } from '../../service/SystemService/toastr.service';
 import { BatchStatus } from '../../helper/enums/BatchStatus';
-import { CreateBatchRequest, UpdateBatchRequest } from '../../dto/request/Batch/BatchRequest';
-import { MOCK_BATCHES, mockPage } from '../../helper/mock/mock-data';
+import { ChangeBatchStatusRequest, CreateBatchRequest } from '../../dto/request/Batch/BatchRequest';
+import { ProductService } from '../../service/ProductService/product.service';
+import { ProductResponse } from '../../dto/response/Product/ProductResponse';
 
 @Component({
   selector: 'app-batch',
@@ -12,7 +13,9 @@ import { MOCK_BATCHES, mockPage } from '../../helper/mock/mock-data';
   styleUrls: ['./batch.component.css']
 })
 export class BatchComponent implements OnInit {
+  allBatches: BatchResponse[] = [];
   batches: BatchResponse[] = [];
+  products: ProductResponse[] = [];
   currentPage = 0;
   pageSize = 10;
   totalElements = 0;
@@ -28,46 +31,73 @@ export class BatchComponent implements OnInit {
   showDeleteModal = false;
 
   createForm: CreateBatchRequest = this.initCreateForm();
-  editForm: UpdateBatchRequest & { id: string } = { id: '', status: BatchStatus.ACTIVE };
+  editForm: ChangeBatchStatusRequest = { status: BatchStatus.ACTIVE };
   selectedBatch: BatchResponse | null = null;
 
   BatchStatus = BatchStatus;
 
   constructor(
     private batchService: BatchService,
+    private productService: ProductService,
     private toastr: ToastrService
   ) {}
 
-  ngOnInit(): void { this.loadBatches(); }
+  ngOnInit(): void {
+    this.loadProducts();
+    this.loadBatches();
+  }
+
+  private loadProducts(): void {
+    this.productService.getAll(0, 200).subscribe({
+      next: (res) => {
+        if (res.success) {
+          this.products = res.data.content;
+          this.batches = this.batches.map((batch) => this.enrichBatch(batch));
+        }
+      },
+      error: () => {
+        this.products = [];
+      }
+    });
+  }
 
   loadBatches(): void {
     this.loading = true;
-    this.batchService.getAll(this.currentPage, this.pageSize).subscribe({
+    this.batchService.getAll(0, 200).subscribe({
       next: (res) => {
         if (res.success) {
-          this.batches = res.data.content;
-          this.totalElements = res.data.total_elements;
-          this.totalPages = res.data.total_pages;
+          this.allBatches = res.data.content.map((batch) => this.enrichBatch(batch));
+          this.applyFilters();
         }
         this.loading = false;
       },
-      error: () => {
-        const page = mockPage(MOCK_BATCHES, this.currentPage, this.pageSize);
-        this.batches = page.content;
-        this.totalElements = page.total_elements;
-        this.totalPages = page.total_pages;
+      error: (error) => {
+        this.allBatches = [];
+        this.batches = [];
+        this.totalElements = 0;
+        this.totalPages = 0;
+        this.toastr.error(error?.error?.message || 'Không tải được danh sách lô hàng.');
         this.loading = false;
       }
     });
   }
 
-  onSearch(): void { this.currentPage = 0; this.loadBatches(); }
-  onResetFilter(): void { this.searchKeyword = ''; this.selectedStatus = ''; this.loadBatches(); }
+  onSearch(): void {
+    this.currentPage = 0;
+    this.applyFilters();
+  }
+
+  onResetFilter(): void {
+    this.searchKeyword = '';
+    this.selectedStatus = '';
+    this.currentPage = 0;
+    this.applyFilters();
+  }
 
   onPageChange(page: number): void {
     if (page < 0 || page >= this.totalPages) return;
     this.currentPage = page;
-    this.loadBatches();
+    this.applyFilters();
   }
 
   openCreateModal(): void { this.createForm = this.initCreateForm(); this.showCreateModal = true; }
@@ -75,13 +105,7 @@ export class BatchComponent implements OnInit {
   openEditModal(b: BatchResponse): void {
     this.selectedBatch = b;
     this.editForm = {
-      id: b.id,
-      batch_number: b.batch_number,
-      manufacture_date: b.manufacture_date,
-      expiry_date: b.expiry_date,
-      quantity: b.quantity,
       status: b.status,
-      notes: b.notes ?? undefined
     };
     this.showEditModal = true;
   }
@@ -101,11 +125,14 @@ export class BatchComponent implements OnInit {
   }
 
   onEditSubmit(): void {
-    const { id, ...body } = this.editForm;
-    this.batchService.update(id, body).subscribe({
+    if (!this.selectedBatch) {
+      return;
+    }
+
+    this.batchService.changeStatus(this.selectedBatch.id, this.editForm).subscribe({
       next: (res) => {
         if (res.success) {
-          this.toastr.success('Cập nhật lô hàng thành công!');
+          this.toastr.success('Cập nhật trạng thái lô hàng thành công!');
           this.showEditModal = false;
           this.loadBatches();
         }
@@ -115,10 +142,10 @@ export class BatchComponent implements OnInit {
 
   onDeleteConfirm(): void {
     if (!this.selectedBatch) return;
-    this.batchService.delete(this.selectedBatch.id).subscribe({
+    this.batchService.changeStatus(this.selectedBatch.id, { status: BatchStatus.DISPOSED }).subscribe({
       next: (res) => {
         if (res.success) {
-          this.toastr.success('Đã xoá lô hàng!');
+          this.toastr.success('Đã chuyển lô hàng sang trạng thái huỷ!');
           this.showDeleteModal = false;
           this.loadBatches();
         }
@@ -153,11 +180,50 @@ export class BatchComponent implements OnInit {
     return classes[status];
   }
 
-  get activeCount(): number   { return this.batches.filter(b => b.status === BatchStatus.ACTIVE).length; }
-  get expiredCount(): number  { return this.batches.filter(b => b.status === BatchStatus.EXPIRED).length; }
+  get activeCount(): number   { return this.allBatches.filter(b => b.status === BatchStatus.ACTIVE).length; }
+  get expiredCount(): number  { return this.allBatches.filter(b => b.status === BatchStatus.EXPIRED).length; }
 
   private initCreateForm(): CreateBatchRequest {
-    return { product_id: '', batch_number: '', manufacture_date: '', expiry_date: '', quantity: 0 };
+    return {
+      product_id: '',
+      batch_number: '',
+      manufacturing_date: new Date().toISOString().slice(0, 10),
+      expiry_date: '',
+      status: BatchStatus.ACTIVE,
+    };
+  }
+
+  private enrichBatch(batch: BatchResponse): BatchResponse {
+    const product = this.products.find((item) => item.id === batch.product_id);
+
+    return {
+      ...batch,
+      product_name: product?.name || batch.product_name,
+      product_sku: product?.sku || batch.product_sku,
+    };
+  }
+
+  private applyFilters(): void {
+    const keyword = this.searchKeyword.trim().toLowerCase();
+    let filtered = [...this.allBatches];
+
+    if (keyword) {
+      filtered = filtered.filter((batch) =>
+        batch.batch_number.toLowerCase().includes(keyword)
+        || (batch.product_name || '').toLowerCase().includes(keyword)
+        || (batch.product_sku || '').toLowerCase().includes(keyword)
+      );
+    }
+
+    if (this.selectedStatus) {
+      filtered = filtered.filter((batch) => batch.status === this.selectedStatus);
+    }
+
+    this.totalElements = filtered.length;
+    this.totalPages = this.totalElements === 0 ? 0 : Math.ceil(this.totalElements / this.pageSize);
+
+    const start = this.currentPage * this.pageSize;
+    this.batches = filtered.slice(start, start + this.pageSize);
   }
 }
 

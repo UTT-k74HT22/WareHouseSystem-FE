@@ -5,7 +5,7 @@ import { BaseURL } from '../../../environments/BaseURL';
 import { ApiResponse } from '../../dto/response/ApiResponse';
 import { PageResponse } from '../../dto/response/PageResponse';
 import { BatchResponse } from '../../dto/response/Batch/BatchResponse';
-import { CreateBatchRequest, UpdateBatchRequest } from '../../dto/request/Batch/BatchRequest';
+import { ChangeBatchStatusRequest, CreateBatchRequest } from '../../dto/request/Batch/BatchRequest';
 
 @Injectable({ providedIn: 'root' })
 export class BatchService {
@@ -24,26 +24,13 @@ export class BatchService {
     return this.http.get<ApiResponse<BatchResponse>>(`${this.apiUrl}/${id}`);
   }
 
-  /** GET /api/v1/batches/product/:productId */
-  getByProduct(productId: string, page = 0, size = 10): Observable<ApiResponse<PageResponse<BatchResponse>>> {
-    const params = new HttpParams().set('page', page).set('size', size);
-    return this.http.get<ApiResponse<PageResponse<BatchResponse>>>(
-      `${this.apiUrl}/product/${productId}`, { params }
-    );
-  }
-
   /** POST /api/v1/batches */
   create(request: CreateBatchRequest): Observable<ApiResponse<BatchResponse>> {
     return this.http.post<ApiResponse<BatchResponse>>(this.apiUrl, request);
   }
 
-  /** PUT /api/v1/batches/:id */
-  update(id: string, request: UpdateBatchRequest): Observable<ApiResponse<BatchResponse>> {
-    return this.http.put<ApiResponse<BatchResponse>>(`${this.apiUrl}/${id}`, request);
-  }
-
-  /** DELETE /api/v1/batches/:id */
-  delete(id: string): Observable<ApiResponse<void>> {
-    return this.http.delete<ApiResponse<void>>(`${this.apiUrl}/${id}`);
+  /** PATCH /api/v1/batches/:id/status */
+  changeStatus(id: string, request: ChangeBatchStatusRequest): Observable<ApiResponse<BatchResponse>> {
+    return this.http.patch<ApiResponse<BatchResponse>>(`${this.apiUrl}/${id}/status`, request);
   }
 }

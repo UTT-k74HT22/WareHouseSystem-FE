@@ -4,6 +4,5 @@ export interface CreateCategoryRequest {
   code: string;
   name: string;
   description?: string;
-  parent_id?: string;
-  status?: CategoryStatus;
+  status: CategoryStatus;
 }

@@ -1,1 +1,95 @@
-/* Stock Transfers Component — specific overrides (base from whs-pages.css) */
+/* Stock Transfers Component - specific overrides (base from whs-pages.css) */
+
+.cell-subtext {
+  color: #64748b;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.table-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.action-btn {
+  min-width: 88px;
+}
+
+.stat-bar--draft {
+  background: #94a3b8;
+}
+
+.stat-bar--success {
+  background: #10b981;
+}
+
+.stat-bar--danger {
+  background: #ef4444;
+}
+
+.summary-panel,
+.callout {
+  border-radius: 14px;
+  margin-bottom: 20px;
+  padding: 16px 18px;
+}
+
+.summary-panel {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+.summary-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.summary-label {
+  color: #64748b;
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
+
+.callout {
+  border: 1px solid transparent;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.callout-info {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  color: #1d4ed8;
+}
+
+.callout-warning {
+  background: #fff7ed;
+  border-color: #fdba74;
+  color: #c2410c;
+}
+
+.form-hint {
+  color: #64748b;
+  font-size: 12px;
+  margin-top: 6px;
+}
+
+.detail-full {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 768px) {
+  .table-actions {
+    flex-direction: column;
+  }
+
+  .action-btn {
+    width: 100%;
+  }
+}
