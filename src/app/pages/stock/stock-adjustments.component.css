@@ -72,49 +72,56 @@
 
 .adjustment-table {
   width: 100%;
-  table-layout: fixed;
+  table-layout: auto;
 }
 
 .adjustment-table th,
 .adjustment-table td {
   white-space: normal;
-  word-break: break-word;
+  word-break: normal;
+  overflow-wrap: anywhere;
   vertical-align: top;
+}
+
+.adjustment-table th {
+  white-space: nowrap;
 }
 
 .adjustment-table th:nth-child(1),
 .adjustment-table td:nth-child(1) {
   width: 44px;
   text-align: center;
+  white-space: nowrap;
 }
 
 .adjustment-table th:nth-child(2),
 .adjustment-table td:nth-child(2) {
-  width: 12%;
+  min-width: 165px;
 }
 
 .adjustment-table th:nth-child(3),
 .adjustment-table td:nth-child(3) {
-  width: 14%;
+  min-width: 190px;
 }
 
 .adjustment-table th:nth-child(4),
 .adjustment-table td:nth-child(4) {
-  width: 14%;
+  min-width: 190px;
 }
 
-.adjustment-table th:nth-child(5),
-.adjustment-table td:nth-child(5) {
-  width: 11%;
+.adjustment-table th:nth-child(6),
+.adjustment-table td:nth-child(6),
+.adjustment-table th:nth-child(7),
+.adjustment-table td:nth-child(7),
+.adjustment-table th:nth-child(8),
+.adjustment-table td:nth-child(8),
+.adjustment-table th:nth-child(9),
+.adjustment-table td:nth-child(9) {
+  white-space: nowrap;
 }
 
 .adjustment-table th:nth-child(10),
 .adjustment-table td:nth-child(10) {
-  width: 11%;
-}
-
-.adjustment-table th:nth-child(11),
-.adjustment-table td:nth-child(11) {
   width: 132px;
 }
 
@@ -141,10 +148,10 @@
 }
 
 @media (max-width: 992px) {
-  .adjustment-table th:nth-child(10),
-  .adjustment-table td:nth-child(10),
   .adjustment-table th:nth-child(4),
-  .adjustment-table td:nth-child(4) {
+  .adjustment-table td:nth-child(4),
+  .adjustment-table th:nth-child(8),
+  .adjustment-table td:nth-child(8) {
     display: none;
   }
 }
@@ -156,10 +163,8 @@
     padding: 0.55rem 0.5rem;
   }
 
-  .adjustment-table th:nth-child(2),
-  .adjustment-table td:nth-child(2),
-  .adjustment-table th:nth-child(8),
-  .adjustment-table td:nth-child(8) {
+  .adjustment-table th:nth-child(3),
+  .adjustment-table td:nth-child(3) {
     display: none;
   }
 

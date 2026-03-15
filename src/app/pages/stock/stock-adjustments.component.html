@@ -97,7 +97,6 @@
           <th>SL trước</th>
           <th>SL sau</th>
           <th>Biến động</th>
-          <th>Ngày tạo</th>
           <th>Thao tác</th>
         </tr>
       </thead>
@@ -123,7 +122,6 @@
           <td [ngClass]="getAdjustmentQuantityClass(adjustment.adjustment_quantity)">
             {{ getSignedQuantity(adjustment.adjustment_quantity) }}
           </td>
-          <td><small>{{ adjustment.created_at | date:'dd/MM/yyyy HH:mm' }}</small></td>
           <td class="actions">
             <button class="btn-icon" title="Chi tiết" (click)="openDetailModal(adjustment)">
               <i class="fa-regular fa-eye" aria-hidden="true"></i>
@@ -145,7 +143,7 @@
           </td>
         </tr>
         <tr *ngIf="adjustments.length === 0">
-          <td colspan="11" class="empty-state">Không có phiếu điều chỉnh phù hợp.</td>
+          <td colspan="10" class="empty-state">Không có phiếu điều chỉnh phù hợp.</td>
         </tr>
       </tbody>
     </table>
