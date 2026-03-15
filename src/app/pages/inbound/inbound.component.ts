@@ -32,6 +32,8 @@ import {
   InboundReceiptLineFormState
 } from '../../service/InboundService/inbound-line-editor.service';
 import { InboundReferenceDataService } from '../../service/InboundService/inbound-reference-data.service';
+import { AccountService } from '../../service/Account/account.service';
+import { AccountResponse } from '../../dto/response/Account/AccountResponse';
 
 @Component({
   selector: 'app-inbound',
@@ -98,12 +100,16 @@ export class InboundComponent implements OnInit {
   LocationStatus = LocationStatus;
   BatchStatus = BatchStatus;
 
+  private confirmedByDisplayCache: Record<string, string> = {};
+  private confirmedByPending = new Set<string>();
+
   constructor(
     private inboundService: InboundService,
     private inboundReceiptLineService: InboundReceiptLineService,
     private inboundReferenceDataService: InboundReferenceDataService,
     private inboundLineEditorService: InboundLineEditorService,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private accountService: AccountService
   ) {}
 
   ngOnInit(): void {
@@ -252,6 +258,7 @@ export class InboundComponent implements OnInit {
       next: (res) => {
         if (res.success) {
           this.selectedReceipt = res.data;
+          this.resolveConfirmedByDisplay(res.data.confirmed_by);
           this.loadDetailPurchaseOrderContext(res.data.purchase_order_id);
 
           const shouldLoadLineReferences = res.data.status === InboundReceiptStatus.DRAFT
@@ -405,7 +412,7 @@ export class InboundComponent implements OnInit {
     }
 
     if (mode === 'create' && this.getCreateAvailablePurchaseOrderLines().length === 0) {
-      this.toastr.warning('Không còn dòng đơn mua hàng nào có thể nhận thêm trên phiếu nh��p này.');
+      this.toastr.warning('Không còn dòng đơn mua hàng nào có thể nhận thêm trên phiếu nhập này.');
       return;
     }
 
@@ -809,6 +816,25 @@ export class InboundComponent implements OnInit {
     return this.normalizeText(line.notes) || '—';
   }
 
+  getConfirmedByDisplay(): string {
+    const rawConfirmedBy = this.selectedReceipt?.confirmed_by;
+    if (!rawConfirmedBy) {
+      return '—';
+    }
+
+    const cached = this.confirmedByDisplayCache[rawConfirmedBy];
+    if (cached) {
+      return cached;
+    }
+
+    if (this.looksLikeAccountId(rawConfirmedBy)) {
+      this.resolveConfirmedByDisplay(rawConfirmedBy);
+      return 'Dang tai...';
+    }
+
+    return rawConfirmedBy;
+  }
+
   private loadAvailablePurchaseOrders(): void {
     this.loadingAvailablePurchaseOrders = true;
 
@@ -971,5 +997,47 @@ export class InboundComponent implements OnInit {
 
   private formatQuantity(value: number): string {
     return value.toLocaleString('vi-VN', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+  }
+
+  private resolveConfirmedByDisplay(confirmedBy: string | null): void {
+    if (!confirmedBy || this.confirmedByDisplayCache[confirmedBy] || this.confirmedByPending.has(confirmedBy)) {
+      return;
+    }
+
+    if (!this.looksLikeAccountId(confirmedBy)) {
+      this.confirmedByDisplayCache[confirmedBy] = confirmedBy;
+      return;
+    }
+
+    this.confirmedByPending.add(confirmedBy);
+    this.accountService.getUserById(confirmedBy).subscribe({
+      next: (response) => {
+        this.confirmedByDisplayCache[confirmedBy] = this.formatAccountDisplay(response.data, confirmedBy);
+        this.confirmedByPending.delete(confirmedBy);
+      },
+      error: () => {
+        this.confirmedByDisplayCache[confirmedBy] = confirmedBy;
+        this.confirmedByPending.delete(confirmedBy);
+      }
+    });
+  }
+
+  private formatAccountDisplay(account: AccountResponse | null | undefined, fallback: string): string {
+    if (!account) {
+      return fallback;
+    }
+
+    const username = this.normalizeText(account.username);
+    const fullName = this.normalizeText(`${account.first_name || ''} ${account.last_name || ''}`);
+
+    if (username && fullName) {
+      return `${username} (${fullName})`;
+    }
+
+    return username || fullName || fallback;
+  }
+
+  private looksLikeAccountId(value: string): boolean {
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
   }
 }

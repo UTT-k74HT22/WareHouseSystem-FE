@@ -251,6 +251,41 @@ export class StockMovementsComponent implements OnInit {
     return movement.reference_number || movement.id;
   }
 
+  getMovementProductDisplay(movement: StockMovementResponse): string {
+    return movement.product_name || movement.product_sku || '—';
+  }
+
+  getMovementWarehouseDisplay(movement: StockMovementResponse): string {
+    const warehouseName = movement.warehouse_name
+      || this.warehouses.find((item) => item.id === movement.warehouse_id)?.name;
+    return warehouseName || '—';
+  }
+
+  getMovementLocationDisplay(movement: StockMovementResponse): string {
+    const location = this.locations.find((item) => item.id === movement.location_id);
+    const code = movement.location_code || location?.code;
+    const name = location?.name;
+
+    if (code && name) {
+      return `${code} - ${name}`;
+    }
+
+    return code || name || '—';
+  }
+
+  getMovementBatchDisplay(movement: StockMovementResponse): string {
+    if (!movement.batch_id) {
+      return '—';
+    }
+
+    const batch = this.batches.find((item) => item.id === movement.batch_id);
+    return movement.batch_number || batch?.batch_number || '—';
+  }
+
+  getMovementReferenceDisplay(movement: StockMovementResponse): string {
+    return movement.reference_number || movement.reference_type;
+  }
+
   onSearch(): void {
     this.currentPage = 0;
     this.applyFilters();
@@ -537,11 +572,11 @@ export class StockAdjustmentsComponent implements OnInit, OnDestroy {
 
     return {
       ...adjustment,
-      product_name: inventory?.product_name || product?.name || adjustment.product_id,
+      product_name: inventory?.product_name || product?.name,
       product_sku: inventory?.product_sku || product?.sku || '',
-      warehouse_name: inventory?.warehouse_name || warehouse?.name || adjustment.warehouse_id,
+      warehouse_name: inventory?.warehouse_name || warehouse?.name,
       warehouse_code: warehouse?.code || '',
-      location_name: inventory?.location_name || location?.name || adjustment.location_id,
+      location_name: inventory?.location_name || location?.name,
       location_code: inventory?.location_code || location?.code || '',
       batch_number: inventory?.batch_number || batch?.batch_number || null,
       uom_code: inventory?.uom_code || product?.uom_code || '',
@@ -909,22 +944,33 @@ export class StockAdjustmentsComponent implements OnInit, OnDestroy {
   }
 
   getProductDisplay(adjustment: StockAdjustmentViewModel): string {
-    const name = adjustment.product_name || adjustment.product_id;
-    return adjustment.product_sku ? `${adjustment.product_sku} - ${name}` : name;
+    const name = adjustment.product_name || adjustment.product_sku;
+    if (!name) {
+      return '—';
+    }
+    return adjustment.product_sku && adjustment.product_name ? `${adjustment.product_sku} - ${adjustment.product_name}` : name;
   }
 
   getBatchDisplay(adjustment: StockAdjustmentViewModel): string {
-    return adjustment.batch_number || 'Khong co lo';
+    return adjustment.batch_number || 'Không có lô';
   }
 
   getLocationDisplay(adjustment: StockAdjustmentViewModel): string {
-    const code = adjustment.location_code || adjustment.location_id;
-    return adjustment.location_name ? `${code} - ${adjustment.location_name}` : code;
+    const code = adjustment.location_code || '';
+    const name = adjustment.location_name || '';
+    if (code && name) {
+      return `${code} - ${name}`;
+    }
+    return code || name || '—';
   }
 
   getWarehouseDisplay(adjustment: StockAdjustmentViewModel): string {
-    const code = adjustment.warehouse_code || adjustment.warehouse_id;
-    return adjustment.warehouse_name ? `${code} - ${adjustment.warehouse_name}` : code;
+    const code = adjustment.warehouse_code || '';
+    const name = adjustment.warehouse_name || '';
+    if (code && name) {
+      return `${code} - ${name}`;
+    }
+    return code || name || '—';
   }
 
   getReasonLabel(reason: ReasonType): string {
@@ -1146,13 +1192,13 @@ export class StockTransfersComponent implements OnInit {
 
     return {
       ...transfer,
-      product_name: product?.name || transfer.product_id,
+      product_name: product?.name,
       product_sku: product?.sku || '',
-      warehouse_name: warehouse?.name || transfer.warehouse_id,
+      warehouse_name: warehouse?.name,
       warehouse_code: warehouse?.code || '',
-      from_location_name: fromLocation?.name || transfer.from_location_id,
+      from_location_name: fromLocation?.name,
       from_location_code: fromLocation?.code || '',
-      to_location_name: toLocation?.name || transfer.to_location_id,
+      to_location_name: toLocation?.name,
       to_location_code: toLocation?.code || '',
       batch_number: batch?.batch_number || null,
       uom_code: product?.uom_code || '',
@@ -1498,5 +1544,35 @@ export class StockTransfersComponent implements OnInit {
       default:
         return 'status-inactive';
     }
+  }
+
+  getTransferProductDisplay(transfer: StockTransferViewModel): string {
+    const name = transfer.product_name || transfer.product_sku;
+    if (!name) {
+      return '—';
+    }
+    return transfer.product_sku && transfer.product_name ? `${transfer.product_sku} - ${transfer.product_name}` : name;
+  }
+
+  getTransferWarehouseDisplay(transfer: StockTransferViewModel): string {
+    const code = transfer.warehouse_code || '';
+    const name = transfer.warehouse_name || '';
+    if (code && name) {
+      return `${code} - ${name}`;
+    }
+    return code || name || '—';
+  }
+
+  getTransferLocationDisplay(code?: string, name?: string): string {
+    if (code && name) {
+      return `${code} - ${name}`;
+    }
+    return code || name || '—';
+  }
+
+  getTransferRouteDisplay(transfer: StockTransferViewModel): string {
+    const fromLocation = this.getTransferLocationDisplay(transfer.from_location_code, transfer.from_location_name);
+    const toLocation = this.getTransferLocationDisplay(transfer.to_location_code, transfer.to_location_name);
+    return `${fromLocation} -> ${toLocation}`;
   }
 }

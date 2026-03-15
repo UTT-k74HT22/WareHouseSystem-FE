@@ -85,7 +85,7 @@
   <div class="loading-state" *ngIf="loading"><span>Đang tải...</span></div>
 
   <div class="table-container" *ngIf="!loading && viewMode === 'list'">
-    <table class="data-table">
+    <table class="data-table adjustment-table">
       <thead>
         <tr>
           <th>#</th>
@@ -106,7 +106,7 @@
           <td>{{ currentPage * pageSize + i + 1 }}</td>
           <td>
             <div class="cell-main"><code>{{ adjustment.adjustment_number }}</code></div>
-            <div class="cell-sub">{{ adjustment.inventory_id }}</div>
+            <div class="cell-sub">{{ adjustment.created_at | date:'dd/MM/yyyy HH:mm' }}</div>
           </td>
           <td>
             <div class="cell-main">{{ getProductDisplay(adjustment) }}</div>
@@ -132,16 +132,14 @@
               *ngIf="isAdminReviewer && adjustment.status === StockAdjustmentsStatus.PENDING_APPROVAL"
               class="btn-icon btn-approve"
               title="Phê duyệt"
-              (click)="openApproveModal(adjustment)"
-            >
+              (click)="openApproveModal(adjustment)">
               <i class="fa-solid fa-check" aria-hidden="true"></i>
             </button>
             <button
               *ngIf="isAdminReviewer && adjustment.status === StockAdjustmentsStatus.PENDING_APPROVAL"
               class="btn-icon btn-delete"
               title="Từ chối"
-              (click)="openRejectModal(adjustment)"
-            >
+              (click)="openRejectModal(adjustment)">
               <i class="fa-solid fa-xmark" aria-hidden="true"></i>
             </button>
           </td>
