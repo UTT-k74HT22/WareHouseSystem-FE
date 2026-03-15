@@ -13,3 +13,12 @@ export interface CreateBatchRequest {
 export interface ChangeBatchStatusRequest {
   status: BatchStatus;
 }
+
+export interface UpdateBatchRequest {
+  id: string;
+  batch_number?: string;
+  manufacturing_date?: string;
+  expiry_date?: string;
+  supplier_batch_number?: string;
+  notes?: string;
+}

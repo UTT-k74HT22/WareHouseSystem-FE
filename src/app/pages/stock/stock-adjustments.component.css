@@ -60,6 +60,123 @@
   height: 42px;
 }
 
+.filter-section {
+  gap: 0.6rem;
+}
+
+.filter-section .search-input,
+.filter-section .filter-select {
+  flex: 1 1 190px;
+  min-width: 0;
+}
+
+.adjustment-table {
+  width: 100%;
+  table-layout: auto;
+}
+
+.adjustment-table th,
+.adjustment-table td {
+  white-space: normal;
+  word-break: normal;
+  overflow-wrap: anywhere;
+  vertical-align: top;
+}
+
+.adjustment-table th {
+  white-space: nowrap;
+}
+
+.adjustment-table th:nth-child(1),
+.adjustment-table td:nth-child(1) {
+  width: 44px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.adjustment-table th:nth-child(2),
+.adjustment-table td:nth-child(2) {
+  min-width: 165px;
+}
+
+.adjustment-table th:nth-child(3),
+.adjustment-table td:nth-child(3) {
+  min-width: 190px;
+}
+
+.adjustment-table th:nth-child(4),
+.adjustment-table td:nth-child(4) {
+  min-width: 190px;
+}
+
+.adjustment-table th:nth-child(6),
+.adjustment-table td:nth-child(6),
+.adjustment-table th:nth-child(7),
+.adjustment-table td:nth-child(7),
+.adjustment-table th:nth-child(8),
+.adjustment-table td:nth-child(8),
+.adjustment-table th:nth-child(9),
+.adjustment-table td:nth-child(9) {
+  white-space: nowrap;
+}
+
+.adjustment-table th:nth-child(10),
+.adjustment-table td:nth-child(10) {
+  width: 132px;
+}
+
+.adjustment-table td.actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.35rem;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+
+.adjustment-table td.actions .btn-icon {
+  flex: 0 0 auto;
+}
+
+@media (max-width: 1200px) {
+  .adjustment-table th:nth-child(5),
+  .adjustment-table td:nth-child(5),
+  .adjustment-table th:nth-child(7),
+  .adjustment-table td:nth-child(7) {
+    display: none;
+  }
+}
+
+@media (max-width: 992px) {
+  .adjustment-table th:nth-child(4),
+  .adjustment-table td:nth-child(4),
+  .adjustment-table th:nth-child(8),
+  .adjustment-table td:nth-child(8) {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .adjustment-table th,
+  .adjustment-table td {
+    font-size: 0.75rem;
+    padding: 0.55rem 0.5rem;
+  }
+
+  .adjustment-table th:nth-child(3),
+  .adjustment-table td:nth-child(3) {
+    display: none;
+  }
+
+  .entity-card__actions {
+    flex-wrap: wrap;
+  }
+
+  .btn-card {
+    width: 100%;
+  }
+}
+
 @media (max-width: 768px) {
   .search-input--compact,
   .search-input--datetime {

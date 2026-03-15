@@ -54,7 +54,7 @@
   <div class="loading-state" *ngIf="loading"><span>Đang tải...</span></div>
 
   <div class="table-container" *ngIf="!loading && viewMode === 'list'">
-    <table class="data-table">
+    <table class="data-table transfer-table">
       <thead>
         <tr>
           <th>#</th>
@@ -65,7 +65,6 @@
           <th>Lý do</th>
           <th>Số lượng</th>
           <th>Trạng thái</th>
-          <th>Ngày tạo</th>
           <th>Thao tác</th>
         </tr>
       </thead>
@@ -74,19 +73,17 @@
           <td>{{ currentPage * pageSize + i + 1 }}</td>
           <td>
             <code>{{ transfer.transfer_number }}</code>
+            <div class="cell-subtext">{{ transfer.created_at | date:'dd/MM/yyyy HH:mm' }}</div>
             <div class="cell-subtext" *ngIf="transfer.batch_number">Lô: {{ transfer.batch_number }}</div>
           </td>
           <td>
-            <div>{{ transfer.warehouse_code || transfer.warehouse_name }}</div>
-            <div class="cell-subtext">{{ transfer.warehouse_name }}</div>
+            <div>{{ getTransferWarehouseDisplay(transfer) }}</div>
           </td>
           <td>
-            <div>{{ transfer.product_name }}</div>
-            <div class="cell-subtext" *ngIf="transfer.product_sku">{{ transfer.product_sku }}</div>
+            <div>{{ getTransferProductDisplay(transfer) }}</div>
           </td>
           <td>
-            <div>{{ transfer.from_location_code }} → {{ transfer.to_location_code }}</div>
-            <div class="cell-subtext">{{ transfer.from_location_name }} → {{ transfer.to_location_name }}</div>
+            <div>{{ getTransferRouteDisplay(transfer) }}</div>
           </td>
           <td>{{ getReasonLabel(transfer.reason) }}</td>
           <td>
@@ -97,29 +94,29 @@
             <span class="badge" [ngClass]="getStatusClass(transfer.status)">{{ getStatusLabel(transfer.status) }}</span>
           </td>
           <td>
-            <div>{{ transfer.created_at | date:'dd/MM/yyyy' }}</div>
-            <div class="cell-subtext">{{ transfer.created_at | date:'HH:mm' }}</div>
-          </td>
-          <td>
-            <div class="table-actions">
-              <button class="btn btn-ghost action-btn" (click)="openDetailModal(transfer)">Chi tiết</button>
-              <button
-                *ngIf="canUpdateTransfer(transfer)"
-                class="btn btn-primary action-btn"
-                (click)="openCompleteModal(transfer)">
-                Hoàn tất
+            <div class="table-actions" [class.single-action]="!canUpdateTransfer(transfer)">
+              <button class="btn-icon" title="Chi tiết" (click)="openDetailModal(transfer)">
+                <i class="fa-regular fa-eye" aria-hidden="true"></i>
               </button>
               <button
                 *ngIf="canUpdateTransfer(transfer)"
-                class="btn btn-danger action-btn"
+                class="btn-icon btn-complete"
+                title="Hoàn tất"
+                (click)="openCompleteModal(transfer)">
+                <i class="fa-solid fa-check" aria-hidden="true"></i>
+              </button>
+              <button
+                *ngIf="canUpdateTransfer(transfer)"
+                class="btn-icon btn-delete"
+                title="Huỷ"
                 (click)="openCancelModal(transfer)">
-                Huỷ
+                <i class="fa-solid fa-xmark" aria-hidden="true"></i>
               </button>
             </div>
           </td>
         </tr>
         <tr *ngIf="transfers.length === 0">
-          <td colspan="10" class="empty-state">Chưa có phiếu chuyển kho nào</td>
+          <td colspan="9" class="empty-state">Chưa có phiếu chuyển kho nào</td>
         </tr>
       </tbody>
     </table>
@@ -128,29 +125,33 @@
   <div class="entity-grid" *ngIf="!loading && viewMode === 'grid'">
     <div class="entity-card" *ngFor="let transfer of transfers">
       <h3 class="entity-card__title">{{ transfer.transfer_number }}</h3>
-      <p class="entity-card__sub">{{ transfer.product_name }}</p>
+      <p class="entity-card__sub">{{ getTransferProductDisplay(transfer) }}</p>
       <div class="entity-card__meta">
-        <div class="entity-card__row">Kho: {{ transfer.warehouse_code || transfer.warehouse_name }}</div>
-        <div class="entity-card__row">Tuyến: {{ transfer.from_location_code }} → {{ transfer.to_location_code }}</div>
+        <div class="entity-card__row">Kho: {{ getTransferWarehouseDisplay(transfer) }}</div>
+        <div class="entity-card__row">Tuyến: {{ getTransferRouteDisplay(transfer) }}</div>
         <div class="entity-card__row">Lý do: {{ getReasonLabel(transfer.reason) }}</div>
         <div class="entity-card__row">Số lượng: {{ transfer.quantity }} {{ transfer.uom_code }}</div>
         <div class="entity-card__row">
           <span class="badge" [ngClass]="getStatusClass(transfer.status)">{{ getStatusLabel(transfer.status) }}</span>
         </div>
       </div>
-      <div class="entity-card__actions">
-        <button class="btn btn-ghost action-btn" (click)="openDetailModal(transfer)">Chi tiết</button>
-        <button
-          *ngIf="canUpdateTransfer(transfer)"
-          class="btn btn-primary action-btn"
-          (click)="openCompleteModal(transfer)">
-          Hoàn tất
+      <div class="entity-card__actions transfer-card-actions">
+        <button class="btn-icon" title="Chi tiết" (click)="openDetailModal(transfer)">
+          <i class="fa-regular fa-eye" aria-hidden="true"></i>
         </button>
         <button
           *ngIf="canUpdateTransfer(transfer)"
-          class="btn btn-danger action-btn"
+          class="btn-icon btn-complete"
+          title="Hoàn tất"
+          (click)="openCompleteModal(transfer)">
+          <i class="fa-solid fa-check" aria-hidden="true"></i>
+        </button>
+        <button
+          *ngIf="canUpdateTransfer(transfer)"
+          class="btn-icon btn-delete"
+          title="Huỷ"
           (click)="openCancelModal(transfer)">
-          Huỷ
+          <i class="fa-solid fa-xmark" aria-hidden="true"></i>
         </button>
       </div>
     </div>

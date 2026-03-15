@@ -85,7 +85,7 @@
   <div class="loading-state" *ngIf="loading"><span>Đang tải...</span></div>
 
   <div class="table-container" *ngIf="!loading && viewMode === 'list'">
-    <table class="data-table">
+    <table class="data-table adjustment-table">
       <thead>
         <tr>
           <th>#</th>
@@ -97,7 +97,6 @@
           <th>SL trước</th>
           <th>SL sau</th>
           <th>Biến động</th>
-          <th>Ngày tạo</th>
           <th>Thao tác</th>
         </tr>
       </thead>
@@ -106,7 +105,7 @@
           <td>{{ currentPage * pageSize + i + 1 }}</td>
           <td>
             <div class="cell-main"><code>{{ adjustment.adjustment_number }}</code></div>
-            <div class="cell-sub">{{ adjustment.inventory_id }}</div>
+            <div class="cell-sub">{{ adjustment.created_at | date:'dd/MM/yyyy HH:mm' }}</div>
           </td>
           <td>
             <div class="cell-main">{{ getProductDisplay(adjustment) }}</div>
@@ -123,7 +122,6 @@
           <td [ngClass]="getAdjustmentQuantityClass(adjustment.adjustment_quantity)">
             {{ getSignedQuantity(adjustment.adjustment_quantity) }}
           </td>
-          <td><small>{{ adjustment.created_at | date:'dd/MM/yyyy HH:mm' }}</small></td>
           <td class="actions">
             <button class="btn-icon" title="Chi tiết" (click)="openDetailModal(adjustment)">
               <i class="fa-regular fa-eye" aria-hidden="true"></i>
@@ -132,22 +130,20 @@
               *ngIf="isAdminReviewer && adjustment.status === StockAdjustmentsStatus.PENDING_APPROVAL"
               class="btn-icon btn-approve"
               title="Phê duyệt"
-              (click)="openApproveModal(adjustment)"
-            >
+              (click)="openApproveModal(adjustment)">
               <i class="fa-solid fa-check" aria-hidden="true"></i>
             </button>
             <button
               *ngIf="isAdminReviewer && adjustment.status === StockAdjustmentsStatus.PENDING_APPROVAL"
               class="btn-icon btn-delete"
               title="Từ chối"
-              (click)="openRejectModal(adjustment)"
-            >
+              (click)="openRejectModal(adjustment)">
               <i class="fa-solid fa-xmark" aria-hidden="true"></i>
             </button>
           </td>
         </tr>
         <tr *ngIf="adjustments.length === 0">
-          <td colspan="11" class="empty-state">Không có phiếu điều chỉnh phù hợp.</td>
+          <td colspan="10" class="empty-state">Không có phiếu điều chỉnh phù hợp.</td>
         </tr>
       </tbody>
     </table>

@@ -76,7 +76,8 @@
 
   <div class="info-box">
     Phiếu nhập chỉ được tạo từ đơn mua hàng ở trạng thái <strong>Đã xác nhận</strong> hoặc <strong>Nhận một phần</strong>.
-    Thông tin chung của phiếu nhập chỉ được sửa khi phiếu còn ở trạng thái <strong>Nháp</strong>, còn các dòng hiện tại đang ở chế độ chỉ xem theo dữ liệu hệ thống trả về.
+    Thông tin chung và các dòng của phiếu nhập chỉ được sửa khi phiếu còn ở trạng thái <strong>Nháp</strong>.
+    FE hiện đã đồng bộ CRUD cho <strong>Inbound Receipt Lines</strong>, gồm kiểm soát vị trí, batch, trạng thái chất lượng và phần số lượng còn có thể nhận.
   </div>
 
   <div class="loading-state" *ngIf="loading"><span>Đang tải danh sách phiếu nhập...</span></div>
@@ -280,7 +281,7 @@
           <div class="detail-item"><span class="detail-label">Ngày nhập</span><span>{{ selectedReceipt.receipt_date | date:'dd/MM/yyyy' }}</span></div>
           <div class="detail-item"><span class="detail-label">Số giao nhận</span><span>{{ selectedReceipt.delivery_note_number || '—' }}</span></div>
           <div class="detail-item"><span class="detail-label">Xác nhận lúc</span><span>{{ selectedReceipt.confirmed_at ? (selectedReceipt.confirmed_at | date:'dd/MM/yyyy HH:mm') : '—' }}</span></div>
-          <div class="detail-item"><span class="detail-label">Người xác nhận</span><span>{{ selectedReceipt.confirmed_by || '—' }}</span></div>
+          <div class="detail-item"><span class="detail-label">Người xác nhận</span><span>{{ getConfirmedByDisplay() }}</span></div>
           <div class="detail-item"><span class="detail-label">Tạo lúc</span><span>{{ selectedReceipt.created_at | date:'dd/MM/yyyy HH:mm' }}</span></div>
           <div class="detail-item"><span class="detail-label">Cập nhật lúc</span><span>{{ selectedReceipt.updated_at | date:'dd/MM/yyyy HH:mm' }}</span></div>
         </div>
@@ -315,49 +316,67 @@
       <div *ngIf="detailTab === 'lines'">
         <div class="lines-header">
           <h4><i class="fa-solid fa-list-check" aria-hidden="true"></i> Dòng phiếu nhập ({{ selectedReceipt.lines.length }})</h4>
+          <button
+            class="btn btn-primary"
+            *ngIf="canEditReceipt(selectedReceipt)"
+            (click)="openLineEditor('create')"
+            [disabled]="!canAddLine()">
+            <i class="fa-solid fa-plus" aria-hidden="true"></i> Thêm dòng
+          </button>
+        </div>
+
+        <div class="loading-state loading-state-inline" *ngIf="loadingLineReferences && canEditReceipt(selectedReceipt)">
+          <span>Đang tải vị trí lưu kho và batch hợp lệ cho phiếu nhập...</span>
         </div>
 
         <div class="table-container" *ngIf="selectedReceipt.lines.length > 0">
-          <table class="data-table table-compact">
+          <table class="data-table table-compact lines-table">
             <thead>
               <tr>
-                <th>#</th>
-                <th>Sản phẩm</th>
-                <th>Vị trí</th>
-                <th>Lô</th>
-                <th class="text-right">SL nhận</th>
-                <th>Chất lượng</th>
-                <th class="text-right">SL đặt</th>
-                <th class="text-right">SL đã nhận trên đơn</th>
-                <th class="text-right">Còn lại</th>
-                <th>Ghi chú</th>
+                <th class="col-index">#</th>
+                <th class="col-product">Sản phẩm</th>
+                <th class="col-location">Vị trí</th>
+                <th class="col-batch">Lô</th>
+                <th class="text-right col-qty">SL nhận</th>
+                <th class="col-quality">Chất lượng</th>
+                <th class="col-po">Đối chiếu PO</th>
+                <th class="col-note">Ghi chú</th>
+                <th class="col-actions" *ngIf="canEditReceipt(selectedReceipt)">Thao tác</th>
               </tr>
             </thead>
             <tbody>
               <tr *ngFor="let line of selectedReceipt.lines">
-                <td>{{ line.line_number }}</td>
-                <td>
-                  <div class="cell-main">{{ line.product_name || line.product_id }}</div>
-                  <div class="cell-sub" *ngIf="line.product_sku">{{ line.product_sku }}</div>
+                <td class="col-index">{{ line.line_number }}</td>
+                <td class="col-product">
+                  <div class="cell-main">{{ getLineProductDisplay(line) }}</div>
+                  <div class="cell-sub" *ngIf="getLineProductSkuDisplay(line) as sku">{{ sku }}</div>
                 </td>
-                <td>
-                  <div class="cell-main">{{ line.location_name || line.location_id }}</div>
+                <td class="col-location">
+                  <div class="cell-main">{{ getLineLocationDisplay(line) }}</div>
                   <div class="cell-sub" *ngIf="line.location_code">{{ line.location_code }}</div>
                 </td>
-                <td>
-                  <div class="cell-main">{{ line.batch_number || '—' }}</div>
-                  <div class="cell-sub" *ngIf="line.batch_id">{{ line.batch_id }}</div>
+                <td class="col-batch">
+                  <div class="cell-main">{{ getLineBatchDisplay(line) }}</div>
                 </td>
-                <td class="text-right">{{ line.quantity_received | number:'1.2-2' }}</td>
-                <td><span class="badge" [ngClass]="getQualityStatusClass(line.quality_status)">{{ getQualityStatusLabel(line.quality_status) }}</span></td>
-                <td class="text-right">{{ getPurchaseOrderLine(line.purchase_order_line_id)?.quantity_ordered ?? '—' }}</td>
-                <td class="text-right">{{ getPurchaseOrderLine(line.purchase_order_line_id)?.quantity_received ?? '—' }}</td>
-                <td class="text-right">
-                  <span [class.text-danger]="(getRemainingAfterThisReceipt(line) ?? 0) < 0">
-                    {{ getReceiptLineRemaining(line) ?? '—' }}
-                  </span>
+                <td class="text-right col-qty">{{ line.quantity_received | number:'1.2-2' }}</td>
+                <td class="col-quality"><span class="badge" [ngClass]="getQualityStatusClass(line.quality_status)">{{ getQualityStatusLabel(line.quality_status) }}</span></td>
+                <td class="col-po">
+                  <div class="cell-main po-summary">{{ getLinePoSummary(line) }}</div>
+                  <div class="cell-sub" *ngIf="getRemainingAfterThisReceipt(line) !== null">
+                    Sau line này: {{ getRemainingAfterThisReceipt(line) | number:'1.2-2' }}
+                  </div>
                 </td>
-                <td>{{ line.notes || '—' }}</td>
+                <td class="col-note">
+                  <span class="line-note">{{ getLineNotesDisplay(line) }}</span>
+                </td>
+                <td *ngIf="canEditReceipt(selectedReceipt)" class="actions col-actions">
+                  <button class="btn-icon" (click)="openLineEditor('edit', line)" title="Sửa dòng">
+                    <i class="fa-regular fa-pen-to-square" aria-hidden="true"></i>
+                  </button>
+                  <button class="btn-icon btn-delete" (click)="openDeleteLineConfirm(line)" title="Xóa dòng">
+                    <i class="fa-regular fa-trash-can" aria-hidden="true"></i>
+                  </button>
+                </td>
               </tr>
             </tbody>
           </table>
@@ -368,19 +387,138 @@
         </div>
 
         <div class="info-box" *ngIf="selectedReceipt.lines.length > 0 && selectedReceipt.status === InboundReceiptStatus.DRAFT">
-          Cột "SL đã nhận trên đơn" và "Còn lại" đang phản ánh số liệu hiện tại của đơn mua hàng. Khi phiếu nhập chưa xác nhận, số liệu này chưa bao gồm giao dịch của phiếu đang mở.
+          Cột "SL đã nhận trên đơn" phản ánh phần đã xác nhận trên PO. Dòng draft của phiếu hiện tại vẫn đang được tách riêng để FE kiểm tra split theo vị trí, batch và quality trước khi confirm.
         </div>
         <div class="info-box" *ngIf="selectedReceipt.lines.length > 0 && selectedReceipt.status === InboundReceiptStatus.CONFIRMED">
           Các dòng phiếu nhập được đối chiếu với dòng của đơn mua hàng để kiểm tra số lượng đặt/đã nhận/còn lại sau khi xác nhận.
         </div>
         <div class="info-box" *ngIf="selectedReceipt.lines.length === 0 && selectedReceipt.status === InboundReceiptStatus.DRAFT">
-          Hiện chưa có API cho phép thêm, sửa, xóa dòng phiếu nhập. Màn hình này đang hiển thị các dòng ở chế độ chỉ xem từ API chi tiết phiếu nhập.
+          Phiếu nhập đang ở trạng thái nháp nhưng chưa có dòng nào. Hãy thêm dòng nhận hàng từ các dòng đơn mua hàng còn số lượng có thể nhận.
+        </div>
+        <div class="info-box" *ngIf="selectedReceipt.status === InboundReceiptStatus.DRAFT">
+          Với cùng một dòng đơn mua hàng, bạn có thể tách nhiều line theo <strong>vị trí</strong>, <strong>batch</strong> hoặc <strong>chất lượng</strong>.
+          FE sẽ chặn line trùng dimension và chặn số lượng vượt phần còn lại trước khi gọi backend.
         </div>
       </div>
     </div>
 
     <div class="modal-footer">
       <button class="btn btn-ghost" (click)="closeDetailModal()">Đóng</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" *ngIf="showLineEditorModal" (click)="closeSubModal('lineEditor')">
+  <div class="modal-box modal-lg" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>{{ getLineEditorTitle() }}</h3>
+      <button class="modal-close" (click)="closeSubModal('lineEditor')">✕</button>
+    </div>
+
+    <div class="modal-body" *ngIf="selectedReceipt">
+      <div class="loading-state loading-state-inline" *ngIf="isLineEditorBusy()">
+        <span>Đang chuẩn bị dữ liệu dòng phiếu nhập...</span>
+      </div>
+
+      <ng-container *ngIf="!isLineEditorBusy()">
+        <div class="info-box">
+          Dòng phiếu nhập chỉ được thao tác khi receipt còn ở trạng thái <strong>Nháp</strong>. FE sẽ kiểm tra trước các rule chính:
+          số lượng phải dương, không vượt phần còn lại của PO line, product theo dõi lô thì bắt buộc có batch,
+          và line <strong>Cách ly</strong> phải có ghi chú.
+        </div>
+
+        <div class="form-group">
+          <label>Dòng đơn mua hàng <span class="required">*</span></label>
+          <select
+            [(ngModel)]="lineForm.purchase_order_line_id"
+            (ngModelChange)="onLinePurchaseOrderChange($event)"
+            [disabled]="lineEditorMode === 'edit'">
+            <option value="">-- Chọn dòng đơn mua hàng --</option>
+            <option *ngFor="let poLine of getSelectablePurchaseOrderLines()" [value]="poLine.id">
+              {{ getPurchaseOrderLineOptionLabel(poLine) }}
+            </option>
+          </select>
+        </div>
+
+        <div class="detail-grid compact-grid" *ngIf="getLineEditorSelectedPurchaseOrderLine() as selectedPoLine">
+          <div class="detail-item">
+            <span class="detail-label">Sản phẩm</span>
+            <span>{{ selectedPoLine.product_sku ? (selectedPoLine.product_sku + ' - ' + (selectedPoLine.product_name || selectedPoLine.product_id)) : (selectedPoLine.product_name || selectedPoLine.product_id) }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Theo dõi lô</span>
+            <span>{{ lineEditorRequiresBatchTracking() ? 'Có' : 'Không' }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">SL đặt</span>
+            <span>{{ selectedPoLine.quantity_ordered | number:'1.2-2' }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">SL đã nhận trên PO</span>
+            <span>{{ selectedPoLine.quantity_received | number:'1.2-2' }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Draft đã phân bổ trên receipt này</span>
+            <span>{{ (getCurrentLineDraftAllocated() ?? 0) | number:'1.2-2' }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Còn có thể nhận</span>
+            <span>{{ (getCurrentLineRemainingCapacity() ?? 0) | number:'1.2-2' }}</span>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Vị trí nhận hàng <span class="required">*</span></label>
+            <select [(ngModel)]="lineForm.location_id">
+              <option value="">-- Chọn vị trí trong kho nhận --</option>
+              <option *ngFor="let location of getAvailableLineLocations()" [value]="location.id">
+                {{ location.code }} - {{ location.name }} ({{ location.status }})
+              </option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Trạng thái chất lượng <span class="required">*</span></label>
+            <select [(ngModel)]="lineForm.quality_status" (ngModelChange)="onLineQualityStatusChange($event)">
+              <option [ngValue]="QualityStatus.PASS">Đạt</option>
+              <option [ngValue]="QualityStatus.QUARANTINE">Cách ly</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Số lượng nhận <span class="required">*</span></label>
+            <input type="number" min="0.01" step="0.01" [(ngModel)]="lineForm.quantity_received" />
+          </div>
+          <div class="form-group">
+            <label *ngIf="lineEditorRequiresBatchTracking()">Batch <span class="required">*</span></label>
+            <label *ngIf="!lineEditorRequiresBatchTracking()">Batch</label>
+            <select [(ngModel)]="lineForm.batch_id" [disabled]="!lineEditorRequiresBatchTracking()">
+              <option value="">-- {{ lineEditorRequiresBatchTracking() ? 'Chọn batch hợp lệ' : 'Sản phẩm không theo dõi lô' }} --</option>
+              <option *ngFor="let batch of getAvailableLineBatches()" [value]="batch.id">
+                {{ batch.batch_number }} - {{ batch.status }}
+              </option>
+            </select>
+          </div>
+        </div>
+
+        <div class="empty-helper" *ngIf="lineEditorRequiresBatchTracking() && getAvailableLineBatches().length === 0">
+          Không có batch hợp lệ cho sản phẩm/chất lượng đã chọn. Nếu đây là sản phẩm theo dõi lô, hãy tạo batch trước ở module Batch.
+        </div>
+
+        <div class="form-group">
+          <label>Ghi chú</label>
+          <textarea [(ngModel)]="lineForm.notes" rows="3" maxlength="500" placeholder="Bắt buộc nếu dòng ở trạng thái cách ly"></textarea>
+        </div>
+      </ng-container>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-ghost" (click)="closeSubModal('lineEditor')">Hủy</button>
+      <button class="btn btn-primary" (click)="onLineSubmit()" [disabled]="lineSubmitting || isLineEditorBusy()">
+        {{ getLineSubmitLabel() }}
+      </button>
     </div>
   </div>
 </div>
@@ -421,6 +559,20 @@
     <div class="modal-footer">
       <button class="btn btn-ghost" (click)="closeSubModal('confirm')">Hủy</button>
       <button class="btn btn-primary" (click)="onConfirmReceipt()">Xác nhận</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" *ngIf="showDeleteLineConfirm" (click)="closeSubModal('deleteLine')">
+  <div class="modal-box modal-sm" (click)="$event.stopPropagation()">
+    <div class="modal-header modal-header-danger"><h3>Xác nhận xóa dòng</h3><button class="modal-close" (click)="closeSubModal('deleteLine')">✕</button></div>
+    <div class="modal-body">
+      <p>Xóa dòng <strong>#{{ lineToDelete?.line_number }}</strong> khỏi phiếu nhập <strong>{{ selectedReceipt?.receipt_number }}</strong>?</p>
+      <p class="text-muted">Thao tác này chỉ hợp lệ khi phiếu nhập còn ở trạng thái nháp.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" (click)="closeSubModal('deleteLine')">Hủy</button>
+      <button class="btn btn-danger" (click)="onDeleteLineConfirm()">Xóa dòng</button>
     </div>
   </div>
 </div>

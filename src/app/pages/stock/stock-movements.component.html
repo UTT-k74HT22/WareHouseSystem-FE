@@ -37,7 +37,7 @@
   <div class="loading-state" *ngIf="loading"><span>Đang tải dữ liệu...</span></div>
 
   <div class="table-container" *ngIf="!loading && viewMode === 'list'">
-    <table class="data-table">
+    <table class="data-table movement-table">
       <thead>
         <tr>
           <th>#</th>
@@ -57,12 +57,17 @@
           <td>{{ currentPage * pageSize + i + 1 }}</td>
           <td><code>{{ getMovementDisplayCode(m) }}</code></td>
           <td><span class="badge" [ngClass]="getTypeClass(m.movement_type)">{{ getTypeLabel(m.movement_type) }}</span></td>
-          <td>{{ m.product_name ?? m.product_id }} <small *ngIf="m.product_sku">({{ m.product_sku }})</small></td>
-          <td>{{ m.warehouse_name ?? m.warehouse_id }}</td>
-          <td>{{ m.location_code ?? m.location_id }}</td>
-          <td>{{ m.batch_number ?? '—' }}</td>
+          <td>
+            <div class="cell-main">{{ getMovementProductDisplay(m) }}</div>
+            <div class="cell-sub" *ngIf="m.product_sku">{{ m.product_sku }}</div>
+          </td>
+          <td>{{ getMovementWarehouseDisplay(m) }}</td>
+          <td>{{ getMovementLocationDisplay(m) }}</td>
+          <td>{{ getMovementBatchDisplay(m) }}</td>
           <td><strong>{{ m.quantity_change }}</strong> {{ m.uom_code ?? '' }}</td>
-          <td><small>{{ m.reference_type }} #{{ m.reference_number || m.reference_id }}</small></td>
+          <td class="movement-reference">
+            <small>{{ m.reference_type }} #{{ getMovementReferenceDisplay(m) }}</small>
+          </td>
           <td><small>{{ m.movement_date | date:'dd/MM/yyyy HH:mm' }}</small></td>
         </tr>
         <tr *ngIf="movements.length === 0">
@@ -75,10 +80,10 @@
   <div class="entity-grid" *ngIf="!loading && viewMode === 'grid'">
     <div class="entity-card" *ngFor="let m of movements">
       <h3 class="entity-card__title">{{ getMovementDisplayCode(m) }}</h3>
-      <p class="entity-card__sub">{{ m.product_name ?? m.product_id }}<span *ngIf="m.product_sku"> ({{ m.product_sku }})</span></p>
+      <p class="entity-card__sub">{{ getMovementProductDisplay(m) }}<span *ngIf="m.product_sku"> ({{ m.product_sku }})</span></p>
       <div class="entity-card__meta">
         <div class="entity-card__row"><span class="badge" [ngClass]="getTypeClass(m.movement_type)">{{ getTypeLabel(m.movement_type) }}</span></div>
-        <div class="entity-card__row">Vị trí: {{ m.location_code ?? m.location_id }}</div>
+        <div class="entity-card__row">Vị trí: {{ getMovementLocationDisplay(m) }}</div>
         <div class="entity-card__row">Biến động: {{ m.quantity_change }} {{ m.uom_code ?? '' }}</div>
         <div class="entity-card__row">Thời gian: {{ m.movement_date | date:'dd/MM/yyyy HH:mm' }}</div>
       </div>
