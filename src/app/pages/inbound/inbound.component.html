@@ -330,51 +330,46 @@
         </div>
 
         <div class="table-container" *ngIf="selectedReceipt.lines.length > 0">
-          <table class="data-table table-compact">
+          <table class="data-table table-compact lines-table">
             <thead>
               <tr>
-                <th>#</th>
-                <th>Sản phẩm</th>
-                <th>Vị trí</th>
-                <th>Lô</th>
-                <th class="text-right">SL nhận</th>
-                <th>Chất lượng</th>
-                <th class="text-right">SL đặt</th>
-                <th class="text-right">SL đã nhận trên đơn</th>
-                <th class="text-right">Còn lại</th>
-                <th>Ghi chú</th>
-                <th *ngIf="canEditReceipt(selectedReceipt)">Thao tác</th>
+                <th class="col-index">#</th>
+                <th class="col-product">Sản phẩm</th>
+                <th class="col-location">Vị trí</th>
+                <th class="col-batch">Lô</th>
+                <th class="text-right col-qty">SL nhận</th>
+                <th class="col-quality">Chất lượng</th>
+                <th class="col-po">Đối chiếu PO</th>
+                <th class="col-note">Ghi chú</th>
+                <th class="col-actions" *ngIf="canEditReceipt(selectedReceipt)">Thao tác</th>
               </tr>
             </thead>
             <tbody>
               <tr *ngFor="let line of selectedReceipt.lines">
-                <td>{{ line.line_number }}</td>
-                <td>
-                  <div class="cell-main">{{ line.product_name || line.product_id }}</div>
-                  <div class="cell-sub" *ngIf="line.product_sku">{{ line.product_sku }}</div>
+                <td class="col-index">{{ line.line_number }}</td>
+                <td class="col-product">
+                  <div class="cell-main">{{ getLineProductDisplay(line) }}</div>
+                  <div class="cell-sub" *ngIf="getLineProductSkuDisplay(line) as sku">{{ sku }}</div>
                 </td>
-                <td>
-                  <div class="cell-main">{{ line.location_name || line.location_id }}</div>
+                <td class="col-location">
+                  <div class="cell-main">{{ getLineLocationDisplay(line) }}</div>
                   <div class="cell-sub" *ngIf="line.location_code">{{ line.location_code }}</div>
                 </td>
-                <td>
-                  <div class="cell-main">{{ line.batch_number || '—' }}</div>
-                  <div class="cell-sub" *ngIf="line.batch_id">{{ line.batch_id }}</div>
+                <td class="col-batch">
+                  <div class="cell-main">{{ getLineBatchDisplay(line) }}</div>
                 </td>
-                <td class="text-right">{{ line.quantity_received | number:'1.2-2' }}</td>
-                <td><span class="badge" [ngClass]="getQualityStatusClass(line.quality_status)">{{ getQualityStatusLabel(line.quality_status) }}</span></td>
-                <td class="text-right">{{ getPurchaseOrderLine(line.purchase_order_line_id)?.quantity_ordered ?? '—' }}</td>
-                <td class="text-right">{{ getPurchaseOrderLine(line.purchase_order_line_id)?.quantity_received ?? '—' }}</td>
-                <td class="text-right">
-                  <span [class.text-danger]="(getRemainingAfterThisReceipt(line) ?? 0) < 0">
-                    {{ getReceiptLineRemaining(line) ?? '—' }}
-                  </span>
+                <td class="text-right col-qty">{{ line.quantity_received | number:'1.2-2' }}</td>
+                <td class="col-quality"><span class="badge" [ngClass]="getQualityStatusClass(line.quality_status)">{{ getQualityStatusLabel(line.quality_status) }}</span></td>
+                <td class="col-po">
+                  <div class="cell-main po-summary">{{ getLinePoSummary(line) }}</div>
                   <div class="cell-sub" *ngIf="getRemainingAfterThisReceipt(line) !== null">
                     Sau line này: {{ getRemainingAfterThisReceipt(line) | number:'1.2-2' }}
                   </div>
                 </td>
-                <td>{{ line.notes || '—' }}</td>
-                <td *ngIf="canEditReceipt(selectedReceipt)" class="actions">
+                <td class="col-note">
+                  <span class="line-note">{{ getLineNotesDisplay(line) }}</span>
+                </td>
+                <td *ngIf="canEditReceipt(selectedReceipt)" class="actions col-actions">
                   <button class="btn-icon" (click)="openLineEditor('edit', line)" title="Sửa dòng">
                     <i class="fa-regular fa-pen-to-square" aria-hidden="true"></i>
                   </button>
