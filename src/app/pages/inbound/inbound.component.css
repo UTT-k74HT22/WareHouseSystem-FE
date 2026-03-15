@@ -113,6 +113,10 @@
   color: #0f172a;
 }
 
+.lines-header .btn {
+  flex-shrink: 0;
+}
+
 .loading-state-inline {
   padding: 1.5rem 0;
 }

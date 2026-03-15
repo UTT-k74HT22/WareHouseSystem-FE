@@ -4,7 +4,11 @@ import { BatchResponse } from '../../dto/response/Batch/BatchResponse';
 import { BatchService } from '../../service/BatchService/batch.service';
 import { ToastrService } from '../../service/SystemService/toastr.service';
 import { BatchStatus } from '../../helper/enums/BatchStatus';
-import { ChangeBatchStatusRequest, CreateBatchRequest } from '../../dto/request/Batch/BatchRequest';
+import {
+  ChangeBatchStatusRequest,
+  CreateBatchRequest,
+  UpdateBatchRequest
+} from '../../dto/request/Batch/BatchRequest';
 import { ProductService } from '../../service/ProductService/product.service';
 import { ProductResponse } from '../../dto/response/Product/ProductResponse';
 import { ProductStatus } from '../../helper/enums/ProductStatus';
@@ -27,6 +31,8 @@ export class BatchComponent implements OnInit {
   loading = false;
   loadingProducts = false;
   detailLoading = false;
+  savingEdit = false;
+  savingStatus = false;
   viewMode: 'grid' | 'list' = 'list';
 
   searchKeyword = '';
@@ -35,12 +41,14 @@ export class BatchComponent implements OnInit {
 
   showCreateModal = false;
   showDetailModal = false;
+  showEditModal = false;
   showStatusModal = false;
 
   selectedBatch: BatchResponse | null = null;
   selectedStatusOptions: BatchStatus[] = [];
 
   createForm: CreateBatchRequest = this.initCreateForm();
+  editForm: UpdateBatchRequest = this.initEditForm();
   statusForm: ChangeBatchStatusRequest = { status: BatchStatus.AVAILABLE };
 
   readonly BatchStatus = BatchStatus;
@@ -70,6 +78,9 @@ export class BatchComponent implements OnInit {
         if (this.selectedBatch) {
           const latest = this.allBatches.find((item) => item.id === this.selectedBatch?.id);
           this.selectedBatch = latest ? latest : this.enrichBatch(this.selectedBatch);
+          if (this.showEditModal && this.selectedBatch) {
+            this.editForm = this.initEditForm(this.selectedBatch);
+          }
         }
 
         this.loading = false;
@@ -175,12 +186,55 @@ export class BatchComponent implements OnInit {
           const batch = this.enrichBatch(res.data);
           this.selectedBatch = batch;
           this.replaceBatchInState(batch);
+
+          if (this.showEditModal) {
+            this.editForm = this.initEditForm(batch);
+          }
         }
         this.detailLoading = false;
       },
       error: (error) => {
         this.detailLoading = false;
         this.toastr.error(error?.error?.message || 'Không tải được chi tiết lô.');
+      }
+    });
+  }
+
+  openEditModal(batch?: BatchResponse): void {
+    const targetBatch = batch ? this.enrichBatch(batch) : this.selectedBatch;
+    if (!targetBatch) {
+      return;
+    }
+
+    this.selectedBatch = targetBatch;
+    this.editForm = this.initEditForm(targetBatch);
+    this.showEditModal = true;
+  }
+
+  onEditSubmit(): void {
+    if (!this.selectedBatch) {
+      return;
+    }
+
+    const request = this.normalizeUpdateRequest();
+    if (!this.validateUpdateRequest(request)) {
+      return;
+    }
+
+    this.savingEdit = true;
+    this.batchService.update(this.selectedBatch.id, request).subscribe({
+      next: (res) => {
+        if (res.success) {
+          const updatedBatch = this.enrichBatch(res.data);
+          this.toastr.success('Cập nhật lô thành công.');
+          this.closeEditModal();
+          this.replaceBatchInState(updatedBatch, true);
+        }
+        this.savingEdit = false;
+      },
+      error: (error) => {
+        this.savingEdit = false;
+        this.toastr.error(error?.error?.message || 'Cập nhật lô thất bại.');
       }
     });
   }
@@ -210,16 +264,18 @@ export class BatchComponent implements OnInit {
       return;
     }
 
-    this.batchService.changeStatus(this.selectedBatch.id, this.statusForm).subscribe({
-      next: (res) => {
-        if (res.success) {
-          const updatedBatch = this.enrichBatch(res.data);
-          this.toastr.success('Cập nhật trạng thái lô thành công.');
-          this.closeStatusModal();
-          this.replaceBatchInState(updatedBatch, true);
-        }
+    this.savingStatus = true;
+
+    this.resolveStatusRequest(this.selectedBatch, this.statusForm.status).subscribe({
+      next: (updatedBatch) => {
+        const normalizedBatch = this.enrichBatch(updatedBatch);
+        this.toastr.success(this.getStatusSuccessMessage(this.selectedBatch!.status, this.statusForm.status));
+        this.closeStatusModal();
+        this.replaceBatchInState(normalizedBatch, true);
+        this.savingStatus = false;
       },
       error: (error) => {
+        this.savingStatus = false;
         this.toastr.error(error?.error?.message || 'Cập nhật trạng thái lô thất bại.');
       }
     });
@@ -232,14 +288,26 @@ export class BatchComponent implements OnInit {
 
   closeDetailModal(): void {
     this.showDetailModal = false;
+    this.showEditModal = false;
+    this.showStatusModal = false;
     this.selectedBatch = null;
     this.detailLoading = false;
+    this.savingEdit = false;
+    this.savingStatus = false;
+    this.selectedStatusOptions = [];
+  }
+
+  closeEditModal(): void {
+    this.showEditModal = false;
+    this.editForm = this.initEditForm(this.selectedBatch || undefined);
+    this.savingEdit = false;
   }
 
   closeStatusModal(): void {
     this.showStatusModal = false;
     this.selectedStatusOptions = [];
     this.statusForm = { status: BatchStatus.AVAILABLE };
+    this.savingStatus = false;
   }
 
   canChangeStatus(batch: BatchResponse): boolean {
@@ -286,6 +354,38 @@ export class BatchComponent implements OnInit {
     return this.allBatches.filter((batch) => batch.status === BatchStatus.RECALLED).length;
   }
 
+  getStatusExecutionHint(batch: BatchResponse | null, nextStatus: BatchStatus): string {
+    if (!batch) {
+      return '';
+    }
+
+    if (batch.status === BatchStatus.AVAILABLE && nextStatus === BatchStatus.QUARANTINE) {
+      return 'Hệ thống sẽ gọi API cách ly lô chuyên biệt. Nếu lô đang có tồn giữ chỗ, backend sẽ từ chối thao tác.';
+    }
+
+    if (batch.status === BatchStatus.QUARANTINE && nextStatus === BatchStatus.AVAILABLE) {
+      return 'Hệ thống sẽ gọi API giải cách ly chuyên biệt. Backend chỉ cho phép khi lô chưa hết hạn.';
+    }
+
+    return 'Hệ thống sẽ dùng API cập nhật trạng thái chung cho lô.';
+  }
+
+  getStatusSubmitLabel(): string {
+    if (!this.selectedBatch) {
+      return 'Lưu trạng thái';
+    }
+
+    if (this.selectedBatch.status === BatchStatus.AVAILABLE && this.statusForm.status === BatchStatus.QUARANTINE) {
+      return 'Thực hiện cách ly';
+    }
+
+    if (this.selectedBatch.status === BatchStatus.QUARANTINE && this.statusForm.status === BatchStatus.AVAILABLE) {
+      return 'Giải cách ly';
+    }
+
+    return 'Lưu trạng thái';
+  }
+
   isPastExpiryDate(batch: BatchResponse | null): boolean {
     const expiryDate = this.toDateOnly(batch?.expiry_date);
     if (!expiryDate) {
@@ -322,10 +422,10 @@ export class BatchComponent implements OnInit {
     }
 
     if (batch.status === BatchStatus.QUARANTINE) {
-      return 'Lô đang bị cách ly. Chỉ chuyển về Sẵn dùng khi đã hoàn tất đánh giá chất lượng.';
+      return 'Lô đang bị cách ly. Chỉ chuyển về Sẵn dùng khi đã hoàn tất đánh giá chất lượng và backend xác nhận lô chưa hết hạn.';
     }
 
-    return 'Lô đang sẵn dùng. Có thể chuyển sang Cách ly, Hết hạn hoặc Thu hồi tùy theo tình huống nghiệp vụ.';
+    return 'Lô đang sẵn dùng. Có thể chuyển sang Cách ly bằng nghiệp vụ chuyên biệt, hoặc sang Hết hạn / Thu hồi theo tình huống thực tế.';
   }
 
   private fetchAllBatches(): Observable<BatchResponse[]> {
@@ -396,6 +496,17 @@ export class BatchComponent implements OnInit {
     };
   }
 
+  private initEditForm(batch?: BatchResponse): UpdateBatchRequest {
+    return {
+      id: batch?.id || '',
+      batch_number: batch?.batch_number || '',
+      manufacturing_date: batch?.manufacturing_date || '',
+      expiry_date: batch?.expiry_date || undefined,
+      supplier_batch_number: batch?.supplier_batch_number || '',
+      notes: batch?.notes || ''
+    };
+  }
+
   private normalizeCreateRequest(): CreateBatchRequest {
     return {
       product_id: this.createForm.product_id,
@@ -405,6 +516,17 @@ export class BatchComponent implements OnInit {
       supplier_batch_number: this.createForm.supplier_batch_number?.trim() || undefined,
       status: BatchStatus.AVAILABLE,
       notes: this.createForm.notes?.trim() || undefined
+    };
+  }
+
+  private normalizeUpdateRequest(): UpdateBatchRequest {
+    return {
+      id: this.selectedBatch?.id || this.editForm.id,
+      batch_number: this.editForm.batch_number?.trim(),
+      manufacturing_date: this.editForm.manufacturing_date || undefined,
+      expiry_date: this.editForm.expiry_date || undefined,
+      supplier_batch_number: this.editForm.supplier_batch_number?.trim() ?? '',
+      notes: this.editForm.notes?.trim() ?? ''
     };
   }
 
@@ -460,6 +582,47 @@ export class BatchComponent implements OnInit {
     return true;
   }
 
+  private validateUpdateRequest(request: UpdateBatchRequest): boolean {
+    if (!this.selectedBatch) {
+      this.toastr.warning('Không xác định được lô cần cập nhật.');
+      return false;
+    }
+
+    if (!request.batch_number) {
+      this.toastr.warning('Mã lô không được để trống.');
+      return false;
+    }
+
+    if (request.batch_number.length > 50) {
+      this.toastr.warning('Mã lô không được vượt quá 50 ký tự.');
+      return false;
+    }
+
+    if ((request.supplier_batch_number || '').length > 50) {
+      this.toastr.warning('Mã lô của nhà cung cấp không được vượt quá 50 ký tự.');
+      return false;
+    }
+
+    const manufacturingDate = this.toDateOnly(request.manufacturing_date);
+    if (!manufacturingDate) {
+      this.toastr.warning('Ngày sản xuất không được để trống.');
+      return false;
+    }
+
+    if (manufacturingDate > this.today()) {
+      this.toastr.warning('Ngày sản xuất không được ở tương lai.');
+      return false;
+    }
+
+    const expiryDate = this.toDateOnly(request.expiry_date);
+    if (expiryDate && expiryDate < manufacturingDate) {
+      this.toastr.warning('Hạn sử dụng phải sau hoặc bằng ngày sản xuất.');
+      return false;
+    }
+
+    return true;
+  }
+
   private getAvailableStatusOptions(batch: BatchResponse): BatchStatus[] {
     const options = new Set<BatchStatus>([batch.status]);
     const expiredByDate = this.isPastExpiryDate(batch);
@@ -480,6 +643,32 @@ export class BatchComponent implements OnInit {
     options.add(BatchStatus.RECALLED);
 
     return Array.from(options);
+  }
+
+  private resolveStatusRequest(batch: BatchResponse, nextStatus: BatchStatus): Observable<BatchResponse> {
+    if (batch.status === BatchStatus.AVAILABLE && nextStatus === BatchStatus.QUARANTINE) {
+      return this.batchService.quarantine(batch.id);
+    }
+
+    if (batch.status === BatchStatus.QUARANTINE && nextStatus === BatchStatus.AVAILABLE) {
+      return this.batchService.release(batch.id);
+    }
+
+    return this.batchService.changeStatus(batch.id, { status: nextStatus }).pipe(
+      map((response) => response.data)
+    );
+  }
+
+  private getStatusSuccessMessage(currentStatus: BatchStatus, nextStatus: BatchStatus): string {
+    if (currentStatus === BatchStatus.AVAILABLE && nextStatus === BatchStatus.QUARANTINE) {
+      return 'Cách ly lô thành công.';
+    }
+
+    if (currentStatus === BatchStatus.QUARANTINE && nextStatus === BatchStatus.AVAILABLE) {
+      return 'Giải cách ly lô thành công.';
+    }
+
+    return 'Cập nhật trạng thái lô thành công.';
   }
 
   private enrichBatch(batch: BatchResponse): BatchResponse {

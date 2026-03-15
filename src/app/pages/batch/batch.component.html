@@ -77,8 +77,9 @@
   </div>
 
   <div class="info-box">
-    Lô chỉ được tạo cho sản phẩm có bật theo dõi lô. API hiện tại hỗ trợ tạo mới, xem chi tiết, xem danh sách và đổi trạng thái lô;
-    không hỗ trợ xóa lô hoặc sửa lại thông tin gốc của lô sau khi đã tạo.
+    Lô chỉ được tạo cho sản phẩm có bật theo dõi lô. Màn hình hiện đã đồng bộ đủ các API tạo mới, xem chi tiết, sửa thông tin lô,
+    cách ly, giải cách ly và đổi trạng thái. Lưu ý: nghiệp vụ <strong>Cách ly</strong>/<strong>Giải cách ly</strong> dùng API chuyên biệt,
+    không đi chung với patch trạng thái thông thường.
   </div>
 
   <div class="loading-state" *ngIf="loading"><span>Đang tải danh sách lô...</span></div>
@@ -125,12 +126,15 @@
             <button class="btn-icon" title="Xem chi tiết" (click)="openDetailModal(batch)">
               <i class="fa-regular fa-eye" aria-hidden="true"></i>
             </button>
+            <button class="btn-icon" title="Sửa thông tin lô" (click)="openEditModal(batch)">
+              <i class="fa-regular fa-pen-to-square" aria-hidden="true"></i>
+            </button>
             <button
               class="btn-icon"
-              title="Cập nhật trạng thái"
+              title="Cập nhật trạng thái / cách ly"
               (click)="openStatusModal(batch)"
               [disabled]="!canChangeStatus(batch)">
-              <i class="fa-regular fa-pen-to-square" aria-hidden="true"></i>
+              <i class="fa-solid fa-shield-virus" aria-hidden="true"></i>
             </button>
           </td>
         </tr>
@@ -160,12 +164,15 @@
         <button class="btn-icon" title="Xem chi tiết" (click)="openDetailModal(batch)">
           <i class="fa-regular fa-eye" aria-hidden="true"></i>
         </button>
+        <button class="btn-icon" title="Sửa thông tin lô" (click)="openEditModal(batch)">
+          <i class="fa-regular fa-pen-to-square" aria-hidden="true"></i>
+        </button>
         <button
           class="btn-icon"
-          title="Cập nhật trạng thái"
+          title="Cập nhật trạng thái / cách ly"
           (click)="openStatusModal(batch)"
           [disabled]="!canChangeStatus(batch)">
-          <i class="fa-regular fa-pen-to-square" aria-hidden="true"></i>
+          <i class="fa-solid fa-shield-virus" aria-hidden="true"></i>
         </button>
       </div>
     </div>
@@ -251,8 +258,11 @@
     </div>
 
     <div class="detail-action-bar" *ngIf="selectedBatch">
+      <button class="btn btn-ghost" (click)="openEditModal()">
+        <i class="fa-regular fa-pen-to-square" aria-hidden="true"></i> Sửa thông tin lô
+      </button>
       <button class="btn btn-primary" (click)="openStatusModal(selectedBatch)" [disabled]="!canChangeStatus(selectedBatch)">
-        <i class="fa-regular fa-pen-to-square" aria-hidden="true"></i> Cập nhật trạng thái
+        <i class="fa-solid fa-shield-virus" aria-hidden="true"></i> Cập nhật trạng thái
       </button>
     </div>
 
@@ -299,6 +309,55 @@
   </div>
 </div>
 
+<div class="modal-overlay" *ngIf="showEditModal" (click)="closeEditModal()">
+  <div class="modal-box" (click)="$event.stopPropagation()">
+    <div class="modal-header"><h3>Sửa thông tin lô</h3><button class="modal-close" (click)="closeEditModal()">✕</button></div>
+    <div class="modal-body" *ngIf="selectedBatch">
+      <div class="info-box">
+        API cập nhật hiện cho phép sửa metadata của lô. Nếu để trống <strong>Hạn sử dụng</strong>, backend sẽ giữ nguyên giá trị hiện tại thay vì xóa bỏ.
+      </div>
+
+      <div class="detail-grid compact-grid">
+        <div class="detail-item"><span class="detail-label">Sản phẩm</span><span>{{ selectedBatch.product_name || selectedBatch.product_id }}</span></div>
+        <div class="detail-item"><span class="detail-label">Trạng thái hiện tại</span><span class="badge" [ngClass]="getStatusClass(selectedBatch.status)">{{ getStatusLabel(selectedBatch.status) }}</span></div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Mã lô <span class="required">*</span></label>
+          <input type="text" [(ngModel)]="editForm.batch_number" maxlength="50" />
+        </div>
+        <div class="form-group">
+          <label>Mã lô nhà cung cấp</label>
+          <input type="text" [(ngModel)]="editForm.supplier_batch_number" maxlength="50" />
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Ngày sản xuất <span class="required">*</span></label>
+          <input type="date" [(ngModel)]="editForm.manufacturing_date" />
+        </div>
+        <div class="form-group">
+          <label>Hạn sử dụng</label>
+          <input type="date" [(ngModel)]="editForm.expiry_date" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Ghi chú</label>
+        <textarea [(ngModel)]="editForm.notes" rows="3" maxlength="1000"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" (click)="closeEditModal()">Hủy</button>
+      <button class="btn btn-primary" (click)="onEditSubmit()" [disabled]="savingEdit || !selectedBatch">
+        {{ savingEdit ? 'Đang lưu...' : 'Lưu thay đổi' }}
+      </button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" *ngIf="showStatusModal" (click)="closeStatusModal()">
   <div class="modal-box modal-sm" (click)="$event.stopPropagation()">
     <div class="modal-header"><h3>Cập nhật trạng thái lô</h3><button class="modal-close" (click)="closeStatusModal()">✕</button></div>
@@ -311,6 +370,7 @@
       </div>
 
       <div class="info-box">{{ getStatusChangeHint(selectedBatch) }}</div>
+      <div class="info-box info-box-status">{{ getStatusExecutionHint(selectedBatch, statusForm.status) }}</div>
 
       <div class="form-group">
         <label>Trạng thái mới</label>
@@ -325,7 +385,9 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" (click)="closeStatusModal()">Hủy</button>
-      <button class="btn btn-primary" (click)="onStatusSubmit()" [disabled]="!selectedBatch || !canChangeStatus(selectedBatch)">Lưu trạng thái</button>
+      <button class="btn btn-primary" (click)="onStatusSubmit()" [disabled]="savingStatus || !selectedBatch || !canChangeStatus(selectedBatch)">
+        {{ savingStatus ? 'Đang xử lý...' : getStatusSubmitLabel() }}
+      </button>
     </div>
   </div>
 </div>

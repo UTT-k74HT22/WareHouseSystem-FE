@@ -5,7 +5,11 @@ import { BaseURL } from '../../../environments/BaseURL';
 import { ApiResponse } from '../../dto/response/ApiResponse';
 import { PageResponse } from '../../dto/response/PageResponse';
 import { BatchResponse } from '../../dto/response/Batch/BatchResponse';
-import { ChangeBatchStatusRequest, CreateBatchRequest } from '../../dto/request/Batch/BatchRequest';
+import {
+  ChangeBatchStatusRequest,
+  CreateBatchRequest,
+  UpdateBatchRequest
+} from '../../dto/request/Batch/BatchRequest';
 
 @Injectable({ providedIn: 'root' })
 export class BatchService {
@@ -32,5 +36,20 @@ export class BatchService {
   /** PATCH /api/v1/batches/:id/status */
   changeStatus(id: string, request: ChangeBatchStatusRequest): Observable<ApiResponse<BatchResponse>> {
     return this.http.patch<ApiResponse<BatchResponse>>(`${this.apiUrl}/${id}/status`, request);
+  }
+
+  /** PUT /api/v1/batches/:id */
+  update(id: string, request: UpdateBatchRequest): Observable<ApiResponse<BatchResponse>> {
+    return this.http.put<ApiResponse<BatchResponse>>(`${this.apiUrl}/${id}`, request);
+  }
+
+  /** PUT /api/v1/batches/:id/quarantine */
+  quarantine(id: string): Observable<BatchResponse> {
+    return this.http.put<BatchResponse>(`${this.apiUrl}/${id}/quarantine`, {});
+  }
+
+  /** PUT /api/v1/batches/:id/release */
+  release(id: string): Observable<BatchResponse> {
+    return this.http.put<BatchResponse>(`${this.apiUrl}/${id}/release`, {});
   }
 }

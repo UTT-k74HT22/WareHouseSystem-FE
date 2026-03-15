@@ -1,4 +1,5 @@
 import { InboundReceiptStatus } from '../../../helper/enums/InboundReceiptStatus';
+import { QualityStatus } from '../../../helper/enums/QualityStatus';
 
 export interface InboundReceiptLineResponse {
   id: string;
@@ -14,7 +15,7 @@ export interface InboundReceiptLineResponse {
   location_name: string | null;
   line_number: number;
   quantity_received: number;
-  quality_status: string;
+  quality_status: QualityStatus;
   notes: string | null;
   created_at: string;
   updated_at: string;
