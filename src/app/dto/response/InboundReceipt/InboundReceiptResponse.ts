@@ -1,20 +1,39 @@
 import { InboundReceiptStatus } from '../../../helper/enums/InboundReceiptStatus';
 
+export interface InboundReceiptLineResponse {
+  id: string;
+  inbound_receipt_id: string;
+  purchase_order_line_id: string;
+  product_id: string;
+  product_sku: string | null;
+  product_name: string | null;
+  batch_id: string | null;
+  batch_number: string | null;
+  location_id: string;
+  location_code: string | null;
+  location_name: string | null;
+  line_number: number;
+  quantity_received: number;
+  quality_status: string;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface InboundReceiptResponse {
   id: string;
   receipt_number: string;
-  purchase_order_id: string | null;
+  purchase_order_id: string;
   purchase_order_number: string | null;
-  supplier_id: string;
-  supplier_name: string;
   warehouse_id: string;
-  warehouse_name: string;
+  warehouse_name: string | null;
   status: InboundReceiptStatus;
-  expected_date: string;
-  received_date: string;
+  receipt_date: string;
+  delivery_note_number: string | null;
   notes: string | null;
-  created_by: string;
+  confirmed_at: string | null;
+  confirmed_by: string | null;
+  lines: InboundReceiptLineResponse[];
   created_at: string;
-  updated_by: string;
   updated_at: string;
 }

@@ -16,9 +16,10 @@ export class PurchaseOrderLineService {
   constructor(private http: HttpClient) {}
 
   /** GET /api/v1/purchase-order-lines?purchaseOrderId=:id */
-  getByPurchaseOrderId(purchaseOrderId: string): Observable<ApiResponse<PurchaseOrderLineResponse[]>> {
-    const params = new HttpParams().set('purchaseOrderId', purchaseOrderId);
-    return this.http.get<ApiResponse<PurchaseOrderLineResponse[]>>(this.apiUrl, { params });
+  getByPurchaseOrderId(id: string): Observable<ApiResponse<PurchaseOrderLineResponse[]>> {
+    return this.http.get<ApiResponse<PurchaseOrderLineResponse[]>>(
+      `${this.apiUrl}/purchase-order/${id}`
+    );
   }
 
   /** POST /api/v1/purchase-order-lines */

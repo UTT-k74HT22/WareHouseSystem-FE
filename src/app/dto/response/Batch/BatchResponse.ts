@@ -7,7 +7,7 @@ export interface BatchResponse {
   product_name?: string;
   product_sku?: string;
   manufacturing_date: string;
-  expiry_date: string;
+  expiry_date: string | null;
   supplier_batch_number: string | null;
   status: BatchStatus;
   notes: string | null;

@@ -1,6 +1,5 @@
 export enum InboundReceiptStatus {
-  PENDING = 'PENDING',
-  IN_PROGRESS = 'IN_PROGRESS',
-  COMPLETED = 'COMPLETED',
+  DRAFT = 'DRAFT',
+  CONFIRMED = 'CONFIRMED',
   CANCELLED = 'CANCELLED'
 }
