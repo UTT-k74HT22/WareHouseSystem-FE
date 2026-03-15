@@ -164,7 +164,6 @@ export class BusinessPartnerComponent implements OnInit {
 
   private initCreateForm(): CreateBusinessPartnerRequest {
     return {
-      code: '',
       name: '',
       type: BusinessPartnerType.SUPPLIER,
       city: 'Vietnam',

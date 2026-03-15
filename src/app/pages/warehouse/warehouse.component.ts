@@ -64,7 +64,6 @@ export class WarehouseComponent implements OnInit {
 
   private initCreateForm(): CreateWarehouseRequest {
     return {
-      code: '',
       name: '',
       address: '',
       phone: '',
@@ -339,10 +338,6 @@ export class WarehouseComponent implements OnInit {
 
   // Validation methods
   private validateCreateForm(): boolean {
-    if (!this.createForm.code.trim()) {
-      this.toastr.warning('Thiếu thông tin', 'Vui lòng nhập mã kho');
-      return false;
-    }
     if (!this.createForm.name.trim()) {
       this.toastr.warning('Thiếu thông tin', 'Vui lòng nhập tên kho');
       return false;

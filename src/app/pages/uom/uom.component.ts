@@ -27,7 +27,7 @@ export class UomComponent implements OnInit {
   selectedUOM: UnitsOfMeasureResponse | null = null;
   uomToDelete: UnitsOfMeasureResponse | null = null;
 
-  createForm: CreateUOMRequest = { code: '', name: '', type: UnitsOfMeasureType.COUNT };
+  createForm: CreateUOMRequest = { name: '', type: UnitsOfMeasureType.COUNT };
   editForm: UpdateUOMRequest = {};
 
   constructor(
@@ -70,7 +70,7 @@ export class UomComponent implements OnInit {
   onResetFilter(): void { this.searchKeyword = ''; this.applyFilter(); }
 
   openCreateModal(): void {
-    this.createForm = { code: '', name: '', type: UnitsOfMeasureType.COUNT };
+    this.createForm = { name: '', type: UnitsOfMeasureType.COUNT };
     this.showCreateModal = true;
   }
 

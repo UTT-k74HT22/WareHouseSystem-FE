@@ -394,31 +394,20 @@
             </div>
 
             <div class="form-group">
-              <label for="create-code">Mã vị trí <span class="required">*</span></label>
+              <label for="create-name">Tên vị trí <span class="required">*</span></label>
               <input
                 type="text"
-                id="create-code"
+                id="create-name"
                 class="form-control"
-                [(ngModel)]="createForm.code"
-                name="code"
-                placeholder="Nhập mã vị trí"
+                [(ngModel)]="createForm.name"
+                name="name"
+                placeholder="Nhập tên vị trí"
                 required
               />
             </div>
           </div>
 
-          <div class="form-group">
-            <label for="create-name">Tên vị trí <span class="required">*</span></label>
-            <input
-              type="text"
-              id="create-name"
-              class="form-control"
-              [(ngModel)]="createForm.name"
-              name="name"
-              placeholder="Nhập tên vị trí"
-              required
-            />
-          </div>
+          <div class="info-box"><i class="fa-regular fa-lightbulb" aria-hidden="true"></i> Mã vị trí sẽ được hệ thống tự sinh theo kho đã chọn.</div>
 
           <div class="form-row">
             <div class="form-group">

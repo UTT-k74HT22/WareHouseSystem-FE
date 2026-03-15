@@ -2,7 +2,6 @@ import { BusinessPartnerType } from '../../../helper/enums/BusinessPartnerType';
 import { BusinessPartnerStatus } from '../../../helper/enums/BusinessPartnerStatus';
 
 export interface CreateBusinessPartnerRequest {
-  code: string;
   name: string;
   type: BusinessPartnerType;
   contact_person?: string;

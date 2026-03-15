@@ -226,7 +226,6 @@ export class ProductComponent implements OnInit {
   // ══════════════════════════════════════════════════
   private initCreateForm(): CreateProductRequest {
     return {
-      sku: '',
       name: '',
       category_id: '',
       uom_id: '',

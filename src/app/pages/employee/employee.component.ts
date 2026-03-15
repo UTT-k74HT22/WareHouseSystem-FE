@@ -67,7 +67,6 @@ export class EmployeeComponent implements OnInit {
       last_name: '',
       email: '',
       phone_number: '',
-      employee_code: '',
       department: '',
       position: '',
       hire_date: ''
@@ -337,10 +336,6 @@ export class EmployeeComponent implements OnInit {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(this.createForm.email)) {
       this.toastr.warning('Email không hợp lệ', 'Vui lòng nhập đúng định dạng email');
-      return false;
-    }
-    if (!this.createForm.employee_code.trim()) {
-      this.toastr.warning('Thiếu thông tin', 'Vui lòng nhập mã nhân viên');
       return false;
     }
     if (this.createForm.phone_number && !/^\d{10,15}$/.test(this.createForm.phone_number)) {

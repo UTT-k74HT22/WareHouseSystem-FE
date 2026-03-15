@@ -111,7 +111,6 @@ export class CategoryComponent implements OnInit {
   openEditModal(category: CategoryResponse): void {
     this.selectedCategory = category;
     this.editForm = {
-      code: category.code,
       name: category.name,
       description: category.description ?? undefined
     };
@@ -179,7 +178,7 @@ export class CategoryComponent implements OnInit {
   }
 
   private initCreateForm(): CreateCategoryRequest {
-    return { code: '', name: '', status: CategoryStatus.ACTIVE };
+    return { name: '', status: CategoryStatus.ACTIVE };
   }
 
   private applyFilter(): void {

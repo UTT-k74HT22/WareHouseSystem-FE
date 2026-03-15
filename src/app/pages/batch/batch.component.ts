@@ -487,7 +487,6 @@ export class BatchComponent implements OnInit {
   private initCreateForm(): CreateBatchRequest {
     return {
       product_id: '',
-      batch_number: '',
       manufacturing_date: new Date().toISOString().slice(0, 10),
       expiry_date: '',
       supplier_batch_number: '',
@@ -499,7 +498,6 @@ export class BatchComponent implements OnInit {
   private initEditForm(batch?: BatchResponse): UpdateBatchRequest {
     return {
       id: batch?.id || '',
-      batch_number: batch?.batch_number || '',
       manufacturing_date: batch?.manufacturing_date || '',
       expiry_date: batch?.expiry_date || undefined,
       supplier_batch_number: batch?.supplier_batch_number || '',
@@ -510,7 +508,6 @@ export class BatchComponent implements OnInit {
   private normalizeCreateRequest(): CreateBatchRequest {
     return {
       product_id: this.createForm.product_id,
-      batch_number: this.createForm.batch_number.trim(),
       manufacturing_date: this.createForm.manufacturing_date,
       expiry_date: this.createForm.expiry_date || undefined,
       supplier_batch_number: this.createForm.supplier_batch_number?.trim() || undefined,
@@ -522,7 +519,6 @@ export class BatchComponent implements OnInit {
   private normalizeUpdateRequest(): UpdateBatchRequest {
     return {
       id: this.selectedBatch?.id || this.editForm.id,
-      batch_number: this.editForm.batch_number?.trim(),
       manufacturing_date: this.editForm.manufacturing_date || undefined,
       expiry_date: this.editForm.expiry_date || undefined,
       supplier_batch_number: this.editForm.supplier_batch_number?.trim() ?? '',
@@ -544,16 +540,6 @@ export class BatchComponent implements OnInit {
     const selectedProduct = this.creatableProducts.find((product) => product.id === request.product_id);
     if (!selectedProduct) {
       this.toastr.warning('Sản phẩm đã chọn không hợp lệ hoặc không hỗ trợ theo dõi lô.');
-      return false;
-    }
-
-    if (!request.batch_number) {
-      this.toastr.warning('Vui lòng nhập mã lô.');
-      return false;
-    }
-
-    if (request.batch_number.length > 50) {
-      this.toastr.warning('Mã lô không được vượt quá 50 ký tự.');
       return false;
     }
 
@@ -585,16 +571,6 @@ export class BatchComponent implements OnInit {
   private validateUpdateRequest(request: UpdateBatchRequest): boolean {
     if (!this.selectedBatch) {
       this.toastr.warning('Không xác định được lô cần cập nhật.');
-      return false;
-    }
-
-    if (!request.batch_number) {
-      this.toastr.warning('Mã lô không được để trống.');
-      return false;
-    }
-
-    if (request.batch_number.length > 50) {
-      this.toastr.warning('Mã lô không được vượt quá 50 ký tự.');
       return false;
     }
 
