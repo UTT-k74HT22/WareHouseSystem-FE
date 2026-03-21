@@ -120,6 +120,11 @@ export class StockTransferService {
     return this.http.post<ApiResponse<StockTransferResponse>>(this.transfersUrl, request);
   }
 
+  /** PUT /api/v1/stock-transfers/:id/submit */
+  submit(id: string): Observable<ApiResponse<StockTransferResponse>> {
+    return this.http.put<ApiResponse<StockTransferResponse>>(`${this.transfersUrl}/${id}/submit`, {});
+  }
+
   /** PUT /api/v1/stock-transfers/:id/complete */
   complete(id: string): Observable<ApiResponse<StockTransferResponse>> {
     return this.http.put<ApiResponse<StockTransferResponse>>(`${this.transfersUrl}/${id}/complete`, {});

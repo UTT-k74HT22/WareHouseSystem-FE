@@ -1064,11 +1064,13 @@ export class StockTransfersComponent implements OnInit {
   totalElements = 0;
 
   draftCount = 0;
+  pendingCount = 0;
   completedCount = 0;
   cancelledCount = 0;
 
   showCreateModal = false;
   showDetailModal = false;
+  showSubmitModal = false;
   showCompleteModal = false;
   showCancelModal = false;
 
@@ -1173,6 +1175,7 @@ export class StockTransfersComponent implements OnInit {
         this.totalElements = pageResponse.total_elements;
         this.transfers = pageResponse.content.map((transfer) => this.enrichTransfer(transfer));
         this.draftCount = this.transfers.filter((transfer) => transfer.status === StockTransferStatus.DRAFT).length;
+        this.pendingCount = this.transfers.filter((transfer) => transfer.status === StockTransferStatus.PENDING).length;
         this.completedCount = this.transfers.filter(
           (transfer) => transfer.status === StockTransferStatus.COMPLETED
         ).length;
@@ -1242,6 +1245,16 @@ export class StockTransfersComponent implements OnInit {
     this.refreshTransfer(transfer.id);
   }
 
+  openSubmitModal(transfer: StockTransferViewModel): void {
+    if (!this.canSubmitTransfer(transfer)) {
+      return;
+    }
+
+    this.closeAllModals();
+    this.actionTransfer = transfer;
+    this.showSubmitModal = true;
+  }
+
   openCompleteModal(transfer: StockTransferViewModel): void {
     if (!this.canUpdateTransfer(transfer)) {
       return;
@@ -1265,6 +1278,7 @@ export class StockTransfersComponent implements OnInit {
   closeAllModals(): void {
     this.showCreateModal = false;
     this.showDetailModal = false;
+    this.showSubmitModal = false;
     this.showCompleteModal = false;
     this.showCancelModal = false;
     this.selectedTransfer = null;
@@ -1449,6 +1463,27 @@ export class StockTransfersComponent implements OnInit {
     });
   }
 
+  onSubmitConfirm(): void {
+    if (!this.actionTransfer) {
+      return;
+    }
+
+    this.submitting = true;
+
+    this.stockTransferService.submit(this.actionTransfer.id).subscribe({
+      next: () => {
+        this.toastr.success('Đã gửi phiếu chuyển kho để xử lý.', 'Stock Transfer');
+        this.submitting = false;
+        this.closeAllModals();
+        this.loadTransfers(this.currentPage);
+      },
+      error: (error) => {
+        this.submitting = false;
+        this.toastr.error(errorMessage(error, 'Gửi phiếu chuyển kho thất bại.'));
+      },
+    });
+  }
+
   onCompleteConfirm(): void {
     if (!this.actionTransfer) {
       return;
@@ -1492,6 +1527,10 @@ export class StockTransfersComponent implements OnInit {
   }
 
   canUpdateTransfer(transfer: StockTransferViewModel | null): boolean {
+    return transfer?.status === StockTransferStatus.PENDING;
+  }
+
+  canSubmitTransfer(transfer: StockTransferViewModel | null): boolean {
     return transfer?.status === StockTransferStatus.DRAFT;
   }
 
@@ -1524,6 +1563,8 @@ export class StockTransfersComponent implements OnInit {
     switch (status) {
       case StockTransferStatus.DRAFT:
         return 'Nháp';
+      case StockTransferStatus.PENDING:
+        return 'Cho xu ly';
       case StockTransferStatus.COMPLETED:
         return 'Hoan tat';
       case StockTransferStatus.CANCELLED:
@@ -1536,6 +1577,8 @@ export class StockTransfersComponent implements OnInit {
   getStatusClass(status: StockTransferStatus): string {
     switch (status) {
       case StockTransferStatus.DRAFT:
+        return 'status-pending';
+      case StockTransferStatus.PENDING:
         return 'status-pending';
       case StockTransferStatus.COMPLETED:
         return 'status-active';
