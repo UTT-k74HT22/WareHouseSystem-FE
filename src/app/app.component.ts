@@ -12,8 +12,14 @@ export class AppComponent implements OnInit {
   showLayout = false;
   sidebarCollapsed = false;
 
-  // Routes that should NOT show the layout (sidebar/header/footer)
-  private routesWithoutLayout = ['/login', '/register'];
+  // Public auth routes that should render without sidebar/header/footer
+  private routesWithoutLayout = [
+    '/login',
+    '/register',
+    '/forgot-password',
+    '/verify-otp',
+    '/reset-password'
+  ];
 
   constructor(
     private router: Router,
@@ -35,7 +41,7 @@ export class AppComponent implements OnInit {
   private updateLayoutVisibility(): void {
     const currentUrl = this.router.url;
 
-    // Hide layout for specific routes (login, register)
+    // Hide layout for public auth routes
     const isRouteWithoutLayout = this.routesWithoutLayout.some(route =>
       currentUrl.includes(route)
     );

@@ -20,7 +20,10 @@ import { InventoryComponent } from './pages/inventory/inventory.component';
 import { EmployeeComponent } from './pages/employee/employee.component';
 import { ProfileComponent } from './pages/account/profile/profile.component';
 import { ChangePasswordComponent } from './pages/account/change-password/change-password.component';
+import { ForgotPasswordComponent } from './pages/account/forgot-password/forgot-password.component';
+import { ResetPasswordComponent } from './pages/account/reset-password/reset-password.component';
 import { SettingsComponent } from './pages/account/settings/settings.component';
+import { VerifyOtpComponent } from './pages/account/verify-otp/verify-otp.component';
 import { AuthGuard } from './security/guards/auth.guard';
 import { GuestGuard } from './security/guards/guest.guard';
 
@@ -40,6 +43,21 @@ const routes: Routes = [
   {
     path: 'register',
     component: RegisterComponent,
+    canActivate: [GuestGuard]
+  },
+  {
+    path: 'forgot-password',
+    component: ForgotPasswordComponent,
+    canActivate: [GuestGuard]
+  },
+  {
+    path: 'verify-otp',
+    component: VerifyOtpComponent,
+    canActivate: [GuestGuard]
+  },
+  {
+    path: 'reset-password/:token',
+    component: ResetPasswordComponent,
     canActivate: [GuestGuard]
   },
 

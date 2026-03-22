@@ -1,0 +1,11 @@
+@import '../../../authenticate/login/login.component.css';
+
+.success-message {
+  background: #dcfce7;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 13px;
+  color: #166534;
+  margin-bottom: 16px;
+}

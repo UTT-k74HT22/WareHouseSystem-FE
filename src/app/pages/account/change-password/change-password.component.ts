@@ -1,6 +1,8 @@
 import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { ToastrService } from '../../../service/SystemService/toastr.service';
+import { AuthService } from 'src/app/service/AuthService/auth-service.service';
+import { ChangePasswordRequest } from 'src/app/dto/request/Auth/ChangePasswordRequest';
 
 @Component({
   selector: 'app-change-password',
@@ -17,7 +19,8 @@ export class ChangePasswordComponent {
 
   constructor(
     private fb: FormBuilder,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private authService: AuthService
   ) {
     this.initForm();
   }
@@ -89,16 +92,28 @@ export class ChangePasswordComponent {
   onSubmit(): void {
     if (this.passwordForm.invalid) {
       this.passwordForm.markAllAsTouched();
+      this.toastr.warning('Thiếu hoặc sai thông tin', 'Kiểm tra lại mật khẩu hiện tại, mật khẩu mới và phần xác nhận.');
       return;
     }
 
     this.isLoading = true;
-    // Simulate API call
-    setTimeout(() => {
-      this.isLoading = false;
-      this.passwordForm.reset();
-      this.toastr.success('Thành công', 'Đổi mật khẩu thành công');
-    }, 1500);
+
+    const request: ChangePasswordRequest = {
+      old_password: this.passwordForm.value.currentPassword,
+      new_password: this.passwordForm.value.newPassword
+    };
+
+    this.authService.changePassword(request).subscribe(
+      () => {
+        this.isLoading = false;
+        this.passwordForm.reset();
+        this.toastr.success('Thành công', 'Đổi mật khẩu thành công');
+      },
+      (error) => {
+        this.isLoading = false;
+        this.toastr.error('Lỗi', error.error.message || 'Có lỗi xảy ra, vui lòng thử lại.');
+      }
+    );
   }
 
   get f() {
