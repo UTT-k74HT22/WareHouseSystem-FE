@@ -25,7 +25,9 @@ export class RegisterComponent implements OnInit {
       username: ['', [Validators.required, Validators.minLength(3)]],
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]],
-      confirmPassword: ['', [Validators.required]]
+      confirmPassword: ['', [Validators.required]],
+      fullName: ['', [Validators.required]],
+      phoneNumber: ['', [Validators.required]]
     });
   }
 
@@ -45,6 +47,14 @@ export class RegisterComponent implements OnInit {
     return this.registerForm.get('confirmPassword');
   }
 
+  get fullName() {
+    return this.registerForm.get('fullName');
+  }
+
+  get phoneNumber() {
+    return this.registerForm.get('phoneNumber');
+  }
+
   onSubmit(): void {
     if (this.registerForm.invalid) {
       this.registerForm.markAllAsTouched();
@@ -60,23 +70,26 @@ export class RegisterComponent implements OnInit {
 
     this.isLoading = true;
 
-    // Example: Call register service
-    // this.authService.register(this.registerForm.value).subscribe({
-    //   next: (response) => {
-    //     this.isLoading = false;
-    //     this.toastr.success('Tài khoản đã được tạo thành công!', 'Đăng ký thành công');
-    //     this.router.navigate(['/login']);
-    //   },
-    //   error: (error) => {
-    //     this.isLoading = false;
-    //     this.toastr.error(error.error?.message || 'Đăng ký thất bại', 'Lỗi');
-    //   }
-    // });
+    const request = {
+      ...this.registerForm.value,
+      full_name: this.registerForm.value.fullName,
+      phone_number: this.registerForm.value.phoneNumber,
+      confirm_password: this.registerForm.value.confirmPassword
+    };
+    delete request.fullName;
+    delete request.phoneNumber;
+    delete request.confirmPassword;
 
-    // Demo toastr
-    setTimeout(() => {
-      this.isLoading = false;
-      this.toastr.success('Tài khoản đã được tạo thành công!', 'Đăng ký thành công');
-    }, 1500);
+    this.authService.register(request).subscribe({
+      next: (response) => {
+        this.isLoading = false;
+        this.toastr.success('Tài khoản đã được tạo thành công!', 'Đăng ký thành công');
+        this.router.navigate(['/login']);
+      },
+      error: (error) => {
+        this.isLoading = false;
+        this.toastr.error(error.error?.message || 'Đăng ký thất bại', 'Lỗi');
+      }
+    });
   }
 }

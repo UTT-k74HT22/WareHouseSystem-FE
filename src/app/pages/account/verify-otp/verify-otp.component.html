@@ -5,94 +5,53 @@
       <div class="logo-text">WMS Portal</div>
     </div>
 
-    <h1 class="auth-title">Sign in</h1>
+    <h1 class="auth-title">Verify OTP</h1>
     <p class="auth-subtitle">
-      Don’t have an account?
-      <a href="#">Create now</a>
+      An OTP has been sent to your email. Please enter it below.
     </p>
 
-    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+    <form [formGroup]="verifyOtpForm" (ngSubmit)="onSubmit()">
       <div *ngIf="errorMessage" class="error-message">
         {{ errorMessage }}
       </div>
+      <div *ngIf="successMessage" class="success-message">
+        {{ successMessage }}
+      </div>
 
-      <!-- USERNAME -->
+      <!-- OTP -->
       <div class="form-group">
-        <label class="form-label" for="username">Username</label>
+        <label class="form-label" for="otp">OTP</label>
         <input
-          id="username"
+          id="otp"
           type="text"
           class="form-input"
-          formControlName="username"
-          placeholder="Enter your username"
-          [class.is-invalid]="submitted && username?.invalid"
+          formControlName="otp"
+          placeholder="Enter your OTP"
+          inputmode="numeric"
+          maxlength="6"
+          autocomplete="one-time-code"
+          [class.is-invalid]="submitted && otp?.invalid"
         />
-        <div class="error-text" *ngIf="submitted && username?.invalid">
-          <span *ngIf="username?.errors?.['required']">Username is required</span>
+        <div class="error-text" *ngIf="submitted && otp?.invalid">
+          <span *ngIf="otp?.errors?.['required']">OTP is required</span>
+          <span *ngIf="otp?.errors?.['pattern']">OTP must be exactly 6 digits</span>
         </div>
-      </div>
-      <div class="form-group">
-        <label class="form-label" for="password">Password</label>
-
-        <div class="form-input-wrapper">
-          <input
-            id="password"
-            class="form-input"
-            formControlName="password"
-            [type]="hidePassword ? 'password' : 'text'"
-            placeholder="••••••••"
-            [class.is-invalid]="submitted && password?.invalid"
-          />
-          <button
-            type="button"
-            class="toggle-password"
-            (click)="togglePassword()"
-          >
-            <i *ngIf="hidePassword" class="fa-regular fa-eye" aria-hidden="true"></i>
-            <i *ngIf="!hidePassword" class="fa-regular fa-eye-slash" aria-hidden="true"></i>
-          </button>
-        </div>
-
-        <div class="error-text" *ngIf="submitted && password?.invalid">
-          <span *ngIf="password?.errors?.['required']">Password is required</span>
-          <span *ngIf="password?.errors?.['minlength']">
-            Password must be at least 6 characters
-          </span>
-        </div>
-      </div>
-
-      <!-- EXTRA ROW -->
-      <div class="extra-row">
-        <label class="checkbox">
-          <input type="checkbox" />
-          <span>Remember me</span>
-        </label>
-        <a routerLink="/forgot-password">Forgot password?</a>
       </div>
 
       <!-- SUBMIT -->
       <button class="btn-primary" type="submit" [disabled]="isLoading">
-        <span *ngIf="!isLoading">Sign in</span>
+        <span *ngIf="!isLoading">Verify</span>
         <i *ngIf="isLoading" class="loading-spinner fa-solid fa-rotate" aria-hidden="true"></i>
       </button>
 
       <!-- DIVIDER -->
       <div class="divider">
         <div class="divider-line"></div>
-        <span>OR</span>
-        <div class="divider-line"></div>
       </div>
 
-      <!-- SOCIAL BUTTONS -->
-      <button type="button" class="btn-social btn-google">
-        <i class="fa-brands fa-google"></i>
-        <span>Continue with Google</span>
-      </button>
-
-      <button type="button" class="btn-social btn-facebook">
-        <i class="fa-brands fa-facebook"></i>
-        <span>Continue with Facebook</span>
-      </button>
+      <div class="extra-row">
+        <a routerLink="/login">Back to login</a>
+      </div>
     </form>
   </div>
 

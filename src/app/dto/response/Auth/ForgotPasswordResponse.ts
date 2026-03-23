@@ -1,3 +1,3 @@
 export interface ForgotPasswordResponse {
-  reset_token: string;
+  resetToken: string;
 }

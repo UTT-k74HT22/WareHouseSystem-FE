@@ -40,6 +40,9 @@ import { EmployeeComponent } from './pages/employee/employee.component';
 import { ProfileComponent } from './pages/account/profile/profile.component';
 import { ChangePasswordComponent } from './pages/account/change-password/change-password.component';
 import { SettingsComponent } from './pages/account/settings/settings.component';
+import { ForgotPasswordComponent } from './pages/account/forgot-password/forgot-password.component';
+import { VerifyOtpComponent } from './pages/account/verify-otp/verify-otp.component';
+import { ResetPasswordComponent } from './pages/account/reset-password/reset-password.component';
 
 @NgModule({
   declarations: [
@@ -76,6 +79,9 @@ import { SettingsComponent } from './pages/account/settings/settings.component';
     ProfileComponent,
     ChangePasswordComponent,
     SettingsComponent,
+    ForgotPasswordComponent,
+    VerifyOtpComponent,
+    ResetPasswordComponent,
   ],
   imports: [
     BrowserModule,
