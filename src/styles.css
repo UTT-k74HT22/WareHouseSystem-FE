@@ -1,1 +1,282 @@
-/* You can add global styles to this file, and also import other style files */
+/* Import ngx-toastr styles */
+@import 'ngx-toastr/toastr';
+
+/* ========== RESET CƠ BẢN ========== */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #1f2933;
+  background-color: #f3f4f6;
+}
+
+/* Bỏ style mặc định của ul, button, a */
+ul {
+  list-style: none;
+}
+
+button {
+  border: none;
+  background: none;
+  cursor: pointer;
+  font: inherit;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* ========== THEME BIẾN DÙNG CHUNG ========== */
+/* Dùng :root để sau này đổi theme rất nhanh */
+:root {
+  --whs-primary: #0d6efd;      /* màu chính (có thể đổi theo brand) */
+  --whs-primary-dark: #0b5ed7;
+  --whs-accent: #f97316;       /* màu nhấn (ví dụ báo cáo, biểu đồ) */
+  --whs-bg: #f3f4f6;
+  --whs-card-bg: #ffffff;
+  --whs-border: #e5e7eb;
+  --whs-text-main: #111827;
+  --whs-text-muted: #6b7280;
+  --whs-danger: #dc2626;
+  --whs-success: #16a34a;
+  --whs-warning: #facc15;
+
+  --whs-radius-sm: 4px;
+  --whs-radius-md: 8px;
+  --whs-radius-lg: 12px;
+
+  --whs-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --whs-shadow-md: 0 4px 8px rgba(15, 23, 42, 0.08);
+}
+
+/* ========== APP LAYOUT ========== */
+
+.app-shell {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  grid-template-rows: 56px minmax(0, 1fr);
+  grid-template-areas:
+    "sidebar header"
+    "sidebar content";
+  height: 100vh;
+}
+
+/* Sidebar */
+.app-sidebar {
+  grid-area: sidebar;
+  background-color: #020617;
+  color: #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  padding: 12px;
+}
+
+.app-logo {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  padding: 8px 10px;
+  border-radius: var(--whs-radius-md);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #0f172a, #020617);
+}
+
+.app-nav-section-title {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #6b7280;
+  margin: 12px 8px 4px;
+}
+
+.app-nav-item {
+  padding: 8px 10px;
+  border-radius: var(--whs-radius-md);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #e5e7eb;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.app-nav-item:hover {
+  background-color: rgba(148, 163, 184, 0.12);
+}
+
+.app-nav-item.active {
+  background-color: rgba(37, 99, 235, 0.3);
+  color: #dbeafe;
+}
+
+/* Header */
+.app-header {
+  grid-area: header;
+  background-color: var(--whs-card-bg);
+  border-bottom: 1px solid var(--whs-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+}
+
+.app-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.app-header-title {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.app-header-subtitle {
+  font-size: 12px;
+  color: var(--whs-text-muted);
+}
+
+/* Content */
+.app-content {
+  grid-area: content;
+  padding: 16px;
+  overflow: auto;
+  background-color: var(--whs-bg);
+}
+
+/* Card chung cho màn WMS */
+.whs-card {
+  background-color: var(--whs-card-bg);
+  border-radius: var(--whs-radius-md);
+  padding: 16px;
+  box-shadow: var(--whs-shadow-sm);
+  border: 1px solid var(--whs-border);
+}
+
+.whs-card-title {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.whs-card-subtitle {
+  font-size: 12px;
+  color: var(--whs-text-muted);
+}
+
+/* ========== BUTTON STYLE CƠ BẢN ========== */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: var(--whs-radius-sm);
+  font-size: 13px;
+  font-weight: 500;
+  border: 1px solid transparent;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.btn-primary {
+  background-color: var(--whs-primary);
+  color: #ffffff;
+}
+
+.btn-primary:hover {
+  background-color: var(--whs-primary-dark);
+}
+
+.btn-outline {
+  background-color: transparent;
+  border-color: var(--whs-border);
+  color: var(--whs-text-main);
+}
+
+.btn-outline:hover {
+  border-color: var(--whs-primary);
+  color: var(--whs-primary);
+}
+
+/* ========== TOASTR TINH CHỈNH NHẸ ========== */
+
+.toast-top-right {
+  top: 70px;
+  right: 16px;
+}
+
+.toast-success {
+  background-color: var(--whs-success) !important;
+}
+
+.toast-error {
+  background-color: var(--whs-danger) !important;
+}
+
+.toast-warning {
+  background-color: var(--whs-warning) !important;
+  color: #3f3f46 !important;
+}
+
+/* ========== CHART CONTAINER CƠ BẢN ========== */
+
+.whs-chart-card {
+  background-color: var(--whs-card-bg);
+  border-radius: var(--whs-radius-md);
+  padding: 16px;
+  box-shadow: var(--whs-shadow-sm);
+  border: 1px solid var(--whs-border);
+}
+
+.whs-chart-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.whs-chart-title {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.whs-chart-subtitle {
+  font-size: 12px;
+  color: var(--whs-text-muted);
+}
+
+@media (max-width: 1024px) {
+  .app-shell {
+    grid-template-columns: 86px minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .app-shell {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+    grid-template-areas:
+      "header"
+      "content";
+  }
+
+  .app-sidebar {
+    display: none;
+  }
+}

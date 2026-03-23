@@ -1,0 +1,79 @@
+<div class="not-found-container">
+  <div class="not-found-content">
+    <!-- Animated 404 Illustration -->
+    <div class="illustration">
+      <div class="number-404">
+        <span class="digit">4</span>
+        <span class="digit middle">
+          <svg class="warehouse-icon" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <!-- Warehouse building -->
+            <rect x="15" y="40" width="70" height="50" fill="#e5e7eb" stroke="#9ca3af" stroke-width="2"/>
+            <polygon points="50,15 10,40 90,40" fill="#6b7280" stroke="#4b5563" stroke-width="2"/>
+
+            <!-- Door -->
+            <rect x="40" y="60" width="20" height="30" fill="#9ca3af" stroke="#6b7280" stroke-width="1.5"/>
+            <circle cx="45" cy="75" r="1.5" fill="#6b7280"/>
+
+            <!-- Windows -->
+            <rect x="22" y="48" width="12" height="10" fill="#cbd5e1" stroke="#94a3b8" stroke-width="1"/>
+            <rect x="66" y="48" width="12" height="10" fill="#cbd5e1" stroke="#94a3b8" stroke-width="1"/>
+
+            <!-- Loading box (animated) -->
+            <g class="floating-box">
+              <rect x="68" y="28" width="14" height="14" fill="#4f46e5" opacity="0.8"/>
+              <line x1="68" y1="35" x2="82" y2="35" stroke="#fff" stroke-width="1"/>
+              <line x1="75" y1="28" x2="75" y2="42" stroke="#fff" stroke-width="1"/>
+            </g>
+          </svg>
+        </span>
+        <span class="digit">4</span>
+      </div>
+
+      <!-- Decorative elements -->
+      <div class="deco-box deco-box-1"></div>
+      <div class="deco-box deco-box-2"></div>
+      <div class="deco-box deco-box-3"></div>
+    </div>
+
+    <!-- Error Message -->
+    <div class="message-section">
+      <h1 class="error-title">Trang không tồn tại</h1>
+      <p class="error-description">
+        Rất tiếc, trang bạn đang tìm kiếm không tồn tại hoặc đã bị di chuyển.<br>
+        Vui lòng kiểm tra lại đường dẫn hoặc quay về trang chủ.
+      </p>
+
+      <!-- Action Buttons -->
+      <div class="action-buttons">
+        <button class="btn btn-primary" (click)="goHome()">
+          <i class="fa-solid fa-house btn-icon" aria-hidden="true"></i>
+          Về trang chủ
+        </button>
+
+        <button class="btn btn-secondary" (click)="goBack()">
+          <i class="fa-solid fa-arrow-left btn-icon" aria-hidden="true"></i>
+          Quay lại
+        </button>
+      </div>
+
+      <!-- Helpful Links -->
+<!--      <div class="helpful-links">-->
+<!--        <p class="links-title">Hoặc bạn có thể truy cập:</p>-->
+<!--        <div class="links-grid">-->
+<!--          <a [routerLink]="['/dashboard']" class="link-item">-->
+<!--            <svg class="link-icon" viewBox="0 0 20 20" fill="currentColor">-->
+<!--              <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>-->
+<!--            </svg>-->
+<!--            Dashboard-->
+<!--          </a>-->
+<!--          <a [routerLink]="['/warehouse']" class="link-item">-->
+<!--            <svg class="link-icon" viewBox="0 0 20 20" fill="currentColor">-->
+<!--              <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3a1 1 0 01-1-1v-2a1 1 0 00-1-1H9a1 1 0 00-1 1v2a1 1 0 01-1 1H4a1 1 0 110-2V4zm3 1h2v2H7V5zm2 4H7v2h2V9zm2-4h2v2h-2V5zm2 4h-2v2h2V9z" clip-rule="evenodd"/>-->
+<!--            </svg>-->
+<!--            Quản lý kho-->
+<!--          </a>-->
+<!--        </div>-->
+<!--      </div>-->
+    </div>
+  </div>
+</div>

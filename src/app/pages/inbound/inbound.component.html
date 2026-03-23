@@ -1,0 +1,592 @@
+<div class="page-container">
+  <div class="page-hero">
+    <div class="hero-left">
+      <div class="hero-accent"></div>
+      <div class="hero-text">
+        <h1 class="hero-title"><i class="fa-solid fa-boxes-packing" aria-hidden="true"></i> Nhập kho</h1>
+        <p class="hero-subtitle">Quản lý phiếu nhập theo đơn mua hàng đã xác nhận, từ danh sách tổng quan đến bước xác nhận nhập hàng.</p>
+      </div>
+    </div>
+    <div class="hero-actions">
+      <button class="btn btn-ghost" (click)="loadReceipts()">
+        <i class="fa-solid fa-rotate-right" aria-hidden="true"></i> Làm mới
+      </button>
+      <button class="btn btn-primary" (click)="openCreateModal()">+ Tạo phiếu nhập</button>
+    </div>
+  </div>
+
+  <div class="stats-grid" *ngIf="!loading">
+    <div class="stat-item stat-total">
+      <div class="stat-bar"></div>
+      <div class="stat-body"><div class="stat-label">Tổng phiếu</div><div class="stat-value">{{ totalElements }}</div></div>
+    </div>
+    <div class="stat-item stat-active">
+      <div class="stat-bar"></div>
+      <div class="stat-body"><div class="stat-label">Đang nháp</div><div class="stat-value">{{ getDraftCount() }}</div></div>
+    </div>
+    <div class="stat-item stat-info">
+      <div class="stat-bar"></div>
+      <div class="stat-body"><div class="stat-label">Đã xác nhận</div><div class="stat-value">{{ getConfirmedCount() }}</div></div>
+    </div>
+    <div class="stat-item stat-full">
+      <div class="stat-bar"></div>
+      <div class="stat-body"><div class="stat-label">Đã hủy</div><div class="stat-value">{{ getCancelledCount() }}</div></div>
+    </div>
+  </div>
+
+  <div class="filter-section">
+    <input
+      class="search-input"
+      type="text"
+      [(ngModel)]="searchReceiptNumber"
+      placeholder="Tìm theo số phiếu nhập..."
+      (keyup.enter)="onSearch()" />
+
+    <select class="filter-select" [(ngModel)]="selectedWarehouseId">
+      <option value="">-- Tất cả kho --</option>
+      <option *ngFor="let warehouse of warehouses" [value]="warehouse.id">{{ warehouse.name }}</option>
+    </select>
+
+    <select class="filter-select" [(ngModel)]="selectedStatus">
+      <option value="">-- Tất cả trạng thái --</option>
+      <option value="DRAFT">Nháp</option>
+      <option value="CONFIRMED">Đã xác nhận</option>
+      <option value="CANCELLED">Đã hủy</option>
+    </select>
+
+    <input class="filter-date" type="date" [(ngModel)]="receiptDateFrom" title="Từ ngày nhập" />
+    <input class="filter-date" type="date" [(ngModel)]="receiptDateTo" title="Đến ngày nhập" />
+
+    <button class="btn btn-primary" (click)="onSearch()">
+      <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i> Tìm kiếm
+    </button>
+    <button class="btn btn-ghost" (click)="onResetFilter()">
+      <i class="fa-solid fa-rotate-right" aria-hidden="true"></i> Đặt lại
+    </button>
+
+    <div class="view-toggle">
+      <button class="btn-view-toggle" [class.active]="viewMode === 'grid'" (click)="viewMode = 'grid'" title="Chế độ lưới">
+        <i class="fa-solid fa-grip" aria-hidden="true"></i>
+      </button>
+      <button class="btn-view-toggle" [class.active]="viewMode === 'list'" (click)="viewMode = 'list'" title="Chế độ danh sách">
+        <i class="fa-solid fa-list" aria-hidden="true"></i>
+      </button>
+    </div>
+  </div>
+
+  <div class="info-box">
+    Phiếu nhập chỉ được tạo từ đơn mua hàng ở trạng thái <strong>Đã xác nhận</strong> hoặc <strong>Nhận một phần</strong>.
+    Thông tin chung và các dòng của phiếu nhập chỉ được sửa khi phiếu còn ở trạng thái <strong>Nháp</strong>.
+    FE hiện đã đồng bộ CRUD cho <strong>Inbound Receipt Lines</strong>, gồm kiểm soát vị trí, batch, trạng thái chất lượng và phần số lượng còn có thể nhận.
+  </div>
+
+  <div class="loading-state" *ngIf="loading"><span>Đang tải danh sách phiếu nhập...</span></div>
+
+  <div class="table-container" *ngIf="!loading && viewMode === 'list'">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Số phiếu nhập</th>
+          <th>Đơn mua hàng</th>
+          <th>Kho nhận</th>
+          <th>Ngày nhập</th>
+          <th>Số giao nhận</th>
+          <th>Trạng thái</th>
+          <th>Cập nhật lúc</th>
+          <th>Thao tác</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let receipt of receipts; let i = index">
+          <td>{{ currentPage * pageSize + i + 1 }}</td>
+          <td><a class="link" (click)="openDetailModal(receipt)">{{ receipt.receipt_number }}</a></td>
+          <td>{{ receipt.purchase_order_number || receipt.purchase_order_id }}</td>
+          <td>{{ receipt.warehouse_name || receipt.warehouse_id }}</td>
+          <td>{{ receipt.receipt_date | date:'dd/MM/yyyy' }}</td>
+          <td>{{ receipt.delivery_note_number || '—' }}</td>
+          <td><span class="badge" [ngClass]="getStatusClass(receipt.status)">{{ getStatusLabel(receipt.status) }}</span></td>
+          <td>{{ receipt.updated_at | date:'dd/MM/yyyy HH:mm' }}</td>
+          <td class="actions">
+            <button class="btn-icon" (click)="openDetailModal(receipt)" title="Xem chi tiết">
+              <i class="fa-regular fa-eye" aria-hidden="true"></i>
+            </button>
+            <button
+              class="btn-icon btn-delete"
+              (click)="openDeleteConfirm(receipt)"
+              [disabled]="!canDeleteReceipt(receipt)"
+              title="Xóa phiếu nhập">
+              <i class="fa-regular fa-trash-can" aria-hidden="true"></i>
+            </button>
+          </td>
+        </tr>
+        <tr *ngIf="receipts.length === 0">
+          <td colspan="9" class="empty-state">Không có phiếu nhập nào theo bộ lọc hiện tại.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="entity-grid" *ngIf="!loading && viewMode === 'grid'">
+    <div class="entity-card" *ngFor="let receipt of receipts">
+      <h3 class="entity-card__title">{{ receipt.receipt_number }}</h3>
+      <p class="entity-card__sub">{{ receipt.purchase_order_number || receipt.purchase_order_id }}</p>
+      <div class="entity-card__meta">
+        <div class="entity-card__row">Kho: {{ receipt.warehouse_name || receipt.warehouse_id }}</div>
+        <div class="entity-card__row">Ngày nhập: {{ receipt.receipt_date | date:'dd/MM/yyyy' }}</div>
+        <div class="entity-card__row">Số giao nhận: {{ receipt.delivery_note_number || '—' }}</div>
+        <div class="entity-card__row"><span class="badge" [ngClass]="getStatusClass(receipt.status)">{{ getStatusLabel(receipt.status) }}</span></div>
+      </div>
+      <div class="entity-card__actions">
+        <button class="btn-icon" (click)="openDetailModal(receipt)" title="Xem chi tiết">
+          <i class="fa-regular fa-eye" aria-hidden="true"></i>
+        </button>
+        <button class="btn-icon btn-delete" (click)="openDeleteConfirm(receipt)" [disabled]="!canDeleteReceipt(receipt)" title="Xóa phiếu nhập">
+          <i class="fa-regular fa-trash-can" aria-hidden="true"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="pagination" *ngIf="totalPages > 1">
+    <button (click)="onPageChange(currentPage - 1)" [disabled]="currentPage === 0">« Trước</button>
+    <span class="page-info">Trang {{ currentPage + 1 }} / {{ totalPages }} ({{ totalElements }} phiếu)</span>
+    <button (click)="onPageChange(currentPage + 1)" [disabled]="currentPage >= totalPages - 1">Sau »</button>
+  </div>
+</div>
+
+<div class="modal-overlay" *ngIf="showCreateModal" (click)="closeCreateModal()">
+  <div class="modal-box" (click)="$event.stopPropagation()">
+    <div class="modal-header"><h3>Tạo phiếu nhập</h3><button class="modal-close" (click)="closeCreateModal()">✕</button></div>
+    <div class="modal-body">
+      <div class="info-box">
+        Người dùng chỉ được chọn đơn mua hàng hợp lệ. Kho nhận của phiếu nhập sẽ được lấy theo đơn mua hàng và không cho phép sửa trên màn hình này.
+      </div>
+
+      <div class="form-group">
+        <label>Đơn mua hàng <span class="required">*</span></label>
+        <select [(ngModel)]="createForm.purchase_order_id" (ngModelChange)="onCreatePurchaseOrderChange($event)">
+          <option value="">-- Chọn đơn mua hàng có thể tạo phiếu nhập --</option>
+          <option *ngFor="let po of availablePurchaseOrders" [value]="po.id">
+            {{ po.purchase_order_number }} - {{ po.supplier_name || po.supplier_id }} - {{ getOrderStatusLabel(po.status) }}
+          </option>
+        </select>
+      </div>
+
+      <div class="loading-state loading-state-inline" *ngIf="loadingAvailablePurchaseOrders">
+        <span>Đang tải danh sách đơn mua hàng hợp lệ...</span>
+      </div>
+
+      <div class="empty-helper" *ngIf="!loadingAvailablePurchaseOrders && availablePurchaseOrders.length === 0">
+        Không có đơn mua hàng nào ở trạng thái đã xác nhận hoặc nhận một phần để tạo phiếu nhập.
+      </div>
+
+      <div class="detail-grid" *ngIf="createPurchaseOrder">
+        <div class="detail-item"><span class="detail-label">Đơn mua hàng</span><span>{{ createPurchaseOrder.purchase_order_number }}</span></div>
+        <div class="detail-item"><span class="detail-label">Trạng thái đơn mua hàng</span><span class="badge" [ngClass]="getOrderStatusClass(createPurchaseOrder.status)">{{ getOrderStatusLabel(createPurchaseOrder.status) }}</span></div>
+        <div class="detail-item"><span class="detail-label">Nhà cung cấp</span><span>{{ createPurchaseOrder.supplier_name || createPurchaseOrder.supplier_id }}</span></div>
+        <div class="detail-item"><span class="detail-label">Kho nhận</span><span>{{ createPurchaseOrder.warehouse_name || createPurchaseOrder.warehouse_id }}</span></div>
+        <div class="detail-item"><span class="detail-label">Ngày đặt</span><span>{{ createPurchaseOrder.order_date | date:'dd/MM/yyyy' }}</span></div>
+        <div class="detail-item"><span class="detail-label">Ngày dự kiến</span><span>{{ createPurchaseOrder.expected_delivery_date ? (createPurchaseOrder.expected_delivery_date | date:'dd/MM/yyyy') : '—' }}</span></div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Ngày nhập</label>
+          <input type="date" [(ngModel)]="createForm.receipt_date" />
+        </div>
+        <div class="form-group">
+          <label>Số giao nhận</label>
+          <input type="text" [(ngModel)]="createForm.delivery_note_number" maxlength="100" placeholder="Ví dụ: DN-20260315-001" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Ghi chú</label>
+        <textarea [(ngModel)]="createForm.notes" rows="3" maxlength="1000"></textarea>
+      </div>
+
+      <div class="detail-section-title" *ngIf="createPurchaseOrder">Các phiếu nhập đã có trên đơn mua hàng này</div>
+      <div class="loading-state loading-state-inline" *ngIf="loadingCreatePurchaseOrderReceipts">
+        <span>Đang tải phiếu nhập của đơn mua hàng này...</span>
+      </div>
+      <div class="receipt-history-list" *ngIf="createPurchaseOrder && !loadingCreatePurchaseOrderReceipts">
+        <div class="receipt-history-item" *ngFor="let receipt of createPurchaseOrderReceipts">
+          <div>
+            <div class="cell-main">{{ receipt.receipt_number }}</div>
+            <div class="cell-sub">{{ receipt.receipt_date | date:'dd/MM/yyyy' }}</div>
+          </div>
+          <span class="badge" [ngClass]="getStatusClass(receipt.status)">{{ getStatusLabel(receipt.status) }}</span>
+        </div>
+        <div class="empty-helper" *ngIf="createPurchaseOrderReceipts.length === 0">
+          Đơn mua hàng này chưa có phiếu nhập nào. Đây sẽ là phiếu nhập đầu tiên.
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" (click)="closeCreateModal()">Hủy</button>
+      <button class="btn btn-primary" (click)="onCreateSubmit()" [disabled]="!createForm.purchase_order_id">Tạo phiếu nhập</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" *ngIf="showDetailModal" (click)="closeDetailModal()">
+  <div class="modal-box modal-xl" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3 *ngIf="selectedReceipt">
+        <i class="fa-solid fa-boxes-packing" aria-hidden="true"></i>
+        {{ selectedReceipt.receipt_number }}
+        <span class="badge ms-2" [ngClass]="getStatusClass(selectedReceipt.status)">{{ getStatusLabel(selectedReceipt.status) }}</span>
+      </h3>
+      <h3 *ngIf="!selectedReceipt">Đang tải chi tiết phiếu nhập...</h3>
+      <button class="modal-close" (click)="closeDetailModal()">✕</button>
+    </div>
+
+    <div class="detail-action-bar" *ngIf="selectedReceipt">
+      <button class="btn btn-ghost" (click)="openEditModal()" *ngIf="canEditReceipt(selectedReceipt)">
+        <i class="fa-regular fa-pen-to-square" aria-hidden="true"></i> Sửa thông tin chung
+      </button>
+      <button
+        class="btn btn-primary"
+        (click)="openConfirmConfirm(selectedReceipt)"
+        *ngIf="canEditReceipt(selectedReceipt)"
+        [disabled]="!canConfirmReceipt(selectedReceipt)"
+        [title]="selectedReceipt.lines.length === 0 ? 'Cần ít nhất 1 dòng để xác nhận phiếu nhập' : 'Xác nhận phiếu nhập'">
+        <i class="fa-solid fa-check-double" aria-hidden="true"></i> Xác nhận phiếu nhập
+      </button>
+      <button class="btn btn-danger-outline" (click)="openDeleteConfirm(selectedReceipt)" *ngIf="canDeleteReceipt(selectedReceipt)">
+        <i class="fa-regular fa-trash-can" aria-hidden="true"></i> Xóa phiếu nhập
+      </button>
+    </div>
+
+    <div class="detail-tabs" *ngIf="selectedReceipt">
+      <button class="detail-tab" [class.active]="detailTab === 'header'" (click)="detailTab = 'header'">
+        <i class="fa-regular fa-file-lines" aria-hidden="true"></i> Thông tin chung
+      </button>
+      <button class="detail-tab" [class.active]="detailTab === 'lines'" (click)="detailTab = 'lines'">
+        <i class="fa-solid fa-list-check" aria-hidden="true"></i> Dòng phiếu nhập
+        <span class="tab-count" *ngIf="selectedReceipt.lines.length > 0">{{ selectedReceipt.lines.length }}</span>
+      </button>
+    </div>
+
+    <div class="loading-state" *ngIf="detailLoading"><span>Đang tải chi tiết phiếu nhập...</span></div>
+
+    <div class="modal-body" *ngIf="selectedReceipt && !detailLoading">
+      <div *ngIf="detailTab === 'header'">
+        <div class="detail-grid">
+          <div class="detail-item"><span class="detail-label">Số phiếu</span><span><strong>{{ selectedReceipt.receipt_number }}</strong></span></div>
+          <div class="detail-item"><span class="detail-label">Trạng thái</span><span class="badge" [ngClass]="getStatusClass(selectedReceipt.status)">{{ getStatusLabel(selectedReceipt.status) }}</span></div>
+          <div class="detail-item"><span class="detail-label">Đơn mua hàng</span><span>{{ selectedReceipt.purchase_order_number || selectedReceipt.purchase_order_id }}</span></div>
+          <div class="detail-item"><span class="detail-label">Kho nhận</span><span>{{ selectedReceipt.warehouse_name || selectedReceipt.warehouse_id }}</span></div>
+          <div class="detail-item"><span class="detail-label">Ngày nhập</span><span>{{ selectedReceipt.receipt_date | date:'dd/MM/yyyy' }}</span></div>
+          <div class="detail-item"><span class="detail-label">Số giao nhận</span><span>{{ selectedReceipt.delivery_note_number || '—' }}</span></div>
+          <div class="detail-item"><span class="detail-label">Xác nhận lúc</span><span>{{ selectedReceipt.confirmed_at ? (selectedReceipt.confirmed_at | date:'dd/MM/yyyy HH:mm') : '—' }}</span></div>
+          <div class="detail-item"><span class="detail-label">Người xác nhận</span><span>{{ getConfirmedByDisplay() }}</span></div>
+          <div class="detail-item"><span class="detail-label">Tạo lúc</span><span>{{ selectedReceipt.created_at | date:'dd/MM/yyyy HH:mm' }}</span></div>
+          <div class="detail-item"><span class="detail-label">Cập nhật lúc</span><span>{{ selectedReceipt.updated_at | date:'dd/MM/yyyy HH:mm' }}</span></div>
+        </div>
+
+        <div class="detail-section-title">Thông tin đơn mua hàng liên quan</div>
+        <div class="loading-state loading-state-inline" *ngIf="loadingDetailPurchaseOrder">
+          <span>Đang tải đơn mua hàng và các dòng liên quan...</span>
+        </div>
+        <div class="detail-grid" *ngIf="detailPurchaseOrder && !loadingDetailPurchaseOrder">
+        <div class="detail-item"><span class="detail-label">Đơn mua hàng</span><span>{{ detailPurchaseOrder.purchase_order_number }}</span></div>
+          <div class="detail-item"><span class="detail-label">Trạng thái đơn mua hàng</span><span class="badge" [ngClass]="getOrderStatusClass(detailPurchaseOrder.status)">{{ getOrderStatusLabel(detailPurchaseOrder.status) }}</span></div>
+          <div class="detail-item"><span class="detail-label">Nhà cung cấp</span><span>{{ detailPurchaseOrder.supplier_name || detailPurchaseOrder.supplier_id }}</span></div>
+          <div class="detail-item"><span class="detail-label">Kho nhận</span><span>{{ detailPurchaseOrder.warehouse_name || detailPurchaseOrder.warehouse_id }}</span></div>
+          <div class="detail-item"><span class="detail-label">Ngày đặt</span><span>{{ detailPurchaseOrder.order_date | date:'dd/MM/yyyy' }}</span></div>
+          <div class="detail-item"><span class="detail-label">Ngày dự kiến</span><span>{{ detailPurchaseOrder.expected_delivery_date ? (detailPurchaseOrder.expected_delivery_date | date:'dd/MM/yyyy') : '—' }}</span></div>
+        </div>
+        <div class="empty-helper" *ngIf="!detailPurchaseOrder && !loadingDetailPurchaseOrder">
+          Không tải được ngữ cảnh đơn mua hàng cho phiếu nhập này.
+        </div>
+
+        <div class="detail-section-title" *ngIf="selectedReceipt.notes">Ghi chú</div>
+        <div class="detail-notes" *ngIf="selectedReceipt.notes">{{ selectedReceipt.notes }}</div>
+
+        <div class="info-box" *ngIf="selectedReceipt.status === InboundReceiptStatus.DRAFT">
+          Phiếu nhập đang ở trạng thái nháp. Người dùng được sửa thông tin chung, xóa phiếu nhập, và chỉ được xác nhận khi phiếu đã có ít nhất 1 dòng.
+        </div>
+        <div class="info-box" *ngIf="selectedReceipt.status === InboundReceiptStatus.CONFIRMED">
+          Phiếu nhập đã được xác nhận. Thông tin chung đã bị khóa và kết quả nhận hàng đã được cập nhật vào tồn kho cùng đơn mua hàng theo giao dịch hệ thống xử lý.
+        </div>
+      </div>
+
+      <div *ngIf="detailTab === 'lines'">
+        <div class="lines-header">
+          <h4><i class="fa-solid fa-list-check" aria-hidden="true"></i> Dòng phiếu nhập ({{ selectedReceipt.lines.length }})</h4>
+          <button
+            class="btn btn-primary"
+            *ngIf="canEditReceipt(selectedReceipt)"
+            (click)="openLineEditor('create')"
+            [disabled]="!canAddLine()">
+            <i class="fa-solid fa-plus" aria-hidden="true"></i> Thêm dòng
+          </button>
+        </div>
+
+        <div class="loading-state loading-state-inline" *ngIf="loadingLineReferences && canEditReceipt(selectedReceipt)">
+          <span>Đang tải vị trí lưu kho và batch hợp lệ cho phiếu nhập...</span>
+        </div>
+
+        <div class="table-container" *ngIf="selectedReceipt.lines.length > 0">
+          <table class="data-table table-compact lines-table">
+            <thead>
+              <tr>
+                <th class="col-index">#</th>
+                <th class="col-product">Sản phẩm</th>
+                <th class="col-location">Vị trí</th>
+                <th class="col-batch">Lô</th>
+                <th class="text-right col-qty">SL nhận</th>
+                <th class="col-quality">Chất lượng</th>
+                <th class="col-po">Đối chiếu PO</th>
+                <th class="col-note">Ghi chú</th>
+                <th class="col-actions" *ngIf="canEditReceipt(selectedReceipt)">Thao tác</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let line of selectedReceipt.lines">
+                <td class="col-index">{{ line.line_number }}</td>
+                <td class="col-product">
+                  <div class="cell-main">{{ getLineProductDisplay(line) }}</div>
+                  <div class="cell-sub" *ngIf="getLineProductSkuDisplay(line) as sku">{{ sku }}</div>
+                </td>
+                <td class="col-location">
+                  <div class="cell-main">{{ getLineLocationDisplay(line) }}</div>
+                  <div class="cell-sub" *ngIf="line.location_code">{{ line.location_code }}</div>
+                </td>
+                <td class="col-batch">
+                  <div class="cell-main">{{ getLineBatchDisplay(line) }}</div>
+                </td>
+                <td class="text-right col-qty">{{ line.quantity_received | number:'1.2-2' }}</td>
+                <td class="col-quality"><span class="badge" [ngClass]="getQualityStatusClass(line.quality_status)">{{ getQualityStatusLabel(line.quality_status) }}</span></td>
+                <td class="col-po">
+                  <div class="cell-main po-summary">{{ getLinePoSummary(line) }}</div>
+                  <div class="cell-sub" *ngIf="getRemainingAfterThisReceipt(line) !== null">
+                    Sau line này: {{ getRemainingAfterThisReceipt(line) | number:'1.2-2' }}
+                  </div>
+                </td>
+                <td class="col-note">
+                  <span class="line-note">{{ getLineNotesDisplay(line) }}</span>
+                </td>
+                <td *ngIf="canEditReceipt(selectedReceipt)" class="actions col-actions">
+                  <button class="btn-icon" (click)="openLineEditor('edit', line)" title="Sửa dòng">
+                    <i class="fa-regular fa-pen-to-square" aria-hidden="true"></i>
+                  </button>
+                  <button class="btn-icon btn-delete" (click)="openDeleteLineConfirm(line)" title="Xóa dòng">
+                    <i class="fa-regular fa-trash-can" aria-hidden="true"></i>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="empty-state empty-state-panel" *ngIf="selectedReceipt.lines.length === 0">
+          Chưa có dòng nhận hàng nào trên phiếu nhập này.
+        </div>
+
+        <div class="info-box" *ngIf="selectedReceipt.lines.length > 0 && selectedReceipt.status === InboundReceiptStatus.DRAFT">
+          Cột "SL đã nhận trên đơn" phản ánh phần đã xác nhận trên PO. Dòng draft của phiếu hiện tại vẫn đang được tách riêng để FE kiểm tra split theo vị trí, batch và quality trước khi confirm.
+        </div>
+        <div class="info-box" *ngIf="selectedReceipt.lines.length > 0 && selectedReceipt.status === InboundReceiptStatus.CONFIRMED">
+          Các dòng phiếu nhập được đối chiếu với dòng của đơn mua hàng để kiểm tra số lượng đặt/đã nhận/còn lại sau khi xác nhận.
+        </div>
+        <div class="info-box" *ngIf="selectedReceipt.lines.length === 0 && selectedReceipt.status === InboundReceiptStatus.DRAFT">
+          Phiếu nhập đang ở trạng thái nháp nhưng chưa có dòng nào. Hãy thêm dòng nhận hàng từ các dòng đơn mua hàng còn số lượng có thể nhận.
+        </div>
+        <div class="info-box" *ngIf="selectedReceipt.status === InboundReceiptStatus.DRAFT">
+          Với cùng một dòng đơn mua hàng, bạn có thể tách nhiều line theo <strong>vị trí</strong>, <strong>batch</strong> hoặc <strong>chất lượng</strong>.
+          FE sẽ chặn line trùng dimension và chặn số lượng vượt phần còn lại trước khi gọi backend.
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-ghost" (click)="closeDetailModal()">Đóng</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" *ngIf="showLineEditorModal" (click)="closeSubModal('lineEditor')">
+  <div class="modal-box modal-lg" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>{{ getLineEditorTitle() }}</h3>
+      <button class="modal-close" (click)="closeSubModal('lineEditor')">✕</button>
+    </div>
+
+    <div class="modal-body" *ngIf="selectedReceipt">
+      <div class="loading-state loading-state-inline" *ngIf="isLineEditorBusy()">
+        <span>Đang chuẩn bị dữ liệu dòng phiếu nhập...</span>
+      </div>
+
+      <ng-container *ngIf="!isLineEditorBusy()">
+        <div class="info-box">
+          Dòng phiếu nhập chỉ được thao tác khi receipt còn ở trạng thái <strong>Nháp</strong>. FE sẽ kiểm tra trước các rule chính:
+          số lượng phải dương, không vượt phần còn lại của PO line, product theo dõi lô thì bắt buộc có batch,
+          và line <strong>Cách ly</strong> phải có ghi chú.
+        </div>
+
+        <div class="form-group">
+          <label>Dòng đơn mua hàng <span class="required">*</span></label>
+          <select
+            [(ngModel)]="lineForm.purchase_order_line_id"
+            (ngModelChange)="onLinePurchaseOrderChange($event)"
+            [disabled]="lineEditorMode === 'edit'">
+            <option value="">-- Chọn dòng đơn mua hàng --</option>
+            <option *ngFor="let poLine of getSelectablePurchaseOrderLines()" [value]="poLine.id">
+              {{ getPurchaseOrderLineOptionLabel(poLine) }}
+            </option>
+          </select>
+        </div>
+
+        <div class="detail-grid compact-grid" *ngIf="getLineEditorSelectedPurchaseOrderLine() as selectedPoLine">
+          <div class="detail-item">
+            <span class="detail-label">Sản phẩm</span>
+            <span>{{ selectedPoLine.product_sku ? (selectedPoLine.product_sku + ' - ' + (selectedPoLine.product_name || selectedPoLine.product_id)) : (selectedPoLine.product_name || selectedPoLine.product_id) }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Theo dõi lô</span>
+            <span>{{ lineEditorRequiresBatchTracking() ? 'Có' : 'Không' }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">SL đặt</span>
+            <span>{{ selectedPoLine.quantity_ordered | number:'1.2-2' }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">SL đã nhận trên PO</span>
+            <span>{{ selectedPoLine.quantity_received | number:'1.2-2' }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Draft đã phân bổ trên receipt này</span>
+            <span>{{ (getCurrentLineDraftAllocated() ?? 0) | number:'1.2-2' }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Còn có thể nhận</span>
+            <span>{{ (getCurrentLineRemainingCapacity() ?? 0) | number:'1.2-2' }}</span>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Vị trí nhận hàng <span class="required">*</span></label>
+            <select [(ngModel)]="lineForm.location_id">
+              <option value="">-- Chọn vị trí trong kho nhận --</option>
+              <option *ngFor="let location of getAvailableLineLocations()" [value]="location.id">
+                {{ location.code }} - {{ location.name }} ({{ location.status }})
+              </option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Trạng thái chất lượng <span class="required">*</span></label>
+            <select [(ngModel)]="lineForm.quality_status" (ngModelChange)="onLineQualityStatusChange($event)">
+              <option [ngValue]="QualityStatus.PASS">Đạt</option>
+              <option [ngValue]="QualityStatus.QUARANTINE">Cách ly</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Số lượng nhận <span class="required">*</span></label>
+            <input type="number" min="0.01" step="0.01" [(ngModel)]="lineForm.quantity_received" />
+          </div>
+          <div class="form-group">
+            <label *ngIf="lineEditorRequiresBatchTracking()">Batch <span class="required">*</span></label>
+            <label *ngIf="!lineEditorRequiresBatchTracking()">Batch</label>
+            <select [(ngModel)]="lineForm.batch_id" [disabled]="!lineEditorRequiresBatchTracking()">
+              <option value="">-- {{ lineEditorRequiresBatchTracking() ? 'Chọn batch hợp lệ' : 'Sản phẩm không theo dõi lô' }} --</option>
+              <option *ngFor="let batch of getAvailableLineBatches()" [value]="batch.id">
+                {{ batch.batch_number }} - {{ batch.status }}
+              </option>
+            </select>
+          </div>
+        </div>
+
+        <div class="empty-helper" *ngIf="lineEditorRequiresBatchTracking() && getAvailableLineBatches().length === 0">
+          Không có batch hợp lệ cho sản phẩm/chất lượng đã chọn. Nếu đây là sản phẩm theo dõi lô, hãy tạo batch trước ở module Batch.
+        </div>
+
+        <div class="form-group">
+          <label>Ghi chú</label>
+          <textarea [(ngModel)]="lineForm.notes" rows="3" maxlength="500" placeholder="Bắt buộc nếu dòng ở trạng thái cách ly"></textarea>
+        </div>
+      </ng-container>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-ghost" (click)="closeSubModal('lineEditor')">Hủy</button>
+      <button class="btn btn-primary" (click)="onLineSubmit()" [disabled]="lineSubmitting || isLineEditorBusy()">
+        {{ getLineSubmitLabel() }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" *ngIf="showEditModal" (click)="closeSubModal('edit')">
+  <div class="modal-box" (click)="$event.stopPropagation()">
+    <div class="modal-header"><h3>Sửa thông tin chung phiếu nhập</h3><button class="modal-close" (click)="closeSubModal('edit')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Ngày nhập</label>
+          <input type="date" [(ngModel)]="editForm.receipt_date" />
+        </div>
+        <div class="form-group">
+          <label>Số giao nhận</label>
+          <input type="text" [(ngModel)]="editForm.delivery_note_number" maxlength="100" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Ghi chú</label>
+        <textarea [(ngModel)]="editForm.notes" rows="3" maxlength="1000"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" (click)="closeSubModal('edit')">Hủy</button>
+      <button class="btn btn-primary" (click)="onEditSubmit()">Lưu thay đổi</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" *ngIf="showConfirmConfirm" (click)="closeSubModal('confirm')">
+  <div class="modal-box modal-sm" (click)="$event.stopPropagation()">
+    <div class="modal-header"><h3>Xác nhận phiếu nhập</h3><button class="modal-close" (click)="closeSubModal('confirm')">✕</button></div>
+    <div class="modal-body">
+      <p>Bạn muốn xác nhận phiếu nhập <strong>{{ receiptToConfirm?.receipt_number }}</strong>?</p>
+      <p class="text-muted">Sau khi xác nhận, phiếu nhập sẽ bị khóa chỉnh sửa và cập nhật tồn kho, lịch sử dịch chuyển cùng dòng đơn mua hàng theo giao dịch hệ thống xử lý.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" (click)="closeSubModal('confirm')">Hủy</button>
+      <button class="btn btn-primary" (click)="onConfirmReceipt()">Xác nhận</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" *ngIf="showDeleteLineConfirm" (click)="closeSubModal('deleteLine')">
+  <div class="modal-box modal-sm" (click)="$event.stopPropagation()">
+    <div class="modal-header modal-header-danger"><h3>Xác nhận xóa dòng</h3><button class="modal-close" (click)="closeSubModal('deleteLine')">✕</button></div>
+    <div class="modal-body">
+      <p>Xóa dòng <strong>#{{ lineToDelete?.line_number }}</strong> khỏi phiếu nhập <strong>{{ selectedReceipt?.receipt_number }}</strong>?</p>
+      <p class="text-muted">Thao tác này chỉ hợp lệ khi phiếu nhập còn ở trạng thái nháp.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" (click)="closeSubModal('deleteLine')">Hủy</button>
+      <button class="btn btn-danger" (click)="onDeleteLineConfirm()">Xóa dòng</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" *ngIf="showDeleteConfirm" (click)="closeSubModal('delete')">
+  <div class="modal-box modal-sm" (click)="$event.stopPropagation()">
+    <div class="modal-header modal-header-danger"><h3>Xác nhận xóa</h3><button class="modal-close" (click)="closeSubModal('delete')">✕</button></div>
+    <div class="modal-body">
+      <p>Xóa phiếu nhập <strong>{{ receiptToDelete?.receipt_number }}</strong>?</p>
+      <p class="text-muted">Hệ thống chỉ cho phép xóa phiếu nhập ở trạng thái nháp và không có dòng nào.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" (click)="closeSubModal('delete')">Hủy</button>
+      <button class="btn btn-danger" (click)="onDeleteConfirm()">Xóa</button>
+    </div>
+  </div>
+</div>

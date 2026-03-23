@@ -1,0 +1,79 @@
+/* Stock Movements Component — specific overrides (base from whs-pages.css) */
+.movement-table {
+  table-layout: fixed;
+  width: 100%;
+}
+
+.movement-table th,
+.movement-table td {
+  white-space: normal;
+  word-break: break-word;
+  vertical-align: top;
+}
+
+.movement-table th:nth-child(1),
+.movement-table td:nth-child(1) {
+  width: 44px;
+  text-align: center;
+}
+
+.movement-table th:nth-child(2),
+.movement-table td:nth-child(2) {
+  width: 13%;
+}
+
+.movement-table th:nth-child(4),
+.movement-table td:nth-child(4) {
+  width: 14%;
+}
+
+.movement-table th:nth-child(5),
+.movement-table td:nth-child(5) {
+  width: 11%;
+}
+
+.movement-table th:nth-child(6),
+.movement-table td:nth-child(6) {
+  width: 13%;
+}
+
+.movement-table th:nth-child(9),
+.movement-table td:nth-child(9) {
+  width: 14%;
+}
+
+.movement-reference small {
+  display: inline-block;
+  line-height: 1.45;
+}
+
+@media (max-width: 1200px) {
+  .movement-table th:nth-child(9),
+  .movement-table td:nth-child(9) {
+    display: none;
+  }
+}
+
+@media (max-width: 992px) {
+  .movement-table th:nth-child(5),
+  .movement-table td:nth-child(5),
+  .movement-table th:nth-child(7),
+  .movement-table td:nth-child(7) {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .movement-table th,
+  .movement-table td {
+    padding: 0.55rem 0.5rem;
+    font-size: 0.75rem;
+  }
+
+  .movement-table th:nth-child(2),
+  .movement-table td:nth-child(2),
+  .movement-table th:nth-child(10),
+  .movement-table td:nth-child(10) {
+    display: none;
+  }
+}

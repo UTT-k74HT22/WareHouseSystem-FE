@@ -1,0 +1,184 @@
+<div class="auth-wrapper">
+  <div class="auth-left">
+    <div class="logo">
+      <div class="logo-icon">W</div>
+      <div class="logo-text">WMS Portal</div>
+    </div>
+
+    <h1 class="auth-title">Create an account</h1>
+    <p class="auth-subtitle">
+      Already have an account?
+      <a routerLink="/login">Sign in</a>
+    </p>
+
+    <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+      <!-- USERNAME -->
+      <div class="form-group">
+        <label class="form-label" for="username">Username</label>
+        <input
+          id="username"
+          type="text"
+          class="form-input"
+          formControlName="username"
+          placeholder="Enter your username"
+          [class.is-invalid]="username?.touched && username?.invalid"
+        />
+        <div class="error-text" *ngIf="username?.touched && username?.invalid">
+          <span *ngIf="username?.errors?.['required']">Username is required</span>
+          <span *ngIf="username?.errors?.['minlength']">Username must be at least 3 characters</span>
+        </div>
+      </div>
+
+      <!-- FULL NAME -->
+      <div class="form-group">
+        <label class="form-label" for="fullName">Full Name</label>
+        <input
+          id="fullName"
+          type="text"
+          class="form-input"
+          formControlName="fullName"
+          placeholder="Enter your full name"
+          [class.is-invalid]="fullName?.touched && fullName?.invalid"
+        />
+        <div class="error-text" *ngIf="fullName?.touched && fullName?.invalid">
+          <span *ngIf="fullName?.errors?.['required']">Full name is required</span>
+        </div>
+      </div>
+      
+      <!-- EMAIL -->
+      <div class="form-group">
+        <label class="form-label" for="email">Email</label>
+        <input
+          id="email"
+          type="email"
+          class="form-input"
+          formControlName="email"
+          placeholder="Enter your email"
+          [class.is-invalid]="email?.touched && email?.invalid"
+        />
+        <div class="error-text" *ngIf="email?.touched && email?.invalid">
+          <span *ngIf="email?.errors?.['required']">Email is required</span>
+          <span *ngIf="email?.errors?.['email']">Invalid email format</span>
+        </div>
+      </div>
+
+      <!-- PHONE NUMBER -->
+      <div class="form-group">
+        <label class="form-label" for="phoneNumber">Phone Number</label>
+        <input
+          id="phoneNumber"
+          type="text"
+          class="form-input"
+          formControlName="phoneNumber"
+          placeholder="Enter your phone number"
+          [class.is-invalid]="phoneNumber?.touched && phoneNumber?.invalid"
+        />
+        <div class="error-text" *ngIf="phoneNumber?.touched && phoneNumber?.invalid">
+          <span *ngIf="phoneNumber?.errors?.['required']">Phone number is required</span>
+        </div>
+      </div>
+
+      <!-- PASSWORD -->
+      <div class="form-group">
+        <label class="form-label" for="password">Password</label>
+        <input
+          id="password"
+          type="password"
+          class="form-input"
+          formControlName="password"
+          placeholder="••••••••"
+          [class.is-invalid]="password?.touched && password?.invalid"
+        />
+        <div class="error-text" *ngIf="password?.touched && password?.invalid">
+          <span *ngIf="password?.errors?.['required']">Password is required</span>
+          <span *ngIf="password?.errors?.['minlength']">Password must be at least 6 characters</span>
+        </div>
+      </div>
+
+      <!-- CONFIRM PASSWORD -->
+      <div class="form-group">
+        <label class="form-label" for="confirmPassword">Confirm Password</label>
+        <input
+          id="confirmPassword"
+          type="password"
+          class="form-input"
+          formControlName="confirmPassword"
+          placeholder="••••••••"
+          [class.is-invalid]="confirmPassword?.touched && confirmPassword?.invalid"
+        />
+        <div class="error-text" *ngIf="confirmPassword?.touched && confirmPassword?.invalid">
+          <span *ngIf="confirmPassword?.errors?.['required']">Confirm password is required</span>
+        </div>
+        <div class="error-text" *ngIf="registerForm.errors?.['passwordMismatch'] && (confirmPassword?.touched)">
+          Passwords do not match.
+        </div>
+      </div>
+
+      <!-- SUBMIT -->
+      <button class="btn-primary" type="submit" [disabled]="isLoading">
+        <span *ngIf="!isLoading">Create account</span>
+        <i *ngIf="isLoading" class="loading-spinner fa-solid fa-rotate" aria-hidden="true"></i>
+      </button>
+    </form>
+  </div>
+
+  <div class="auth-right">
+    <div class="auth-right-inner">
+      <div class="support-top">
+        <span>Support</span>
+        <div class="support-pill">?</div>
+      </div>
+
+      <div class="hero-card">
+        <div>
+          <h3 class="hero-text-title">Manage your warehouse smarter</h3>
+          <p class="hero-text-desc">
+            Control receiving, putaway, picking, packing and dispatch in one WMS
+            dashboard. Real-time visibility, fewer mistakes, faster operations.
+          </p>
+          <button class="btn-secondary">Explore WMS features</button>
+        </div>
+        <div class="hero-image-wrapper">
+          <div class="hero-image">
+            <img src="assets/images/whs-login.jpg" alt="Warehouse Management System" />
+            <div class="metrics">
+              <span>
+                Today
+                <strong>+124 orders</strong>
+              </span>
+              <span>
+                Accuracy
+                <strong>99.7%</strong>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <h2 class="section-title">Introducing WMS workflows</h2>
+        <p class="section-body">
+          From receiving to dispatch, automate every step in your warehouse.
+          Track pallets, optimize picking routes and keep inventory always up to date.
+        </p>
+
+        <div class="feature-tags">
+          <span class="feature-tag">Receiving</span>
+          <span class="feature-tag">Putaway</span>
+          <span class="feature-tag">Picking</span>
+          <span class="feature-tag">Packing</span>
+          <span class="feature-tag">Loading</span>
+          <span class="feature-tag">Stocktaking</span>
+          <span class="feature-tag">Replenishment</span>
+          <span class="feature-tag">Reporting</span>
+        </div>
+
+        <div class="carousel-dots">
+          <div class="dot active"></div>
+          <div class="dot"></div>
+          <div class="dot"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

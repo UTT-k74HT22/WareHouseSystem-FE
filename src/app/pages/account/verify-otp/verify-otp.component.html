@@ -1,0 +1,117 @@
+<div class="auth-wrapper">
+  <div class="auth-left">
+    <div class="logo">
+      <div class="logo-icon">W</div>
+      <div class="logo-text">WMS Portal</div>
+    </div>
+
+    <h1 class="auth-title">Verify OTP</h1>
+    <p class="auth-subtitle">
+      An OTP has been sent to your email. Please enter it below.
+    </p>
+
+    <form [formGroup]="verifyOtpForm" (ngSubmit)="onSubmit()">
+      <div *ngIf="errorMessage" class="error-message">
+        {{ errorMessage }}
+      </div>
+      <div *ngIf="successMessage" class="success-message">
+        {{ successMessage }}
+      </div>
+
+      <!-- OTP -->
+      <div class="form-group">
+        <label class="form-label" for="otp">OTP</label>
+        <input
+          id="otp"
+          type="text"
+          class="form-input"
+          formControlName="otp"
+          placeholder="Enter your OTP"
+          inputmode="numeric"
+          maxlength="6"
+          autocomplete="one-time-code"
+          [class.is-invalid]="submitted && otp?.invalid"
+        />
+        <div class="error-text" *ngIf="submitted && otp?.invalid">
+          <span *ngIf="otp?.errors?.['required']">OTP is required</span>
+          <span *ngIf="otp?.errors?.['pattern']">OTP must be exactly 6 digits</span>
+        </div>
+      </div>
+
+      <!-- SUBMIT -->
+      <button class="btn-primary" type="submit" [disabled]="isLoading">
+        <span *ngIf="!isLoading">Verify</span>
+        <i *ngIf="isLoading" class="loading-spinner fa-solid fa-rotate" aria-hidden="true"></i>
+      </button>
+
+      <!-- DIVIDER -->
+      <div class="divider">
+        <div class="divider-line"></div>
+      </div>
+
+      <div class="extra-row">
+        <a routerLink="/login">Back to login</a>
+      </div>
+    </form>
+  </div>
+
+  <div class="auth-right">
+    <div class="auth-right-inner">
+      <div class="support-top">
+        <span>Support</span>
+        <div class="support-pill">?</div>
+      </div>
+
+      <div class="hero-card">
+        <div>
+          <h3 class="hero-text-title">Manage your warehouse smarter</h3>
+          <p class="hero-text-desc">
+            Control receiving, putaway, picking, packing and dispatch in one WMS
+            dashboard. Real-time visibility, fewer mistakes, faster operations.
+          </p>
+          <button class="btn-secondary">Explore WMS features</button>
+        </div>
+        <div class="hero-image-wrapper">
+          <div class="hero-image">
+            <img src="assets/images/whs-login.jpg" alt="Warehouse Management System" />
+            <div class="metrics">
+              <span>
+                Today
+                <strong>+124 orders</strong>
+              </span>
+              <span>
+                Accuracy
+                <strong>99.7%</strong>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <h2 class="section-title">Introducing WMS workflows</h2>
+        <p class="section-body">
+          From receiving to dispatch, automate every step in your warehouse.
+          Track pallets, optimize picking routes and keep inventory always up to date.
+        </p>
+
+        <div class="feature-tags">
+          <span class="feature-tag">Receiving</span>
+          <span class="feature-tag">Putaway</span>
+          <span class="feature-tag">Picking</span>
+          <span class="feature-tag">Packing</span>
+          <span class="feature-tag">Loading</span>
+          <span class="feature-tag">Stocktaking</span>
+          <span class="feature-tag">Replenishment</span>
+          <span class="feature-tag">Reporting</span>
+        </div>
+
+        <div class="carousel-dots">
+          <div class="dot active"></div>
+          <div class="dot"></div>
+          <div class="dot"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

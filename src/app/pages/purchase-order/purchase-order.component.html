@@ -1,0 +1,539 @@
+<div class="page-container">
+
+  <!-- ══════════ HEADER ══════════ -->
+  <div class="page-hero">
+    <div class="hero-left">
+      <div class="hero-accent"></div>
+      <div class="hero-text">
+        <h1 class="hero-title"><i class="fa-solid fa-cart-shopping" aria-hidden="true"></i> Đơn mua hàng (PO)</h1>
+        <p class="hero-subtitle">Quản lý đơn đặt hàng từ nhà cung cấp</p>
+      </div>
+    </div>
+    <div class="hero-actions">
+      <button class="btn btn-ghost">Xuất Excel</button>
+      <button class="btn btn-primary" (click)="openCreateModal()">+ Tạo đơn hàng</button>
+    </div>
+  </div>
+
+  <!-- ══════════ STATS ══════════ -->
+  <div class="stats-grid" *ngIf="!loading">
+    <div class="stat-item stat-total">
+      <div class="stat-bar"></div>
+      <div class="stat-body"><div class="stat-label">Tổng đơn hàng</div><div class="stat-value">{{ totalElements }}</div></div>
+    </div>
+    <div class="stat-item stat-active">
+      <div class="stat-bar"></div>
+      <div class="stat-body"><div class="stat-label">Đang xử lý</div><div class="stat-value">{{ getDraftCount() }}</div></div>
+    </div>
+    <div class="stat-item stat-info">
+      <div class="stat-bar"></div>
+      <div class="stat-body"><div class="stat-label">Đã xác nhận</div><div class="stat-value">{{ getConfirmedCount() }}</div></div>
+    </div>
+    <div class="stat-item stat-full">
+      <div class="stat-bar"></div>
+      <div class="stat-body"><div class="stat-label">Hoàn thành</div><div class="stat-value">{{ getCompletedCount() }}</div></div>
+    </div>
+  </div>
+
+  <!-- ══════════ FILTER ══════════ -->
+  <div class="filter-section">
+    <input class="search-input" type="text" [(ngModel)]="searchKeyword" placeholder="Tìm theo số đơn mua hàng..." (keyup.enter)="onSearch()" />
+    <select class="filter-select" [(ngModel)]="selectedStatus">
+      <option value="">-- Tất cả trạng thái --</option>
+      <option value="DRAFT">Nháp</option>
+      <option value="CONFIRMED">Đã xác nhận</option>
+      <option value="PARTIALLY_RECEIVED">Nhận một phần</option>
+      <option value="COMPLETED">Hoàn thành</option>
+      <option value="CANCELLED">Đã huỷ</option>
+    </select>
+    <button class="btn btn-primary" (click)="onSearch()"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i> Tìm kiếm</button>
+    <button class="btn btn-ghost" (click)="onResetFilter()"><i class="fa-solid fa-rotate-right" aria-hidden="true"></i> Reset</button>
+    <div class="view-toggle">
+      <button class="btn-view-toggle" [class.active]="viewMode === 'grid'" (click)="viewMode = 'grid'" title="Chế độ lưới">
+        <i class="fa-solid fa-grip" aria-hidden="true"></i>
+      </button>
+      <button class="btn-view-toggle" [class.active]="viewMode === 'list'" (click)="viewMode = 'list'" title="Chế độ danh sách">
+        <i class="fa-solid fa-list" aria-hidden="true"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- ══════════ LOADING ══════════ -->
+  <div class="loading-state" *ngIf="loading"><span>Đang tải dữ liệu...</span></div>
+
+  <!-- ══════════ TABLE ══════════ -->
+  <div class="table-container" *ngIf="!loading && viewMode === 'list'">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Số đơn hàng</th>
+          <th>Nhà cung cấp</th>
+          <th>Kho nhận</th>
+          <th>Ngày đặt</th>
+          <th>Ngày dự kiến</th>
+          <th>Tổng tiền</th>
+          <th>Trạng thái</th>
+          <th>Thao tác</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let order of orders; let i = index">
+          <td>{{ currentPage * pageSize + i + 1 }}</td>
+          <td><a class="link" (click)="openDetailModal(order)">{{ order.purchase_order_number }}</a></td>
+          <td>{{ order.supplier_name ?? order.supplier_id }}</td>
+          <td>{{ order.warehouse_name ?? order.warehouse_id }}</td>
+          <td>{{ order.order_date | date:'dd/MM/yyyy' }}</td>
+          <td>{{ order.expected_delivery_date ? (order.expected_delivery_date | date:'dd/MM/yyyy') : '—' }}</td>
+          <td>{{ order.total_amount | number:'1.0-0' }} {{ order.currency }}</td>
+          <td><span class="badge" [ngClass]="getStatusClass(order.status)">{{ getStatusLabel(order.status) }}</span></td>
+          <td class="actions">
+            <button class="btn-icon" title="Xem chi tiết" (click)="openDetailModal(order)"><i class="fa-regular fa-eye" aria-hidden="true"></i></button>
+            <button class="btn-icon" title="Xác nhận" (click)="openConfirmConfirm(order)" [disabled]="!isDraft(order)">
+              <i class="fa-solid fa-check" aria-hidden="true"></i>
+            </button>
+            <button class="btn-icon btn-delete" title="Xoá" (click)="openDeleteConfirm(order)"
+                    [disabled]="!isDraft(order)"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></button>
+          </td>
+        </tr>
+        <tr *ngIf="orders.length === 0">
+          <td colspan="9" class="empty-state">Không có đơn hàng nào</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ══════════ GRID ══════════ -->
+  <div class="entity-grid" *ngIf="!loading && viewMode === 'grid'">
+    <div class="entity-card" *ngFor="let order of orders">
+      <h3 class="entity-card__title">{{ order.purchase_order_number }}</h3>
+      <p class="entity-card__sub">{{ order.supplier_name ?? order.supplier_id }}</p>
+      <div class="entity-card__meta">
+        <div class="entity-card__row">Kho: {{ order.warehouse_name ?? order.warehouse_id }}</div>
+        <div class="entity-card__row">Ngày đặt: {{ order.order_date | date:'dd/MM/yyyy' }}</div>
+        <div class="entity-card__row">Tổng tiền: {{ order.total_amount | number:'1.0-0' }} {{ order.currency }}</div>
+        <div class="entity-card__row"><span class="badge" [ngClass]="getStatusClass(order.status)">{{ getStatusLabel(order.status) }}</span></div>
+      </div>
+      <div class="entity-card__actions">
+        <button class="btn-icon" title="Xem chi tiết" (click)="openDetailModal(order)"><i class="fa-regular fa-eye" aria-hidden="true"></i></button>
+        <button class="btn-icon" title="Xác nhận" (click)="openConfirmConfirm(order)" [disabled]="!isDraft(order)"><i class="fa-solid fa-check" aria-hidden="true"></i></button>
+        <button class="btn-icon btn-delete" title="Xoá" (click)="openDeleteConfirm(order)" [disabled]="!isDraft(order)"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ PAGINATION ══════════ -->
+  <div class="pagination" *ngIf="totalPages > 1">
+    <button (click)="onPageChange(currentPage - 1)" [disabled]="currentPage === 0">« Trước</button>
+    <span class="page-info">Trang {{ currentPage + 1 }} / {{ totalPages }} ({{ totalElements }} đơn)</span>
+    <button (click)="onPageChange(currentPage + 1)" [disabled]="currentPage >= totalPages - 1">Sau »</button>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     MODAL: TẠO ĐƠN MUA HÀNG
+     ═══════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" *ngIf="showCreateModal" (click)="showCreateModal = false">
+  <div class="modal-box" (click)="$event.stopPropagation()">
+    <div class="modal-header"><h3>Tạo đơn mua hàng mới</h3><button class="modal-close" (click)="showCreateModal = false">✕</button></div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Nhà cung cấp <span class="required">*</span></label>
+          <select [(ngModel)]="createForm.supplier_id">
+            <option value="">-- Chọn nhà cung cấp --</option>
+            <option *ngFor="let s of suppliers" [value]="s.id">{{ s.code }} - {{ s.name }}</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Kho nhận <span class="required">*</span></label>
+          <select [(ngModel)]="createForm.warehouse_id">
+            <option value="">-- Chọn kho --</option>
+            <option *ngFor="let w of warehouses" [value]="w.id">{{ w.name }}</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Ngày đặt đơn <span class="required">*</span></label>
+          <input type="date" [(ngModel)]="createForm.order_date" />
+        </div>
+        <div class="form-group">
+          <label>Ngày dự kiến nhận</label>
+          <input type="date" [(ngModel)]="createForm.expected_delivery_date" />
+        </div>
+        <div class="form-group">
+          <label>Tiền tệ</label>
+          <select [(ngModel)]="createForm.currency">
+            <option value="VND">VND</option>
+            <option value="USD">USD</option>
+            <option value="EUR">EUR</option>
+            <option value="JPY">JPY</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Điều khoản thanh toán</label>
+        <input type="text" [(ngModel)]="createForm.payment_terms" placeholder="VD: NET 30" />
+      </div>
+      <div class="form-group">
+        <label>Ghi chú</label>
+        <textarea [(ngModel)]="createForm.notes" rows="3"></textarea>
+      </div>
+      <div class="info-box"><i class="fa-regular fa-lightbulb" aria-hidden="true"></i> Sau khi tạo đơn hàng, hệ thống sẽ mở chi tiết để bạn thêm các dòng sản phẩm (Order Lines).</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" (click)="showCreateModal = false">Huỷ</button>
+      <button class="btn btn-primary" (click)="onCreateSubmit()" [disabled]="!isCreateFormValid">Tạo đơn hàng</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     MODAL: CHI TIẾT ĐƠN HÀNG (với Tabs: Header + Lines)
+     ═══════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" *ngIf="showDetailModal" (click)="closeDetailModal()">
+  <div class="modal-box modal-xl" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>
+        <i class="fa-solid fa-cart-shopping" aria-hidden="true"></i>
+        {{ selectedOrder?.purchase_order_number }}
+        <span class="badge ms-2" [ngClass]="getStatusClass(selectedOrder!.status)">{{ getStatusLabel(selectedOrder!.status) }}</span>
+      </h3>
+      <button class="modal-close" (click)="closeDetailModal()">✕</button>
+    </div>
+
+    <!-- Detail Action Bar -->
+    <div class="detail-action-bar" *ngIf="selectedOrder">
+      <button class="btn btn-ghost" (click)="openEditModal()" *ngIf="isDraft(selectedOrder)" title="Sửa thông tin đơn hàng">
+        <i class="fa-regular fa-pen-to-square" aria-hidden="true"></i> Sửa header
+      </button>
+      <button class="btn btn-primary" (click)="openConfirmConfirm(selectedOrder)" *ngIf="isDraft(selectedOrder)" [disabled]="orderLines.length === 0"
+              [title]="orderLines.length === 0 ? 'Cần ít nhất 1 dòng sản phẩm để xác nhận' : 'Xác nhận đơn hàng'">
+        <i class="fa-solid fa-check-double" aria-hidden="true"></i> Xác nhận đơn
+      </button>
+      <button class="btn btn-danger-outline" (click)="openDeleteConfirm(selectedOrder)" *ngIf="isDraft(selectedOrder)">
+        <i class="fa-regular fa-trash-can" aria-hidden="true"></i> Xoá đơn
+      </button>
+    </div>
+
+    <!-- Tabs -->
+    <div class="detail-tabs">
+      <button class="detail-tab" [class.active]="detailTab === 'header'" (click)="detailTab = 'header'">
+        <i class="fa-regular fa-file-lines" aria-hidden="true"></i> Thông tin chung
+      </button>
+      <button class="detail-tab" [class.active]="detailTab === 'lines'" (click)="detailTab = 'lines'">
+        <i class="fa-solid fa-list-ol" aria-hidden="true"></i> Dòng đơn hàng
+        <span class="tab-count" *ngIf="orderLines.length > 0">{{ orderLines.length }}</span>
+      </button>
+    </div>
+
+    <div class="modal-body" *ngIf="selectedOrder">
+
+      <!-- ═══ TAB: THÔNG TIN CHUNG ═══ -->
+      <div *ngIf="detailTab === 'header'">
+        <div class="detail-grid">
+          <div class="detail-item"><span class="detail-label">Số đơn hàng:</span><span><strong>{{ selectedOrder.purchase_order_number }}</strong></span></div>
+          <div class="detail-item"><span class="detail-label">Nhà cung cấp:</span><span>{{ selectedOrder.supplier_name ?? selectedOrder.supplier_id }}</span></div>
+          <div class="detail-item"><span class="detail-label">Kho nhận:</span><span>{{ selectedOrder.warehouse_name ?? selectedOrder.warehouse_id }}</span></div>
+          <div class="detail-item"><span class="detail-label">Trạng thái:</span>
+            <span class="badge" [ngClass]="getStatusClass(selectedOrder.status)">{{ getStatusLabel(selectedOrder.status) }}</span>
+          </div>
+          <div class="detail-item"><span class="detail-label">Ngày đặt:</span><span>{{ selectedOrder.order_date | date:'dd/MM/yyyy' }}</span></div>
+          <div class="detail-item"><span class="detail-label">Ngày dự kiến:</span><span>{{ selectedOrder.expected_delivery_date ? (selectedOrder.expected_delivery_date | date:'dd/MM/yyyy') : '—' }}</span></div>
+          <div class="detail-item"><span class="detail-label">Tiền tệ:</span><span>{{ selectedOrder.currency }}</span></div>
+          <div class="detail-item"><span class="detail-label">Điều khoản TT:</span><span>{{ selectedOrder.payment_terms ?? '—' }}</span></div>
+        </div>
+
+        <div class="detail-section-title">Tổng hợp tài chính</div>
+        <div class="detail-grid">
+          <div class="detail-item"><span class="detail-label">Subtotal:</span><span>{{ selectedOrder.sub_total | number:'1.0-0' }} {{ selectedOrder.currency }}</span></div>
+          <div class="detail-item"><span class="detail-label">Thuế:</span><span>{{ selectedOrder.tax_amount | number:'1.0-0' }} {{ selectedOrder.currency }}</span></div>
+          <div class="detail-item detail-item--highlight"><span class="detail-label">Tổng tiền:</span><span><strong>{{ selectedOrder.total_amount | number:'1.0-0' }} {{ selectedOrder.currency }}</strong></span></div>
+        </div>
+
+        <div class="detail-section-title" *ngIf="selectedOrder.notes">Ghi chú</div>
+        <div class="detail-notes" *ngIf="selectedOrder.notes">{{ selectedOrder.notes }}</div>
+
+        <div class="detail-section-title">Thông tin hệ thống</div>
+        <div class="detail-grid">
+          <div class="detail-item"><span class="detail-label">Xác nhận lúc:</span><span>{{ selectedOrder.confirmed_at ? (selectedOrder.confirmed_at | date:'dd/MM/yyyy HH:mm') : '—' }}</span></div>
+          <div class="detail-item"><span class="detail-label">Người xác nhận:</span><span>{{ selectedOrder.confirmed_by ?? '—' }}</span></div>
+          <div class="detail-item"><span class="detail-label">Tạo lúc:</span><span>{{ selectedOrder.created_at | date:'dd/MM/yyyy HH:mm' }}</span></div>
+          <div class="detail-item"><span class="detail-label">Cập nhật lúc:</span><span>{{ selectedOrder.updated_at | date:'dd/MM/yyyy HH:mm' }}</span></div>
+        </div>
+      </div>
+
+      <!-- ═══ TAB: DÒNG ĐƠN HÀNG ═══ -->
+      <div *ngIf="detailTab === 'lines'">
+        <div class="lines-header">
+          <h4><i class="fa-solid fa-list-ol" aria-hidden="true"></i> Dòng đơn hàng ({{ orderLines.length }})</h4>
+          <button class="btn btn-primary btn-sm" (click)="openAddLineModal()" *ngIf="isDraft(selectedOrder)">
+            <i class="fa-solid fa-plus" aria-hidden="true"></i> Thêm dòng
+          </button>
+        </div>
+
+        <div class="loading-state" *ngIf="linesLoading"><span>Đang tải dòng đơn hàng...</span></div>
+
+        <div class="table-container" *ngIf="!linesLoading">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Sản phẩm</th>
+                <th class="text-right">SL đặt</th>
+                <th class="text-right">SL đã nhận</th>
+                <th class="text-right">Còn lại</th>
+                <th class="text-right">Đơn giá</th>
+                <th class="text-right">Thành tiền</th>
+                <th>Ghi chú</th>
+                <th *ngIf="isDraft(selectedOrder)">Thao tác</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let line of orderLines">
+                <td>{{ line.line_number }}</td>
+                <td>
+                  <div class="cell-main">{{ line.product_name ?? line.product_id }}</div>
+                  <div class="cell-sub" *ngIf="line.product_sku">{{ line.product_sku }}</div>
+                </td>
+                <td class="text-right">{{ line.quantity_ordered | number:'1.2-2' }}</td>
+                <td class="text-right">{{ line.quantity_received | number:'1.2-2' }}</td>
+                <td class="text-right">
+                  <span [class.text-warning]="(line.quantity_ordered - line.quantity_received) > 0">
+                    {{ (line.quantity_ordered - line.quantity_received) | number:'1.2-2' }}
+                  </span>
+                </td>
+                <td class="text-right">{{ line.unit_price | number:'1.2-2' }}</td>
+                <td class="text-right"><strong>{{ line.line_total | number:'1.0-0' }}</strong></td>
+                <td>{{ line.notes ?? '—' }}</td>
+                <td class="actions" *ngIf="isDraft(selectedOrder)">
+                  <button class="btn-icon btn-edit" title="Sửa" (click)="openEditLineModal(line)"><i class="fa-regular fa-pen-to-square" aria-hidden="true"></i></button>
+                  <button class="btn-icon btn-delete" title="Xoá" (click)="openDeleteLineConfirm(line)"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></button>
+                </td>
+              </tr>
+              <tr *ngIf="orderLines.length === 0 && !linesLoading">
+                <td [attr.colspan]="isDraft(selectedOrder) ? 9 : 8" class="empty-state">
+                  <div class="empty-lines-message">
+                    <i class="fa-regular fa-clipboard" aria-hidden="true"></i>
+                    <p>Chưa có dòng đơn hàng nào</p>
+                    <button class="btn btn-primary btn-sm" (click)="openAddLineModal()" *ngIf="isDraft(selectedOrder)">
+                      <i class="fa-solid fa-plus" aria-hidden="true"></i> Thêm dòng đầu tiên
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+            <tfoot *ngIf="orderLines.length > 0">
+              <tr class="summary-row">
+                <td [attr.colspan]="isDraft(selectedOrder) ? 6 : 6" class="text-right"><strong>Tạm tính:</strong></td>
+                <td class="text-right"><strong>{{ getLinesSubTotal() | number:'1.0-0' }} {{ selectedOrder.currency }}</strong></td>
+                <td [attr.colspan]="isDraft(selectedOrder) ? 2 : 1"></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        <div class="info-box" *ngIf="isDraft(selectedOrder) && orderLines.length > 0">
+          <i class="fa-regular fa-lightbulb" aria-hidden="true"></i>
+          Khi xác nhận đơn hàng, hệ thống sẽ tính lại tổng tiền từ tất cả dòng đơn hàng. Đảm bảo kiểm tra kỹ trước khi xác nhận.
+        </div>
+
+        <div class="info-box" *ngIf="!isDraft(selectedOrder)">
+          <i class="fa-solid fa-lock" aria-hidden="true"></i>
+          Đơn hàng đã {{ getStatusLabel(selectedOrder.status).toLowerCase() }} — không thể thay đổi dòng đơn hàng.
+        </div>
+      </div>
+
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-ghost" (click)="closeDetailModal()">Đóng</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     MODAL: SỬA HEADER ĐƠN HÀNG
+     ═══════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" *ngIf="showEditModal" (click)="closeSubModal('edit')">
+  <div class="modal-box" (click)="$event.stopPropagation()">
+    <div class="modal-header"><h3>Sửa thông tin đơn hàng</h3><button class="modal-close" (click)="closeSubModal('edit')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Nhà cung cấp <span class="required">*</span></label>
+          <select [(ngModel)]="editForm.supplier_id">
+            <option value="">-- Chọn nhà cung cấp --</option>
+            <option *ngFor="let s of suppliers" [value]="s.id">{{ s.code }} - {{ s.name }}</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Kho nhận <span class="required">*</span></label>
+          <select [(ngModel)]="editForm.warehouse_id">
+            <option value="">-- Chọn kho --</option>
+            <option *ngFor="let w of warehouses" [value]="w.id">{{ w.name }}</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Ngày đặt đơn</label>
+          <input type="date" [(ngModel)]="editForm.order_date" />
+        </div>
+        <div class="form-group">
+          <label>Ngày dự kiến nhận</label>
+          <input type="date" [(ngModel)]="editForm.expected_delivery_date" />
+        </div>
+        <div class="form-group">
+          <label>Tiền tệ</label>
+          <select [(ngModel)]="editForm.currency">
+            <option value="VND">VND</option>
+            <option value="USD">USD</option>
+            <option value="EUR">EUR</option>
+            <option value="JPY">JPY</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Điều khoản thanh toán</label>
+        <input type="text" [(ngModel)]="editForm.payment_terms" placeholder="VD: NET 30" />
+      </div>
+      <div class="form-group">
+        <label>Ghi chú</label>
+        <textarea [(ngModel)]="editForm.notes" rows="3"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" (click)="closeSubModal('edit')">Huỷ</button>
+      <button class="btn btn-primary" (click)="onEditSubmit()" [disabled]="!isEditFormValid">Lưu thay đổi</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     MODAL: THÊM DÒNG ĐƠN HÀNG
+     ═══════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" *ngIf="showAddLineModal" (click)="closeSubModal('addLine')">
+  <div class="modal-box" (click)="$event.stopPropagation()">
+    <div class="modal-header"><h3>Thêm dòng sản phẩm</h3><button class="modal-close" (click)="closeSubModal('addLine')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Sản phẩm <span class="required">*</span></label>
+        <select [(ngModel)]="lineForm.product_id">
+          <option value="">-- Chọn sản phẩm --</option>
+          <option *ngFor="let p of getAvailableProducts()" [value]="p.id">{{ p.sku }} - {{ p.name }}</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Số lượng đặt <span class="required">*</span></label>
+          <input type="number" [(ngModel)]="lineForm.quantity_ordered" min="0.01" step="0.01" placeholder="VD: 100" />
+        </div>
+        <div class="form-group">
+          <label>Đơn giá <span class="required">*</span></label>
+          <input type="number" [(ngModel)]="lineForm.unit_price" min="0" step="0.01" placeholder="VD: 50000" />
+        </div>
+      </div>
+      <div class="form-group" *ngIf="lineForm.quantity_ordered && lineForm.unit_price !== null">
+        <label>Thành tiền (tự tính)</label>
+        <div class="computed-value">{{ (lineForm.quantity_ordered! * lineForm.unit_price!) | number:'1.0-0' }} {{ selectedOrder?.currency }}</div>
+      </div>
+      <div class="form-group">
+        <label>Ghi chú</label>
+        <textarea [(ngModel)]="lineForm.notes" rows="2" maxlength="500" placeholder="Ghi chú cho dòng này..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" (click)="closeSubModal('addLine')">Huỷ</button>
+      <button class="btn btn-primary" (click)="onAddLineSubmit()" [disabled]="!isLineFormValid">Thêm dòng</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     MODAL: SỬA DÒNG ĐƠN HÀNG
+     ═══════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" *ngIf="showEditLineModal" (click)="closeSubModal('editLine')">
+  <div class="modal-box" (click)="$event.stopPropagation()">
+    <div class="modal-header"><h3>Sửa dòng #{{ selectedLine?.line_number }}</h3><button class="modal-close" (click)="closeSubModal('editLine')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Sản phẩm</label>
+        <select [(ngModel)]="editLineForm.product_id">
+          <option *ngFor="let p of getAvailableProducts(selectedLine?.product_id)" [value]="p.id">{{ p.sku }} - {{ p.name }}</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Số lượng đặt <span class="required">*</span></label>
+          <input type="number" [(ngModel)]="editLineForm.quantity_ordered" min="0.01" step="0.01" />
+        </div>
+        <div class="form-group">
+          <label>Đơn giá <span class="required">*</span></label>
+          <input type="number" [(ngModel)]="editLineForm.unit_price" min="0" step="0.01" />
+        </div>
+      </div>
+      <div class="form-group" *ngIf="editLineForm.quantity_ordered && editLineForm.unit_price !== undefined">
+        <label>Thành tiền (tự tính)</label>
+        <div class="computed-value">{{ (editLineForm.quantity_ordered! * editLineForm.unit_price!) | number:'1.0-0' }} {{ selectedOrder?.currency }}</div>
+      </div>
+      <div class="form-group">
+        <label>Ghi chú</label>
+        <textarea [(ngModel)]="editLineForm.notes" rows="2" maxlength="500"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" (click)="closeSubModal('editLine')">Huỷ</button>
+      <button class="btn btn-primary" (click)="onEditLineSubmit()" [disabled]="!isEditLineFormValid">Lưu thay đổi</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     CONFIRM: XÁC NHẬN ĐƠN HÀNG
+     ═══════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" *ngIf="showConfirmConfirm" (click)="closeSubModal('confirm')">
+  <div class="modal-box modal-sm" (click)="$event.stopPropagation()">
+    <div class="modal-header"><h3>Xác nhận đơn mua hàng</h3><button class="modal-close" (click)="closeSubModal('confirm')">✕</button></div>
+    <div class="modal-body">
+      <p>Bạn muốn xác nhận đơn hàng <strong>{{ orderToConfirm?.purchase_order_number }}</strong>?</p>
+      <p class="text-muted">Sau khi xác nhận, đơn hàng sẽ không thể chỉnh sửa. Tổng tiền sẽ được tính lại từ các dòng đơn hàng.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" (click)="closeSubModal('confirm')">Huỷ</button>
+      <button class="btn btn-primary" (click)="onConfirmOrder()">Xác nhận</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     CONFIRM: XOÁ ĐƠN HÀNG
+     ═══════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" *ngIf="showDeleteConfirm" (click)="closeSubModal('delete')">
+  <div class="modal-box modal-sm" (click)="$event.stopPropagation()">
+    <div class="modal-header modal-header-danger"><h3>Xác nhận xoá</h3><button class="modal-close" (click)="closeSubModal('delete')">✕</button></div>
+    <div class="modal-body"><p>Xoá đơn hàng <strong>{{ orderToDelete?.purchase_order_number }}</strong>?</p><p class="text-muted">Thao tác này sẽ huỷ đơn hàng.</p></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" (click)="closeSubModal('delete')">Huỷ</button>
+      <button class="btn btn-danger" (click)="onDeleteConfirm()">Xoá</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     CONFIRM: XOÁ DÒNG ĐƠN HÀNG
+     ═══════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" *ngIf="showDeleteLineConfirm" (click)="closeSubModal('deleteLine')">
+  <div class="modal-box modal-sm" (click)="$event.stopPropagation()">
+    <div class="modal-header modal-header-danger"><h3>Xoá dòng đơn hàng</h3><button class="modal-close" (click)="closeSubModal('deleteLine')">✕</button></div>
+    <div class="modal-body">
+      <p>Xoá dòng #{{ lineToDelete?.line_number }} — <strong>{{ lineToDelete?.product_name ?? lineToDelete?.product_id }}</strong>?</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" (click)="closeSubModal('deleteLine')">Huỷ</button>
+      <button class="btn btn-danger" (click)="onDeleteLineConfirm()">Xoá</button>
+    </div>
+  </div>
+</div>

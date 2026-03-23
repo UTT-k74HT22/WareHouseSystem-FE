@@ -1,0 +1,662 @@
+<div class="location-container">
+  <!-- Header Section (NEW) -->
+  <div class="location-hero">
+    <div class="hero-left">
+      <div class="hero-accent"></div>
+
+      <div class="hero-text">
+        <h1 class="hero-title">Quản lý Vị Trí</h1>
+        <p class="hero-subtitle">Quản lý và giám sát tất cả các vị trí trong kho</p>
+      </div>
+    </div>
+
+    <div class="hero-actions">
+      <button class="btn btn-ghost" type="button">
+        Xuất Excel
+      </button>
+
+      <button class="btn btn-primary" type="button" (click)="openCreateModal()">
+        + Thêm Vị Trí Mới
+      </button>
+    </div>
+  </div>
+
+  <!-- Statistics Cards (NEW) -->
+  <div class="stats-grid" *ngIf="!loading && locations.length > 0">
+    <div class="stat-item stat-total">
+      <div class="stat-bar"></div>
+      <div class="stat-body">
+        <div class="stat-label">Tổng số vị trí</div>
+        <div class="stat-value">{{ totalElements }}</div>
+      </div>
+    </div>
+
+    <div class="stat-item stat-active">
+      <div class="stat-bar"></div>
+      <div class="stat-body">
+        <div class="stat-label">Đang hoạt động</div>
+        <div class="stat-value">{{ getActiveCount() }}</div>
+      </div>
+    </div>
+
+    <div class="stat-item stat-full">
+      <div class="stat-bar"></div>
+      <div class="stat-body">
+        <div class="stat-label">Đầy</div>
+        <div class="stat-value">{{ getFullCount() }}</div>
+      </div>
+    </div>
+
+    <div class="stat-item stat-maintenance">
+      <div class="stat-bar"></div>
+      <div class="stat-body">
+        <div class="stat-label">Đang bảo trì</div>
+        <div class="stat-value">{{ getMaintenanceCount() }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Search and Filter Section -->
+  <div class="filter-section" *ngIf="!loading && locations.length > 0">
+    <div class="search-box">
+      <i class="fa-solid fa-magnifying-glass search-icon" aria-hidden="true"></i>
+      <input
+        type="text"
+        class="search-input"
+        placeholder="Tìm kiếm theo tên, mã vị trí, khu vực..."
+        [(ngModel)]="searchTerm"
+        (input)="onSearch()"
+      />
+    </div>
+
+    <select class="filter-select" [(ngModel)]="selectedStatus" (change)="onFilterChange()">
+      <option [ngValue]="''">Tất cả trạng thái</option>
+      <option [ngValue]="LocationStatus.ACTIVE">{{ getStatusLabel(LocationStatus.ACTIVE) }}</option>
+      <option [ngValue]="LocationStatus.INACTIVE">{{ getStatusLabel(LocationStatus.INACTIVE) }}</option>
+      <option [ngValue]="LocationStatus.FULL">{{ getStatusLabel(LocationStatus.FULL) }}</option>
+      <option [ngValue]="LocationStatus.MAINTENANCE">{{ getStatusLabel(LocationStatus.MAINTENANCE) }}</option>
+    </select>
+
+    <select class="filter-select" [(ngModel)]="selectedType" (change)="onFilterChange()">
+      <option [ngValue]="''">Tất cả loại</option>
+      <option [ngValue]="LocationType.STORAGE">{{ getTypeLabel(LocationType.STORAGE) }}</option>
+      <option [ngValue]="LocationType.PICKING">{{ getTypeLabel(LocationType.PICKING) }}</option>
+      <option [ngValue]="LocationType.PACKING">{{ getTypeLabel(LocationType.PACKING) }}</option>
+      <option [ngValue]="LocationType.STAGING">{{ getTypeLabel(LocationType.STAGING) }}</option>
+      <option [ngValue]="LocationType.RETURN">{{ getTypeLabel(LocationType.RETURN) }}</option>
+    </select>
+
+    <div class="view-toggle">
+      <button
+        class="btn-view-toggle"
+        [class.active]="viewMode === 'grid'"
+        (click)="viewMode = 'grid'"
+        title="Chế độ lưới"
+      >
+        <i class="fa-solid fa-grip" aria-hidden="true"></i>
+      </button>
+      <button
+        class="btn-view-toggle"
+        [class.active]="viewMode === 'list'"
+        (click)="viewMode = 'list'"
+        title="Chế độ danh sách"
+      >
+        <i class="fa-solid fa-list" aria-hidden="true"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-spinner" *ngIf="loading">
+    <div class="spinner"></div>
+    <p>Đang tải dữ liệu...</p>
+  </div>
+
+  <!-- Nội dung vị trí (chỉ hiện khi không loading) -->
+  <div class="locations-content" *ngIf="!loading">
+    <!-- Không có dữ liệu -->
+    <div class="no-results" *ngIf="getFilteredLocations().length === 0">
+      <div class="no-results-icon">
+        <i class="fa-regular fa-folder-open" aria-hidden="true"></i>
+      </div>
+      <p>{{ locations.length === 0 ? 'Hiện chưa có vị trí nào trong hệ thống' : 'Không tìm thấy vị trí phù hợp với điều kiện lọc' }}</p>
+    </div>
+
+    <!-- Có dữ liệu -->
+    <ng-container *ngIf="getFilteredLocations().length > 0">
+
+      <!-- Grid View -->
+      <div class="locations-grid" *ngIf="viewMode === 'grid'">
+        <div
+          class="location-card"
+          *ngFor="let location of getFilteredLocations()"
+          (click)="selectedLocation = location"
+        >
+          <div class="card-status-bar" [ngClass]="getStatusClass(location.status)"></div>
+
+          <div class="card-header">
+            <span class="status-badge" [ngClass]="getStatusClass(location.status)">
+              {{ getStatusLabel(location.status) }}
+            </span>
+          </div>
+
+          <div class="card-body">
+            <div class="location-code">{{ location.code }}</div>
+            <h3 class="location-name">{{ location.name }}</h3>
+
+            <div class="location-info">
+              <div class="info-item">
+                <span class="info-label">Kho:</span>
+                <span class="info-text">{{ location.warehouse_name }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Khu vực:</span>
+                <span class="info-text">{{ location.zone || 'N/A' }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Sức chứa:</span>
+                <span class="info-text">{{ location.capacity }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card-footer">
+            <span class="type-badge" [ngClass]="'type-' + location.type.toLowerCase()">
+              {{ getTypeLabel(location.type) }}
+            </span>
+            <button class="btn-detail" (click)="$event.stopPropagation(); selectedLocation = location">
+              Chi tiết →
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- List View -->
+      <div class="locations-list" *ngIf="viewMode === 'list'">
+        <div class="table-responsive">
+          <table class="location-table">
+          <thead>
+          <tr>
+            <th style="width: 100px;">Mã vị trí</th>
+            <th style="width: 180px;">Tên vị trí</th>
+            <th style="width: 180px;">Kho</th>
+            <th style="width: 120px;">Khu vực</th>
+            <th style="width: 120px;">Loại</th>
+            <th style="width: 100px;">Sức chứa</th>
+            <th style="width: 130px;">Trạng thái</th>
+            <th style="width: 180px;" class="text-center">Thao tác</th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr
+            *ngFor="let location of getFilteredLocations()"
+            class="table-row"
+          >
+            <td>
+              <span class="location-code-cell">{{ location.code }}</span>
+            </td>
+            <td>
+              <span class="location-name-cell">{{ location.name }}</span>
+            </td>
+            <td>
+              <span class="warehouse-cell">{{ location.warehouse_name }}</span>
+            </td>
+            <td>
+              <span>{{ location.zone || 'N/A' }}</span>
+            </td>
+            <td>
+              <span class="type-badge" [ngClass]="'type-' + location.type.toLowerCase()">
+                {{ getTypeLabel(location.type) }}
+              </span>
+            </td>
+            <td>
+              <span>{{ location.capacity }}</span>
+            </td>
+            <td>
+              <span class="status-badge" [ngClass]="getStatusClass(location.status)">
+                {{ getStatusLabel(location.status) }}
+              </span>
+            </td>
+            <td>
+              <div class="action-buttons">
+                <button
+                  class="btn-action btn-view"
+                  (click)="viewDetails(location)"
+                  title="Xem chi tiết"
+                >
+                  <i class="fa-regular fa-eye" aria-hidden="true"></i>
+                </button>
+                <button
+                  class="btn-action btn-edit"
+                  (click)="openEditModal(location)"
+                  title="Chỉnh sửa"
+                >
+                  <i class="fa-regular fa-pen-to-square" aria-hidden="true"></i>
+                </button>
+                <button
+                  class="btn-action btn-delete"
+                  (click)="openDeleteConfirm(location)"
+                  title="Xóa"
+                >
+                  <i class="fa-regular fa-trash-can" aria-hidden="true"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+          </tbody>
+        </table>
+        </div>
+      </div>
+
+      <!-- Pagination -->
+      <div class="pagination" *ngIf="totalPages > 1">
+        <button
+          class="btn-page"
+          (click)="onPageChange(currentPage - 1)"
+          [disabled]="currentPage === 0"
+        >
+          ← Trước
+        </button>
+
+        <span class="page-info">
+          Trang {{ currentPage + 1 }} / {{ totalPages }}
+          <span class="total-items">({{ totalElements }} vị trí)</span>
+        </span>
+
+        <button
+          class="btn-page"
+          (click)="onPageChange(currentPage + 1)"
+          [disabled]="currentPage >= totalPages - 1"
+        >
+          Sau →
+        </button>
+      </div>
+    </ng-container>
+  </div>
+
+  <!-- Location Detail Modal -->
+  <div
+    class="modal-overlay"
+    *ngIf="selectedLocation"
+    (click)="selectedLocation = null"
+  >
+    <div
+      class="modal-content"
+      (click)="$event.stopPropagation()"
+    >
+      <div class="modal-header">
+        <div class="modal-title-section">
+          <div>
+            <h2>{{ selectedLocation.name }}</h2>
+            <span class="modal-code">{{ selectedLocation.code }}</span>
+          </div>
+        </div>
+        <button
+          class="btn-close"
+          (click)="selectedLocation = null"
+        >
+          ✕
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="detail-section">
+          <h3>Thông tin cơ bản</h3>
+          <div class="detail-grid">
+            <div class="detail-item">
+              <label>Kho</label>
+              <span>{{ selectedLocation.warehouse_name }} ({{ selectedLocation.warehouse_code }})</span>
+            </div>
+            <div class="detail-item">
+              <label>Khu vực</label>
+              <span>{{ selectedLocation.zone || 'N/A' }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Loại vị trí</label>
+              <span class="type-badge" [ngClass]="'type-' + selectedLocation.type.toLowerCase()">
+                {{ getTypeLabel(selectedLocation.type) }}
+              </span>
+            </div>
+            <div class="detail-item">
+              <label>Sức chứa</label>
+              <span>{{ selectedLocation.capacity }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Trạng thái</label>
+              <span class="status-badge" [ngClass]="getStatusClass(selectedLocation.status)">
+                {{ getStatusLabel(selectedLocation.status) }}
+              </span>
+            </div>
+            <div class="detail-item">
+              <label>Ghi chú</label>
+              <span>{{ selectedLocation.notes || 'Không có' }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Người tạo</label>
+              <span>
+                {{ account && selectedLocation.created_by === account.account_id
+                ? (account.first_name + ' ' + account.last_name)
+                : selectedLocation.created_by }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Ngày tạo</label>
+              <span>{{ selectedLocation.created_at | date:'dd/MM/yyyy HH:mm' }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button
+          class="btn btn-secondary"
+          (click)="closeDetails()"
+        >
+          Đóng
+        </button>
+        <button class="btn btn-info" (click)="openStatusChangeModal(selectedLocation); closeDetails()">
+          Đổi trạng thái
+        </button>
+        <button class="btn btn-warning" (click)="openEditModal(selectedLocation); closeDetails()">
+          Chỉnh sửa
+        </button>
+        <button class="btn btn-danger" (click)="openDeleteConfirm(selectedLocation); closeDetails()">
+          Xóa
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create Location Modal -->
+  <div class="modal-overlay" *ngIf="showCreateModal" (click)="closeCreateModal()">
+    <div class="modal-content modal-form" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Thêm Vị Trí Mới</h2>
+        <button class="btn-close" (click)="closeCreateModal()">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <form class="location-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="create-warehouse">Kho <span class="required">*</span></label>
+              <select
+                id="create-warehouse"
+                class="form-control"
+                [(ngModel)]="createForm.warehouse_id"
+                name="warehouse_id"
+                required
+              >
+                <option [ngValue]="''" disabled selected>-- Chọn kho --</option>
+                <option *ngFor="let wh of warehouses" [ngValue]="wh.id">
+                  {{ wh.name }} ({{ wh.code }})
+                </option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="create-code">Mã vị trí <span class="required">*</span></label>
+              <input
+                type="text"
+                id="create-code"
+                class="form-control"
+                [(ngModel)]="createForm.code"
+                name="code"
+                placeholder="Nhập mã vị trí"
+                required
+              />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="create-name">Tên vị trí <span class="required">*</span></label>
+            <input
+              type="text"
+              id="create-name"
+              class="form-control"
+              [(ngModel)]="createForm.name"
+              name="name"
+              placeholder="Nhập tên vị trí"
+              required
+            />
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="create-zone">Khu vực</label>
+              <input
+                type="text"
+                id="create-zone"
+                class="form-control"
+                [(ngModel)]="createForm.zone"
+                name="zone"
+                placeholder="Nhập khu vực"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="create-capacity">Sức chứa <span class="required">*</span></label>
+              <input
+                type="number"
+                id="create-capacity"
+                class="form-control"
+                [(ngModel)]="createForm.capacity"
+                name="capacity"
+                placeholder="Nhập sức chứa"
+                required
+              />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="create-type">Loại vị trí <span class="required">*</span></label>
+              <select
+                id="create-type"
+                class="form-control"
+                [(ngModel)]="createForm.type"
+                name="type"
+                required
+              >
+                <option [ngValue]="LocationType.STORAGE">{{ getTypeLabel(LocationType.STORAGE) }}</option>
+                <option [ngValue]="LocationType.PICKING">{{ getTypeLabel(LocationType.PICKING) }}</option>
+                <option [ngValue]="LocationType.PACKING">{{ getTypeLabel(LocationType.PACKING) }}</option>
+                <option [ngValue]="LocationType.STAGING">{{ getTypeLabel(LocationType.STAGING) }}</option>
+                <option [ngValue]="LocationType.RETURN">{{ getTypeLabel(LocationType.RETURN) }}</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="create-status">Trạng thái <span class="required">*</span></label>
+              <select
+                id="create-status"
+                class="form-control"
+                [(ngModel)]="createForm.status"
+                name="status"
+                required
+              >
+                <option [ngValue]="LocationStatus.ACTIVE">{{ getStatusLabel(LocationStatus.ACTIVE) }}</option>
+                <option [ngValue]="LocationStatus.INACTIVE">{{ getStatusLabel(LocationStatus.INACTIVE) }}</option>
+                <option [ngValue]="LocationStatus.FULL">{{ getStatusLabel(LocationStatus.FULL) }}</option>
+                <option [ngValue]="LocationStatus.MAINTENANCE">{{ getStatusLabel(LocationStatus.MAINTENANCE) }}</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="create-notes">Ghi chú</label>
+            <textarea
+              id="create-notes"
+              class="form-control"
+              [(ngModel)]="createForm.notes"
+              name="notes"
+              placeholder="Nhập ghi chú (tùy chọn)"
+              rows="3"
+            ></textarea>
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeCreateModal()">Hủy</button>
+        <button class="btn btn-primary" (click)="onSubmitCreate()">Tạo mới</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Location Modal -->
+  <div class="modal-overlay" *ngIf="showEditModal" (click)="closeEditModal()">
+    <div class="modal-content modal-form" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Chỉnh sửa Vị Trí</h2>
+        <button class="btn-close" (click)="closeEditModal()">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <form class="location-form">
+          <div class="form-group">
+            <label for="edit-name">Tên vị trí <span class="required">*</span></label>
+            <input
+              type="text"
+              id="edit-name"
+              class="form-control"
+              [(ngModel)]="editForm.name"
+              name="name"
+              placeholder="Nhập tên vị trí"
+              required
+            />
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="edit-zone">Khu vực</label>
+              <input
+                type="text"
+                id="edit-zone"
+                class="form-control"
+                [(ngModel)]="editForm.zone"
+                name="zone"
+                placeholder="Nhập khu vực"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="edit-capacity">Sức chứa <span class="required">*</span></label>
+              <input
+                type="number"
+                id="edit-capacity"
+                class="form-control"
+                [(ngModel)]="editForm.capacity"
+                name="capacity"
+                placeholder="Nhập sức chứa"
+                required
+              />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="edit-type">Loại vị trí <span class="required">*</span></label>
+            <select
+              id="edit-type"
+              class="form-control"
+              [(ngModel)]="editForm.type"
+              name="type"
+              required
+            >
+              <option [ngValue]="LocationType.STORAGE">{{ getTypeLabel(LocationType.STORAGE) }}</option>
+              <option [ngValue]="LocationType.PICKING">{{ getTypeLabel(LocationType.PICKING) }}</option>
+              <option [ngValue]="LocationType.PACKING">{{ getTypeLabel(LocationType.PACKING) }}</option>
+              <option [ngValue]="LocationType.STAGING">{{ getTypeLabel(LocationType.STAGING) }}</option>
+              <option [ngValue]="LocationType.RETURN">{{ getTypeLabel(LocationType.RETURN) }}</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="edit-notes">Ghi chú</label>
+            <textarea
+              id="edit-notes"
+              class="form-control"
+              [(ngModel)]="editForm.notes"
+              name="notes"
+              placeholder="Nhập ghi chú (tùy chọn)"
+              rows="3"
+            ></textarea>
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeEditModal()">Hủy</button>
+        <button class="btn btn-warning" (click)="onSubmitEdit()">Cập nhật</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div class="modal-overlay" *ngIf="showDeleteConfirm" (click)="closeDeleteConfirm()">
+    <div class="modal-content modal-small" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Xác nhận xóa</h2>
+        <button class="btn-close" (click)="closeDeleteConfirm()">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="confirm-message">
+          <i class="fa-solid fa-triangle-exclamation warning-icon" aria-hidden="true"></i>
+          <p>Bạn có chắc chắn muốn xóa vị trí <strong>{{ locationToDelete?.name }}</strong> ({{ locationToDelete?.code }})?</p>
+          <p class="warning-text">Hành động này không thể hoàn tác!</p>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeDeleteConfirm()">Hủy</button>
+        <button class="btn btn-danger" (click)="onConfirmDelete()">Xóa</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Change Status Modal -->
+  <div class="modal-overlay" *ngIf="showStatusChangeModal" (click)="closeStatusChangeModal()">
+    <div class="modal-content modal-small" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Thay đổi trạng thái</h2>
+        <button class="btn-close" (click)="closeStatusChangeModal()">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="status-change-content">
+          <p>Thay đổi trạng thái của vị trí <strong>{{ locationToChangeStatus?.name }}</strong></p>
+          <div class="form-group">
+            <label for="new-status">Chọn trạng thái mới</label>
+            <select
+              id="new-status"
+              class="form-control"
+              [(ngModel)]="newStatus"
+              name="newStatus"
+            >
+              <option [ngValue]="LocationStatus.ACTIVE">{{ getStatusLabel(LocationStatus.ACTIVE) }}</option>
+              <option [ngValue]="LocationStatus.INACTIVE">{{ getStatusLabel(LocationStatus.INACTIVE) }}</option>
+              <option [ngValue]="LocationStatus.FULL">{{ getStatusLabel(LocationStatus.FULL) }}</option>
+              <option [ngValue]="LocationStatus.MAINTENANCE">{{ getStatusLabel(LocationStatus.MAINTENANCE) }}</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="status-reason">Lý do</label>
+            <textarea
+              id="status-reason"
+              class="form-control"
+              [(ngModel)]="statusChangeReason"
+              name="statusChangeReason"
+              placeholder="Nhập lý do thay đổi trạng thái"
+              rows="3"
+            ></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeStatusChangeModal()">Hủy</button>
+        <button class="btn btn-info" (click)="onSubmitStatusChange()">Cập nhật</button>
+      </div>
+    </div>
+  </div>
+</div>

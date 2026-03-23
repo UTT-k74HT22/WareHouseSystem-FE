@@ -1,0 +1,155 @@
+﻿<div class="dashboard-container">
+
+  <!-- â•â•â• HEADER â•â•â• -->
+  <div class="dash-header">
+    <div class="dash-header-left">
+      <div class="dash-accent"></div>
+      <div>
+        <h1 class="dash-title">Tổng quan hệ thống</h1>
+        <p class="dash-sub">Warehouse Management System · {{ today }}</p>
+      </div>
+    </div>
+    <div class="dash-header-right">
+      <span class="dash-date-badge">{{ today }}</span>
+    </div>
+  </div>
+
+  <!-- â•â•â• KPI CARDS â•â•â• -->
+  <div class="kpi-grid">
+    <div class="kpi-card kpi-indigo">
+      <div class="kpi-icon">
+        <i class="fa-regular fa-clipboard" aria-hidden="true"></i>
+      </div>
+      <div class="kpi-body">
+        <div class="kpi-value">{{ kpi.totalOrders }}</div>
+        <div class="kpi-label">Tổng đơn hàng</div>
+        <div class="kpi-trend kpi-up">+24 tháng này</div>
+      </div>
+    </div>
+    <div class="kpi-card kpi-emerald">
+      <div class="kpi-icon">
+        <i class="fa-solid fa-sack-dollar" aria-hidden="true"></i>
+      </div>
+      <div class="kpi-body">
+        <div class="kpi-value">{{ kpi.revenue }}M</div>
+        <div class="kpi-label">Doanh thu (₫)</div>
+        <div class="kpi-trend kpi-up">+7.5% so với T1</div>
+      </div>
+    </div>
+    <div class="kpi-card kpi-amber">
+      <div class="kpi-icon">
+        <i class="fa-regular fa-clock" aria-hidden="true"></i>
+      </div>
+      <div class="kpi-body">
+        <div class="kpi-value">{{ kpi.pendingOrders }}</div>
+        <div class="kpi-label">Đơn chờ xử lý</div>
+        <div class="kpi-trend kpi-down">-5 so với hôm qua</div>
+      </div>
+    </div>
+    <div class="kpi-card kpi-rose">
+      <div class="kpi-icon">
+        <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+      </div>
+      <div class="kpi-body">
+        <div class="kpi-value">{{ kpi.completedToday }}</div>
+        <div class="kpi-label">Hoàn thành hôm nay</div>
+        <div class="kpi-trend kpi-up">+8 so với hôm qua</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- â•â•â• ROW 1: LINE CHART (lá»›n) + DOUGHNUT â•â•â• -->
+  <div class="charts-row">
+
+    <!-- Line chart: Doanh thu & Ä‘Æ¡n hÃ ng theo thÃ¡ng -->
+    <div class="chart-card">
+      <div class="chart-header">
+        <div class="chart-header-left">
+          <div class="chart-title">Doanh thu &amp; Đơn hàng theo tháng</div>
+          <div class="chart-subtitle">6 tháng gần nhất · Doanh thu (trái) | Số đơn (phải)</div>
+        </div>
+        <span class="chart-badge">T9/2025 – T2/2026</span>
+      </div>
+      <div class="chart-canvas-wrap" style="height:260px">
+        <canvas baseChart
+          [data]="lineChartData"
+          [options]="lineChartOptions"
+          [type]="lineChartType">
+        </canvas>
+      </div>
+    </div>
+
+    <!-- Doughnut: Tráº¡ng thÃ¡i Ä‘Æ¡n hÃ ng -->
+    <div class="chart-card">
+      <div class="chart-header">
+        <div class="chart-header-left">
+          <div class="chart-title">Trạng thái đơn hàng</div>
+          <div class="chart-subtitle">Tháng 2/2026</div>
+        </div>
+        <span class="chart-badge">286 đơn</span>
+      </div>
+      <div class="chart-canvas-wrap" style="height:260px">
+        <canvas baseChart
+          [data]="doughnutData"
+          [options]="doughnutOptions"
+          [type]="doughnutType">
+        </canvas>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- â•â•â• ROW 2: BAR CHART + ACTIVITY FEED â•â•â• -->
+  <div class="charts-row">
+
+    <!-- Bar chart: Sá»©c chá»©a kho -->
+    <div class="chart-card">
+      <div class="chart-header">
+        <div class="chart-header-left">
+          <div class="chart-title">Sức chứa kho hàng</div>
+          <div class="chart-subtitle">% công suất đang sử dụng · Đỏ ≥ 80% | Xanh &lt; 50%</div>
+        </div>
+        <span class="chart-badge">5 kho</span>
+      </div>
+      <div class="chart-canvas-wrap" style="height:220px">
+        <canvas baseChart
+          [data]="barChartData"
+          [options]="barChartOptions"
+          [type]="barChartType">
+        </canvas>
+      </div>
+    </div>
+
+    <!-- Activity feed -->
+    <div class="chart-card">
+      <div class="chart-header">
+        <div class="chart-header-left">
+          <div class="chart-title">Hoạt động gần đây</div>
+          <div class="chart-subtitle">Hôm nay</div>
+        </div>
+        <a class="chart-badge" routerLink="/stock-movements" style="cursor:pointer;text-decoration:none;color:#4f46e5">Xem tất cả</a>
+      </div>
+      <div class="activity-list">
+        <div class="activity-item" *ngFor="let a of activities">
+          <div class="activity-icon" [ngClass]="'act-' + a.type">
+            <!-- inbound -->
+            <i *ngIf="a.type === 'in'" class="fa-solid fa-arrow-down" aria-hidden="true"></i>
+            <!-- outbound -->
+            <i *ngIf="a.type === 'out'" class="fa-solid fa-arrow-up" aria-hidden="true"></i>
+            <!-- adjustment -->
+            <i *ngIf="a.type === 'adj'" class="fa-solid fa-sliders" aria-hidden="true"></i>
+            <!-- transfer -->
+            <i *ngIf="a.type === 'tr'" class="fa-solid fa-right-left" aria-hidden="true"></i>
+          </div>
+          <div class="activity-body">
+            <div class="activity-desc">{{ a.desc }}</div>
+            <div class="activity-time">{{ a.time }}</div>
+          </div>
+          <div class="activity-qty" [ngClass]="a.up ? 'qty-up' : 'qty-down'">{{ a.qty }}</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>

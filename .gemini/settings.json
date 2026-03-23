@@ -1,0 +1,23 @@
+{
+  "context": {
+    "fileName": ["AGENTS.md", "GEMINI.md"]
+  },
+  "mcpServers": {
+    "github": {
+      "command": "docker",
+      "args": ["run", "-i", "--rm", "-e", "GITHUB_PERSONAL_ACCESS_TOKEN", "ghcr.io/github/github-mcp-server"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "$GITHUB_MCP_PAT"
+      }
+    },
+    "jira": {
+      "command": "docker",
+      "args": ["run", "-i", "--rm", "-e", "JIRA_URL", "-e", "JIRA_USERNAME", "-e", "JIRA_API_TOKEN", "ghcr.io/sooperset/mcp-atlassian:latest"],
+      "env": {
+        "JIRA_URL": "$JIRA_URL",
+        "JIRA_USERNAME": "$JIRA_USERNAME",
+        "JIRA_API_TOKEN": "$JIRA_API_TOKEN"
+      }
+    }
+  }
+}

@@ -24,3 +24,8 @@ tmp/
 # OS
 .DS_Store
 Thumbs.db
+
+.codex/
+.copilot/
+.gemini/
+.gemini/settings.json

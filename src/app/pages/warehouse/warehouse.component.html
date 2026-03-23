@@ -1,0 +1,648 @@
+<div class="warehouse-container">
+  <!-- Header Section (NEW) -->
+  <div class="warehouse-hero">
+    <div class="hero-left">
+      <div class="hero-accent"></div>
+
+      <div class="hero-text">
+        <h1 class="hero-title">Quản lý Kho Hàng</h1>
+        <p class="hero-subtitle">Quản lý và giám sát tất cả các kho trong hệ thống</p>
+      </div>
+    </div>
+
+    <div class="hero-actions">
+      <button class="btn btn-ghost" type="button">
+        Xuất Excel
+      </button>
+
+      <button class="btn btn-primary" type="button" (click)="openCreateModal()">
+        + Thêm Kho Mới
+      </button>
+    </div>
+  </div>
+
+  <!-- Statistics Cards (NEW) -->
+  <div class="stats-grid" *ngIf="!loading && wareHouses.length > 0">
+    <div class="stat-item stat-total">
+      <div class="stat-bar"></div>
+      <div class="stat-body">
+        <div class="stat-label">Tổng số kho</div>
+        <div class="stat-value">{{ totalElements }}</div>
+      </div>
+    </div>
+
+    <div class="stat-item stat-active">
+      <div class="stat-bar"></div>
+      <div class="stat-body">
+        <div class="stat-label">Đang hoạt động</div>
+        <div class="stat-value">{{ getActiveCount() }}</div>
+      </div>
+    </div>
+
+    <div class="stat-item stat-inactive">
+      <div class="stat-bar"></div>
+      <div class="stat-body">
+        <div class="stat-label">Ngừng hoạt động</div>
+        <div class="stat-value">{{ getInactiveCount() }}</div>
+      </div>
+    </div>
+
+    <div class="stat-item stat-maintenance">
+      <div class="stat-bar"></div>
+      <div class="stat-body">
+        <div class="stat-label">Đang bảo trì</div>
+        <div class="stat-value">{{ getMaintenanceCount() }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Search and Filter Section -->
+  <div class="filter-section" *ngIf="!loading && wareHouses.length > 0">
+    <div class="search-box">
+      <i class="fa-solid fa-magnifying-glass search-icon" aria-hidden="true"></i>
+      <input
+        type="text"
+        class="search-input"
+        placeholder="Tìm kiếm theo tên, mã kho, địa chỉ..."
+        [(ngModel)]="searchTerm"
+        (input)="onSearch()"
+      />
+    </div>
+
+    <select class="filter-select" [(ngModel)]="selectedStatus" (change)="onFilterChange()">
+      <option [ngValue]="''">Tất cả trạng thái</option>
+      <option *ngFor="let st of getStatusOptions()" [ngValue]="st">
+        {{ getStatusLabel(st) }}
+      </option>
+    </select>
+
+    <select class="filter-select" [(ngModel)]="selectedType" (change)="onFilterChange()">
+      <option [ngValue]="''">Tất cả loại kho</option>
+      <option *ngFor="let t of getTypeOptions()" [ngValue]="t">
+        {{ getTypeLabel(t) }}
+      </option>
+    </select>
+
+    <div class="view-toggle">
+      <button
+        class="btn-view-toggle"
+        [class.active]="viewMode === 'grid'"
+        (click)="viewMode = 'grid'"
+        title="Chế độ lưới"
+      >
+        <i class="fa-solid fa-grip" aria-hidden="true"></i>
+      </button>
+      <button
+        class="btn-view-toggle"
+        [class.active]="viewMode === 'list'"
+        (click)="viewMode = 'list'"
+        title="Chế độ danh sách"
+      >
+        <i class="fa-solid fa-list" aria-hidden="true"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-spinner" *ngIf="loading">
+    <div class="spinner"></div>
+    <p>Đang tải dữ liệu...</p>
+  </div>
+
+  <!-- Nội dung kho (chỉ hiện khi không loading) -->
+  <div class="warehouses-content" *ngIf="!loading">
+    <!-- Không có dữ liệu -->
+    <div class="no-results" *ngIf="getFilteredWarehouses().length === 0">
+      <div class="no-results-icon">
+        <i class="fa-regular fa-folder-open" aria-hidden="true"></i>
+      </div>
+      <p>{{ wareHouses.length === 0 ? 'Hiện chưa có kho nào trong hệ thống' : 'Không tìm thấy kho phù hợp với điều kiện lọc' }}</p>
+    </div>
+
+    <!-- Có dữ liệu -->
+    <ng-container *ngIf="getFilteredWarehouses().length > 0">
+
+      <!-- Grid View -->
+      <div class="warehouses-grid" *ngIf="viewMode === 'grid'">
+        <div
+          class="warehouse-card"
+          *ngFor="let warehouse of getFilteredWarehouses()"
+          (click)="selectedWarehouse = warehouse"
+        >
+          <div class="card-status-bar" [ngClass]="'status-' + warehouse.status.toLowerCase()"></div>
+
+          <div class="card-header">
+            <span class="status-badge" [ngClass]="'status-' + warehouse.status.toLowerCase()">
+              {{ getStatusLabel(warehouse.status) }}
+            </span>
+          </div>
+
+          <div class="card-body">
+            <div class="warehouse-code">{{ warehouse.code }}</div>
+            <h3 class="warehouse-name">{{ warehouse.name }}</h3>
+
+            <div class="warehouse-info">
+              <div class="info-item">
+                <span class="info-label">Địa chỉ:</span>
+                <span class="info-text">{{ warehouse.address }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Điện thoại:</span>
+                <span class="info-text">{{ warehouse.phone }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Email:</span>
+                <span class="info-text">{{ warehouse.email }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card-footer">
+            <span class="type-badge" [ngClass]="'type-' + warehouse.ware_house_type.toLowerCase()">
+              {{ getTypeLabel(warehouse.ware_house_type) }}
+            </span>
+            <button class="btn-detail" (click)="$event.stopPropagation(); selectedWarehouse = warehouse">
+              Chi tiết →
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- List View -->
+      <div class="warehouses-list" *ngIf="viewMode === 'list'">
+        <div class="table-responsive">
+          <table class="warehouse-table">
+          <thead>
+          <tr>
+            <th style="width: 100px;">Mã kho</th>
+            <th style="width: 200px;">Tên kho</th>
+            <th style="width: 250px;">Địa chỉ</th>
+            <th style="width: 120px;">Điện thoại</th>
+            <th style="width: 180px;">Email</th>
+            <th style="width: 120px;">Loại kho</th>
+            <th style="width: 130px;">Trạng thái</th>
+            <th style="width: 180px;" class="text-center">Thao tác</th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr
+            *ngFor="let warehouse of getFilteredWarehouses()"
+            class="table-row"
+          >
+            <td>
+              <span class="warehouse-code-cell">{{ warehouse.code }}</span>
+            </td>
+            <td>
+              <span class="warehouse-name-cell">{{ warehouse.name }}</span>
+            </td>
+            <td>
+              <span class="address-cell" [title]="warehouse.address">{{ warehouse.address }}</span>
+            </td>
+            <td>
+              <span>{{ warehouse.phone }}</span>
+            </td>
+            <td>
+              <span class="email-cell" [title]="warehouse.email">{{ warehouse.email }}</span>
+            </td>
+            <td>
+              <span class="type-badge" [ngClass]="'type-' + warehouse.ware_house_type.toLowerCase()">
+                {{ getTypeLabel(warehouse.ware_house_type) }}
+              </span>
+            </td>
+            <td>
+              <span class="status-badge" [ngClass]="'status-' + warehouse.status.toLowerCase()">
+                {{ getStatusLabel(warehouse.status) }}
+              </span>
+            </td>
+            <td>
+              <div class="action-buttons">
+                <button
+                  class="btn-action btn-view"
+                  (click)="viewDetails(warehouse)"
+                  title="Xem chi tiết"
+                >
+                  <i class="fa-regular fa-eye" aria-hidden="true"></i>
+                </button>
+                <button
+                  class="btn-action btn-edit"
+                  (click)="openEditModal(warehouse)"
+                  title="Chỉnh sửa"
+                >
+                  <i class="fa-regular fa-pen-to-square" aria-hidden="true"></i>
+                </button>
+                <button
+                  class="btn-action btn-delete"
+                  (click)="openDeleteConfirm(warehouse)"
+                  title="Xóa"
+                >
+                  <i class="fa-regular fa-trash-can" aria-hidden="true"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+          </tbody>
+        </table>
+        </div>
+      </div>
+
+      <!-- Pagination -->
+      <div class="pagination" *ngIf="totalPages > 1">
+        <button
+          class="btn-page"
+          (click)="previousPage()"
+          [disabled]="currentPage === 0"
+        >
+          ← Trước
+        </button>
+
+        <span class="page-info">
+          Trang {{ currentPage + 1 }} / {{ totalPages }}
+          <span class="total-items">({{ totalElements }} kho)</span>
+        </span>
+
+        <button
+          class="btn-page"
+          (click)="nextPage()"
+          [disabled]="currentPage >= totalPages - 1"
+        >
+          Sau →
+        </button>
+      </div>
+    </ng-container>
+  </div>
+
+  <!-- Warehouse Detail Modal -->
+  <div
+    class="modal-overlay"
+    *ngIf="selectedWarehouse"
+    (click)="selectedWarehouse = null"
+  >
+    <div
+      class="modal-content"
+      (click)="$event.stopPropagation()"
+    >
+      <div class="modal-header">
+        <div class="modal-title-section">
+          <div>
+            <h2>{{ selectedWarehouse.name }}</h2>
+            <span class="modal-code">{{ selectedWarehouse.code }}</span>
+          </div>
+        </div>
+        <button
+          class="btn-close"
+          (click)="selectedWarehouse = null"
+        >
+          ✕
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="detail-section">
+          <h3>Thông tin cơ bản</h3>
+          <div class="detail-grid">
+            <div class="detail-item">
+              <label>Địa chỉ</label>
+              <span>{{ selectedWarehouse.address }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Điện thoại</label>
+              <span>{{ selectedWarehouse.phone }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Email</label>
+              <span>{{ selectedWarehouse.email }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Loại kho</label>
+              <span class="type-badge" [ngClass]="'type-' + selectedWarehouse.ware_house_type.toLowerCase()">
+                {{ getTypeLabel(selectedWarehouse.ware_house_type) }}
+              </span>
+            </div>
+            <div class="detail-item">
+              <label>Trạng thái</label>
+              <span class="status-badge" [ngClass]="'status-' + selectedWarehouse.status.toLowerCase()">
+                {{ getStatusLabel(selectedWarehouse.status) }}
+              </span>
+            </div>
+            <div class="detail-item" *ngIf="selectedWarehouse.manager">
+              <label>Người quản lý</label>
+              <span>{{ selectedWarehouse.manager.first_name }} {{ selectedWarehouse.manager.last_name }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button
+          class="btn btn-secondary"
+          (click)="closeDetails()"
+        >
+          Đóng
+        </button>
+        <button class="btn btn-info" (click)="openStatusChangeModal(selectedWarehouse); closeDetails()">
+          Đổi trạng thái
+        </button>
+        <button class="btn btn-warning" (click)="openEditModal(selectedWarehouse); closeDetails()">
+          Chỉnh sửa
+        </button>
+        <button class="btn btn-danger" (click)="openDeleteConfirm(selectedWarehouse); closeDetails()">
+          Xóa
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create Warehouse Modal -->
+  <div class="modal-overlay" *ngIf="showCreateModal" (click)="closeCreateModal()">
+    <div class="modal-content modal-form" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Thêm Kho Mới</h2>
+        <button class="btn-close" (click)="closeCreateModal()">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <form class="warehouse-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="create-code">Mã kho <span class="required">*</span></label>
+              <input
+                type="text"
+                id="create-code"
+                class="form-control"
+                [(ngModel)]="createForm.code"
+                name="code"
+                placeholder="Nhập mã kho"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="create-name">Tên kho <span class="required">*</span></label>
+              <input
+                type="text"
+                id="create-name"
+                class="form-control"
+                [(ngModel)]="createForm.name"
+                name="name"
+                placeholder="Nhập tên kho"
+                required
+              />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="create-address">Địa chỉ <span class="required">*</span></label>
+            <input
+              type="text"
+              id="create-address"
+              class="form-control"
+              [(ngModel)]="createForm.address"
+              name="address"
+              placeholder="Nhập địa chỉ"
+              required
+            />
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="create-phone">Điện thoại <span class="required">*</span></label>
+              <input
+                type="tel"
+                id="create-phone"
+                class="form-control"
+                [(ngModel)]="createForm.phone"
+                name="phone"
+                placeholder="Nhập số điện thoại"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="create-email">Email <span class="required">*</span></label>
+              <input
+                type="email"
+                id="create-email"
+                class="form-control"
+                [(ngModel)]="createForm.email"
+                name="email"
+                placeholder="Nhập email"
+                required
+              />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="create-type">Loại kho <span class="required">*</span></label>
+              <select
+                id="create-type"
+                class="form-control"
+                [(ngModel)]="createForm.ware_house_type"
+                name="ware_house_type"
+                required
+              >
+                <option *ngFor="let type of getTypeOptions()" [ngValue]="type">
+                  {{ getTypeLabel(type) }}
+                </option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="create-status">Trạng thái <span class="required">*</span></label>
+              <select
+                id="create-status"
+                class="form-control"
+                [(ngModel)]="createForm.status"
+                name="status"
+                required
+              >
+                <option *ngFor="let st of getStatusOptions()" [ngValue]="st">
+                  {{ getStatusLabel(st) }}
+                </option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="create-manager">Manager ID</label>
+            <select
+              id="create-manager"
+              class="form-control"
+              [(ngModel)]="createForm.manager_id"
+              name="manager_id"
+            >
+              <option value="">Chọn người quản lí</option>
+              <option *ngFor="let acc of accountManagers" [value]="acc.account_id">
+                {{ acc.first_name }} {{ acc.last_name }} (ID: {{ acc.account_id }})
+              </option>
+            </select>
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeCreateModal()">Hủy</button>
+        <button class="btn btn-primary" (click)="submitCreate()">Tạo mới</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Warehouse Modal -->
+  <div class="modal-overlay" *ngIf="showEditModal" (click)="closeEditModal()">
+    <div class="modal-content modal-form" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Chỉnh sửa Kho</h2>
+        <button class="btn-close" (click)="closeEditModal()">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <form class="warehouse-form">
+          <div class="form-group">
+            <label for="edit-name">Tên kho <span class="required">*</span></label>
+            <input
+              type="text"
+              id="edit-name"
+              class="form-control"
+              [(ngModel)]="editForm.name"
+              name="name"
+              placeholder="Nhập tên kho"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="edit-address">Địa chỉ <span class="required">*</span></label>
+            <input
+              type="text"
+              id="edit-address"
+              class="form-control"
+              [(ngModel)]="editForm.address"
+              name="address"
+              placeholder="Nhập địa chỉ"
+              required
+            />
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="edit-phone">Điện thoại <span class="required">*</span></label>
+              <input
+                type="tel"
+                id="edit-phone"
+                class="form-control"
+                [(ngModel)]="editForm.phone"
+                name="phone"
+                placeholder="Nhập số điện thoại"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="edit-email">Email <span class="required">*</span></label>
+              <input
+                type="email"
+                id="edit-email"
+                class="form-control"
+                [(ngModel)]="editForm.email"
+                name="email"
+                placeholder="Nhập email"
+                required
+              />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="edit-type">Loại kho <span class="required">*</span></label>
+              <select
+                id="edit-type"
+                class="form-control"
+                [(ngModel)]="editForm.ware_house_type"
+                name="ware_house_type"
+                required
+              >
+                <option *ngFor="let type of getTypeOptions()" [ngValue]="type">
+                  {{ getTypeLabel(type) }}
+                </option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="edit-manager">Manager ID</label>
+              <input
+                type="text"
+                id="edit-manager"
+                class="form-control"
+                [(ngModel)]="editForm.manager_id"
+                name="manager_id"
+                placeholder="Nhập Manager ID (tùy chọn)"
+              />
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeEditModal()">Hủy</button>
+        <button class="btn btn-warning" (click)="submitEdit()">Cập nhật</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div class="modal-overlay" *ngIf="showDeleteConfirm" (click)="closeDeleteConfirm()">
+    <div class="modal-content modal-small" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Xác nhận xóa</h2>
+        <button class="btn-close" (click)="closeDeleteConfirm()">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="confirm-message">
+          <i class="fa-solid fa-triangle-exclamation warning-icon" aria-hidden="true"></i>
+          <p>Bạn có chắc chắn muốn xóa kho <strong>{{ warehouseToDelete?.name }}</strong> ({{ warehouseToDelete?.code }})?</p>
+          <p class="warning-text">Hành động này không thể hoàn tác!</p>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeDeleteConfirm()">Hủy</button>
+        <button class="btn btn-danger" (click)="confirmDelete()">Xóa</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Change Status Modal -->
+  <div class="modal-overlay" *ngIf="showStatusChangeModal" (click)="closeStatusChangeModal()">
+    <div class="modal-content modal-small" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Thay đổi trạng thái</h2>
+        <button class="btn-close" (click)="closeStatusChangeModal()">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="status-change-content">
+          <p>Thay đổi trạng thái của kho <strong>{{ warehouseToChangeStatus?.name }}</strong></p>
+          <div class="form-group">
+            <label for="new-status">Chọn trạng thái mới</label>
+            <select
+              id="new-status"
+              class="form-control"
+              [(ngModel)]="newStatus"
+              name="newStatus"
+            >
+              <option *ngFor="let st of getStatusOptions()" [ngValue]="st">
+                {{ getStatusLabel(st) }}
+              </option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeStatusChangeModal()">Hủy</button>
+        <button class="btn btn-info" (click)="submitStatusChange()">Cập nhật</button>
+      </div>
+    </div>
+  </div>
+</div>

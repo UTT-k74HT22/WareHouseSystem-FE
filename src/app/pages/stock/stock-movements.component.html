@@ -1,0 +1,100 @@
+<div class="page-container">
+  <div class="page-hero">
+    <div class="hero-left">
+      <div class="hero-accent"></div>
+      <div class="hero-text">
+        <h1 class="hero-title"><i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i> Lịch sử chuyển động kho</h1>
+        <p class="hero-subtitle">Toàn bộ giao dịch nhập/xuất/chuyển/điều chỉnh hàng hoá</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-item stat-total">
+      <div class="stat-bar"></div>
+      <div class="stat-body"><div class="stat-label">Tổng giao dịch</div><div class="stat-value">{{ totalElements }}</div></div>
+    </div>
+  </div>
+
+  <div class="filter-section">
+    <input class="search-input" type="text" [(ngModel)]="searchKeyword" placeholder="Mã tham chiếu, sản phẩm..." (keyup.enter)="onSearch()" />
+    <select class="filter-select" [(ngModel)]="selectedType">
+      <option value="">-- Tất cả loại --</option>
+      <option *ngFor="let t of StockMovementType | keyvalue" [value]="t.value">{{ getTypeLabel(t.value) }}</option>
+    </select>
+    <button class="btn btn-primary" (click)="onSearch()"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i> Tìm kiếm</button>
+    <button class="btn btn-ghost" (click)="onResetFilter()"><i class="fa-solid fa-rotate-right" aria-hidden="true"></i> Reset</button>
+    <div class="view-toggle">
+      <button class="btn-view-toggle" [class.active]="viewMode === 'grid'" (click)="viewMode = 'grid'" title="Chế độ lưới">
+        <i class="fa-solid fa-grip" aria-hidden="true"></i>
+      </button>
+      <button class="btn-view-toggle" [class.active]="viewMode === 'list'" (click)="viewMode = 'list'" title="Chế độ danh sách">
+        <i class="fa-solid fa-list" aria-hidden="true"></i>
+      </button>
+    </div>
+  </div>
+
+  <div class="loading-state" *ngIf="loading"><span>Đang tải dữ liệu...</span></div>
+
+  <div class="table-container" *ngIf="!loading && viewMode === 'list'">
+    <table class="data-table movement-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Mã hiển thị</th>
+          <th>Loại</th>
+          <th>Sản phẩm</th>
+          <th>Kho</th>
+          <th>Vị trí</th>
+          <th>Số lô</th>
+          <th>Biến động</th>
+          <th>Tham chiếu</th>
+          <th>Thời gian</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let m of movements; let i = index">
+          <td>{{ currentPage * pageSize + i + 1 }}</td>
+          <td><code>{{ getMovementDisplayCode(m) }}</code></td>
+          <td><span class="badge" [ngClass]="getTypeClass(m.movement_type)">{{ getTypeLabel(m.movement_type) }}</span></td>
+          <td>
+            <div class="cell-main">{{ getMovementProductDisplay(m) }}</div>
+            <div class="cell-sub" *ngIf="m.product_sku">{{ m.product_sku }}</div>
+          </td>
+          <td>{{ getMovementWarehouseDisplay(m) }}</td>
+          <td>{{ getMovementLocationDisplay(m) }}</td>
+          <td>{{ getMovementBatchDisplay(m) }}</td>
+          <td><strong>{{ m.quantity_change }}</strong> {{ m.uom_code ?? '' }}</td>
+          <td class="movement-reference">
+            <small>{{ m.reference_type }} #{{ getMovementReferenceDisplay(m) }}</small>
+          </td>
+          <td><small>{{ m.movement_date | date:'dd/MM/yyyy HH:mm' }}</small></td>
+        </tr>
+        <tr *ngIf="movements.length === 0">
+          <td colspan="10" class="empty-state">Chưa có giao dịch nào</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="entity-grid" *ngIf="!loading && viewMode === 'grid'">
+    <div class="entity-card" *ngFor="let m of movements">
+      <h3 class="entity-card__title">{{ getMovementDisplayCode(m) }}</h3>
+      <p class="entity-card__sub">{{ getMovementProductDisplay(m) }}<span *ngIf="m.product_sku"> ({{ m.product_sku }})</span></p>
+      <div class="entity-card__meta">
+        <div class="entity-card__row"><span class="badge" [ngClass]="getTypeClass(m.movement_type)">{{ getTypeLabel(m.movement_type) }}</span></div>
+        <div class="entity-card__row">Vị trí: {{ getMovementLocationDisplay(m) }}</div>
+        <div class="entity-card__row">Biến động: {{ m.quantity_change }} {{ m.uom_code ?? '' }}</div>
+        <div class="entity-card__row">Thời gian: {{ m.movement_date | date:'dd/MM/yyyy HH:mm' }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pagination" *ngIf="totalPages > 1">
+    <button (click)="onPageChange(currentPage - 1)" [disabled]="currentPage === 0">« Trước</button>
+    <span class="page-info">Trang {{ currentPage + 1 }} / {{ totalPages }}</span>
+    <button (click)="onPageChange(currentPage + 1)" [disabled]="currentPage >= totalPages - 1">Sau »</button>
+  </div>
+</div>
+
+

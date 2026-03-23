@@ -1,0 +1,354 @@
+<div class="page-container">
+  <div class="page-hero">
+    <div class="hero-left">
+      <div class="hero-accent"></div>
+      <div class="hero-text">
+        <h1 class="hero-title"><i class="fa-solid fa-chart-column" aria-hidden="true"></i> Tồn kho</h1>
+        <p class="hero-subtitle">Theo dõi tồn chi tiết theo bản ghi và theo vị trí, bám đúng số khả dụng mà backend đang tính.</p>
+      </div>
+    </div>
+    <div class="hero-actions">
+      <button class="btn btn-ghost" (click)="loadInventory()">
+        <i class="fa-solid fa-rotate-right" aria-hidden="true"></i> Làm mới
+      </button>
+    </div>
+  </div>
+
+  <div class="stats-grid" *ngIf="!loading">
+    <div class="stat-item stat-total">
+      <div class="stat-bar"></div>
+      <div class="stat-body"><div class="stat-label">Tổng bản ghi</div><div class="stat-value">{{ totalElements }}</div></div>
+    </div>
+    <div class="stat-item stat-active">
+      <div class="stat-bar"></div>
+      <div class="stat-body"><div class="stat-label">Tồn tay</div><div class="stat-value">{{ totalQuantityOnHand | number:'1.0-2' }}</div></div>
+    </div>
+    <div class="stat-item stat-info">
+      <div class="stat-bar"></div>
+      <div class="stat-body"><div class="stat-label">Đang giữ</div><div class="stat-value">{{ totalQuantityReserved | number:'1.0-2' }}</div></div>
+    </div>
+    <div class="stat-item stat-full">
+      <div class="stat-bar"></div>
+      <div class="stat-body"><div class="stat-label">Khả dụng</div><div class="stat-value">{{ totalQuantityAvailable | number:'1.0-2' }}</div></div>
+    </div>
+    <div class="stat-item stat-purple">
+      <div class="stat-bar"></div>
+      <div class="stat-body"><div class="stat-label">Số vị trí</div><div class="stat-value">{{ totalLocationGroups }}</div></div>
+    </div>
+  </div>
+
+  <div class="filter-section">
+    <input
+      class="search-input filter-input"
+      type="text"
+      [(ngModel)]="searchProductName"
+      placeholder="Tên sản phẩm"
+      (keyup.enter)="onSearch()" />
+
+    <input
+      class="search-input filter-input"
+      type="text"
+      [(ngModel)]="searchProductSku"
+      placeholder="SKU"
+      (keyup.enter)="onSearch()" />
+
+    <input
+      class="search-input filter-input"
+      type="text"
+      [(ngModel)]="searchBatchNumber"
+      placeholder="Mã lô"
+      (keyup.enter)="onSearch()" />
+
+    <select class="filter-select" [(ngModel)]="selectedWarehouseId" (ngModelChange)="onWarehouseChange($event)">
+      <option value="">-- Tất cả kho --</option>
+      <option *ngFor="let warehouse of warehouses" [value]="warehouse.id">{{ warehouse.name }}</option>
+    </select>
+
+    <select class="filter-select" [(ngModel)]="selectedLocationId">
+      <option value="">-- Tất cả vị trí --</option>
+      <option *ngFor="let location of availableLocations" [value]="location.id">{{ location.code }} - {{ location.name }}</option>
+    </select>
+
+    <button class="btn btn-primary" (click)="onSearch()">
+      <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i> Tìm kiếm
+    </button>
+    <button class="btn btn-ghost" (click)="onResetFilter()">
+      <i class="fa-solid fa-rotate-right" aria-hidden="true"></i> Đặt lại
+    </button>
+  </div>
+
+  <div class="toolbar-row">
+    <div class="segmented-control">
+      <button class="segmented-control__button" [class.active]="inventoryTab === 'records'" (click)="inventoryTab = 'records'">
+        Theo bản ghi
+      </button>
+      <button class="segmented-control__button" [class.active]="inventoryTab === 'locations'" (click)="inventoryTab = 'locations'">
+        Theo vị trí
+      </button>
+    </div>
+
+    <div class="view-toggle" *ngIf="inventoryTab === 'records'">
+      <button class="btn-view-toggle" [class.active]="viewMode === 'grid'" (click)="viewMode = 'grid'" title="Chế độ lưới">
+        <i class="fa-solid fa-grip" aria-hidden="true"></i>
+      </button>
+      <button class="btn-view-toggle" [class.active]="viewMode === 'list'" (click)="viewMode = 'list'" title="Chế độ danh sách">
+        <i class="fa-solid fa-list" aria-hidden="true"></i>
+      </button>
+    </div>
+  </div>
+
+  <div class="info-box">
+    Số <strong>khả dụng</strong> đang bám theo backend: <strong>tồn tay - cách ly - giữ chỗ</strong>.
+    Màn này dùng danh sách tồn kho cho góc nhìn chi tiết và endpoint <strong>theo vị trí</strong> để tổng hợp đúng theo bộ lọc hiện tại.
+  </div>
+
+  <div class="loading-state" *ngIf="loading"><span>Đang tải dữ liệu tồn kho...</span></div>
+
+  <ng-container *ngIf="!loading && inventoryTab === 'records'">
+    <div class="table-container" *ngIf="viewMode === 'list'">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Sản phẩm</th>
+            <th>Kho</th>
+            <th>Vị trí</th>
+            <th>Lô</th>
+            <th class="text-right">Tồn tay</th>
+            <th class="text-right">Đang giữ</th>
+            <th class="text-right">Khả dụng</th>
+            <th>Tình trạng</th>
+            <th>Dịch chuyển cuối</th>
+            <th>Thao tác</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of items; let i = index" [ngClass]="getLowStockClass(item)">
+            <td>{{ currentPage * pageSize + i + 1 }}</td>
+            <td>
+              <button class="table-link" type="button" (click)="openDetailModal(item)">
+                {{ item.product_name || item.product_id }}
+              </button>
+              <div class="cell-sub" *ngIf="item.product_sku">{{ item.product_sku }}</div>
+            </td>
+            <td>{{ item.warehouse_name || item.warehouse_id }}</td>
+            <td>
+              <div class="cell-main">{{ item.location_code || '—' }}</div>
+              <div class="cell-sub" *ngIf="item.location_name">{{ item.location_name }}</div>
+            </td>
+            <td>{{ item.batch_number || '—' }}</td>
+            <td class="text-right">{{ item.on_hand_quantity | number:'1.0-2' }}</td>
+            <td class="text-right">{{ item.reserved_quantity | number:'1.0-2' }}</td>
+            <td class="text-right" [class.text-danger]="item.available_quantity <= 0">
+              <strong>{{ item.available_quantity | number:'1.0-2' }}</strong>
+            </td>
+            <td>
+              <span class="badge inventory-state-badge" [ngClass]="getStockStateClass(item)">{{ getStockStateLabel(item) }}</span>
+            </td>
+            <td>{{ item.last_movement_at ? (item.last_movement_at | date:'dd/MM/yyyy HH:mm') : '—' }}</td>
+            <td class="actions">
+              <button class="btn-icon" title="Xem chi tiết" (click)="openDetailModal(item)">
+                <i class="fa-regular fa-eye" aria-hidden="true"></i>
+              </button>
+            </td>
+          </tr>
+          <tr *ngIf="items.length === 0">
+            <td colspan="11" class="empty-state">Không có dữ liệu tồn kho theo bộ lọc hiện tại.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="entity-grid" *ngIf="viewMode === 'grid'">
+      <div class="entity-card" *ngFor="let item of items" [ngClass]="getLowStockClass(item)">
+        <div class="entity-card__header">
+          <div>
+            <h3 class="entity-card__title">{{ item.product_name || item.product_id }}</h3>
+            <p class="entity-card__sub">{{ item.product_sku || '—' }}</p>
+          </div>
+          <span class="badge inventory-state-badge" [ngClass]="getStockStateClass(item)">{{ getStockStateLabel(item) }}</span>
+        </div>
+        <div class="entity-card__meta">
+          <div class="entity-card__row">Kho: {{ item.warehouse_name || item.warehouse_id }}</div>
+          <div class="entity-card__row">Vị trí: {{ item.location_code || '—' }}</div>
+          <div class="entity-card__row">Lô: {{ item.batch_number || '—' }}</div>
+          <div class="entity-card__row">Tồn tay: <strong>{{ item.on_hand_quantity | number:'1.0-2' }}</strong></div>
+          <div class="entity-card__row">Khả dụng: <strong>{{ item.available_quantity | number:'1.0-2' }}</strong></div>
+        </div>
+        <div class="entity-card__actions">
+          <button class="btn-icon" title="Xem chi tiết" (click)="openDetailModal(item)">
+            <i class="fa-regular fa-eye" aria-hidden="true"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="pagination" *ngIf="totalPages > 1">
+      <button (click)="onPageChange(currentPage - 1)" [disabled]="currentPage === 0">« Trước</button>
+      <span class="page-info">Trang {{ currentPage + 1 }} / {{ totalPages }} ({{ totalElements }} bản ghi)</span>
+      <button (click)="onPageChange(currentPage + 1)" [disabled]="currentPage >= totalPages - 1">Sau »</button>
+    </div>
+  </ng-container>
+
+  <div class="location-groups" *ngIf="!loading && inventoryTab === 'locations'">
+    <div class="location-card" *ngFor="let group of locationGroups">
+      <div class="location-card__header">
+        <div>
+          <h3 class="location-card__title">{{ getLocationGroupLabel(group) }}</h3>
+          <p class="location-card__sub">{{ getWarehouseLabel(group) }}</p>
+        </div>
+        <div class="location-card__totals">
+          <span>Tồn tay: <strong>{{ getGroupOnHand(group) | number:'1.0-2' }}</strong></span>
+          <span>Giữ: <strong>{{ getGroupReserved(group) | number:'1.0-2' }}</strong></span>
+          <span>Khả dụng: <strong>{{ getGroupAvailable(group) | number:'1.0-2' }}</strong></span>
+        </div>
+      </div>
+
+      <div class="table-container table-container--nested">
+        <table class="data-table data-table--nested">
+          <thead>
+            <tr>
+              <th>Sản phẩm</th>
+              <th>Lô</th>
+              <th class="text-right">Tồn tay</th>
+              <th class="text-right">Đang giữ</th>
+              <th class="text-right">Khả dụng</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of group.items">
+              <td>
+                <div class="cell-main">{{ item.product_name || item.product_id }}</div>
+                <div class="cell-sub" *ngIf="item.product_sku">{{ item.product_sku }}</div>
+              </td>
+              <td>{{ item.batch_number || '—' }}</td>
+              <td class="text-right">{{ item.on_hand_quantity | number:'1.0-2' }}</td>
+              <td class="text-right">{{ item.reserved_quantity | number:'1.0-2' }}</td>
+              <td class="text-right" [class.text-danger]="item.available_quantity <= 0">
+                <strong>{{ item.available_quantity | number:'1.0-2' }}</strong>
+              </td>
+            </tr>
+            <tr *ngIf="group.items.length === 0">
+              <td colspan="5" class="empty-state">Không có bản ghi tồn cho vị trí này.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="empty-state location-empty" *ngIf="locationGroups.length === 0">
+      Không có dữ liệu phân bổ tồn theo vị trí theo bộ lọc hiện tại.
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" *ngIf="showDetailModal" (click)="closeAllModals()">
+  <div class="modal-box modal-lg" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3 *ngIf="selectedItem">
+        <i class="fa-solid fa-boxes-stacked" aria-hidden="true"></i>
+        Chi tiết tồn kho
+      </h3>
+      <button class="modal-close" (click)="closeAllModals()">✕</button>
+    </div>
+
+    <div class="loading-state" *ngIf="detailLoading"><span>Đang tải ngữ cảnh tồn kho...</span></div>
+
+    <div class="modal-body" *ngIf="selectedItem && !detailLoading">
+      <div class="detail-grid">
+        <div class="detail-item"><span class="detail-label">Sản phẩm</span><span>{{ selectedItem.product_name || selectedItem.product_id }}</span></div>
+        <div class="detail-item"><span class="detail-label">SKU</span><span>{{ selectedItem.product_sku || '—' }}</span></div>
+        <div class="detail-item"><span class="detail-label">Kho</span><span>{{ selectedItem.warehouse_name || selectedItem.warehouse_id }}</span></div>
+        <div class="detail-item"><span class="detail-label">Vị trí</span><span>{{ selectedItem.location_code || '—' }}{{ selectedItem.location_name ? (' - ' + selectedItem.location_name) : '' }}</span></div>
+        <div class="detail-item"><span class="detail-label">Lô</span><span>{{ selectedItem.batch_number || '—' }}</span></div>
+        <div class="detail-item"><span class="detail-label">Đơn vị tính</span><span>{{ selectedItem.uom_code || '—' }}</span></div>
+        <div class="detail-item"><span class="detail-label">Tồn tay</span><span>{{ selectedItem.on_hand_quantity | number:'1.0-2' }}</span></div>
+        <div class="detail-item"><span class="detail-label">Đang giữ</span><span>{{ selectedItem.reserved_quantity | number:'1.0-2' }}</span></div>
+        <div class="detail-item"><span class="detail-label">Khả dụng</span><span>{{ selectedItem.available_quantity | number:'1.0-2' }}</span></div>
+        <div class="detail-item"><span class="detail-label">Dịch chuyển cuối</span><span>{{ selectedItem.last_movement_at ? (selectedItem.last_movement_at | date:'dd/MM/yyyy HH:mm') : '—' }}</span></div>
+        <div class="detail-item"><span class="detail-label">Cập nhật lúc</span><span>{{ selectedItem.updated_at | date:'dd/MM/yyyy HH:mm' }}</span></div>
+      </div>
+
+      <div class="detail-section-title" *ngIf="selectedSummary">Tổng quan sản phẩm</div>
+      <div class="summary-strip" *ngIf="selectedSummary">
+        <div class="summary-chip">
+          <span class="summary-chip__label">Tồn tay toàn sản phẩm</span>
+          <strong>{{ selectedSummary.total_on_hand_quantity | number:'1.0-2' }}</strong>
+        </div>
+        <div class="summary-chip">
+          <span class="summary-chip__label">Đang giữ toàn sản phẩm</span>
+          <strong>{{ selectedSummary.total_reserved_quantity | number:'1.0-2' }}</strong>
+        </div>
+        <div class="summary-chip">
+          <span class="summary-chip__label">Khả dụng toàn sản phẩm</span>
+          <strong>{{ getSummaryAvailableQuantity() | number:'1.0-2' }}</strong>
+        </div>
+        <div class="summary-chip">
+          <span class="summary-chip__label">Số kho</span>
+          <strong>{{ selectedSummary.warehouse_count }}</strong>
+        </div>
+        <div class="summary-chip">
+          <span class="summary-chip__label">Số vị trí</span>
+          <strong>{{ selectedSummary.location_count }}</strong>
+        </div>
+      </div>
+
+      <div class="info-box" *ngIf="selectedItem.batch_id">
+        Phần phân bổ bên dưới đang lọc theo đúng <strong>lô {{ selectedItem.batch_number }}</strong>. Khối tổng quan phía trên vẫn là tổng quan của toàn sản phẩm.
+      </div>
+
+      <div class="detail-section-title">{{ getDetailDistributionTitle() }}</div>
+      <div class="location-groups location-groups--detail" *ngIf="selectedDistribution.length > 0">
+        <div class="location-card" *ngFor="let group of selectedDistribution">
+          <div class="location-card__header">
+            <div>
+              <h3 class="location-card__title">{{ getLocationGroupLabel(group) }}</h3>
+              <p class="location-card__sub">{{ getWarehouseLabel(group) }}</p>
+            </div>
+            <div class="location-card__totals">
+              <span>Tồn tay: <strong>{{ getGroupOnHand(group) | number:'1.0-2' }}</strong></span>
+              <span>Giữ: <strong>{{ getGroupReserved(group) | number:'1.0-2' }}</strong></span>
+              <span>Khả dụng: <strong>{{ getGroupAvailable(group) | number:'1.0-2' }}</strong></span>
+            </div>
+          </div>
+
+          <div class="table-container table-container--nested">
+            <table class="data-table data-table--nested">
+              <thead>
+                <tr>
+                  <th>Sản phẩm</th>
+                  <th>Lô</th>
+                  <th class="text-right">Tồn tay</th>
+                  <th class="text-right">Đang giữ</th>
+                  <th class="text-right">Khả dụng</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let distributionItem of group.items">
+                  <td>
+                    <div class="cell-main">{{ distributionItem.product_name || distributionItem.product_id }}</div>
+                    <div class="cell-sub" *ngIf="distributionItem.product_sku">{{ distributionItem.product_sku }}</div>
+                  </td>
+                  <td>{{ distributionItem.batch_number || '—' }}</td>
+                  <td class="text-right">{{ distributionItem.on_hand_quantity | number:'1.0-2' }}</td>
+                  <td class="text-right">{{ distributionItem.reserved_quantity | number:'1.0-2' }}</td>
+                  <td class="text-right" [class.text-danger]="distributionItem.available_quantity <= 0">
+                    <strong>{{ distributionItem.available_quantity | number:'1.0-2' }}</strong>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="empty-state detail-empty" *ngIf="selectedDistribution.length === 0">
+        Không có dữ liệu phân bổ tồn theo vị trí cho ngữ cảnh đang chọn.
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-ghost" (click)="closeAllModals()">Đóng</button>
+    </div>
+  </div>
+</div>

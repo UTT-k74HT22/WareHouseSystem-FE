@@ -1,0 +1,201 @@
+/* Stock Transfers Component - specific overrides (base from whs-pages.css) */
+
+.cell-subtext {
+  color: #64748b;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.table-actions {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 0.35rem;
+  white-space: nowrap;
+}
+
+.table-actions.single-action {
+  justify-content: center;
+}
+
+.table-actions .btn-icon {
+  flex: 0 0 auto;
+}
+
+.btn-icon.btn-complete {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.btn-icon.btn-complete:hover {
+  background: #bbf7d0;
+  box-shadow: 0 2px 6px rgba(22, 101, 52, 0.2);
+}
+
+.transfer-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: nowrap;
+}
+
+.stat-bar--draft {
+  background: #94a3b8;
+}
+
+.stat-bar--success {
+  background: #10b981;
+}
+
+.stat-bar--danger {
+  background: #ef4444;
+}
+
+.summary-panel,
+.callout {
+  border-radius: 14px;
+  margin-bottom: 20px;
+  padding: 16px 18px;
+}
+
+.summary-panel {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+.summary-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.summary-label {
+  color: #64748b;
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
+
+.callout {
+  border: 1px solid transparent;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.callout-info {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  color: #1d4ed8;
+}
+
+.callout-warning {
+  background: #fff7ed;
+  border-color: #fdba74;
+  color: #c2410c;
+}
+
+.form-hint {
+  color: #64748b;
+  font-size: 12px;
+  margin-top: 6px;
+}
+
+.detail-full {
+  grid-column: 1 / -1;
+}
+
+.transfer-table {
+  width: 100%;
+  table-layout: auto;
+}
+
+.transfer-table th,
+.transfer-table td {
+  white-space: normal;
+  word-break: normal;
+  overflow-wrap: anywhere;
+  vertical-align: top;
+}
+
+.transfer-table th {
+  white-space: nowrap;
+}
+
+.transfer-table th:nth-child(1),
+.transfer-table td:nth-child(1) {
+  width: 44px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.transfer-table th:nth-child(2),
+.transfer-table td:nth-child(2) {
+  min-width: 180px;
+}
+
+.transfer-table th:nth-child(3),
+.transfer-table td:nth-child(3) {
+  min-width: 170px;
+}
+
+.transfer-table th:nth-child(4),
+.transfer-table td:nth-child(4) {
+  min-width: 170px;
+}
+
+.transfer-table th:nth-child(5),
+.transfer-table td:nth-child(5) {
+  min-width: 210px;
+}
+
+.transfer-table th:nth-child(7),
+.transfer-table td:nth-child(7),
+.transfer-table th:nth-child(8),
+.transfer-table td:nth-child(8) {
+  white-space: nowrap;
+}
+
+.transfer-table th:nth-child(9),
+.transfer-table td:nth-child(9) {
+  width: 126px;
+}
+
+@media (max-width: 1200px) {
+  .transfer-table th:nth-child(6),
+  .transfer-table td:nth-child(6) {
+    display: none;
+  }
+}
+
+@media (max-width: 992px) {
+  .transfer-table th:nth-child(3),
+  .transfer-table td:nth-child(3),
+  .transfer-table th:nth-child(5),
+  .transfer-table td:nth-child(5) {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .transfer-table th,
+  .transfer-table td {
+    font-size: 0.75rem;
+    padding: 0.55rem 0.5rem;
+  }
+
+  .transfer-table th:nth-child(4),
+  .transfer-table td:nth-child(4) {
+    display: none;
+  }
+
+  .table-actions {
+    justify-content: flex-start;
+  }
+
+  .transfer-card-actions {
+    justify-content: flex-start;
+  }
+}
