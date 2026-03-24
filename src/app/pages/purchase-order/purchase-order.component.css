@@ -40,8 +40,8 @@
 }
 
 .detail-tab.active {
-  color: #4f46e5;
-  border-bottom-color: #4f46e5;
+  color: #047857;
+  border-bottom-color: #047857;
   font-weight: 600;
 }
 
@@ -52,7 +52,7 @@
   min-width: 20px;
   height: 20px;
   border-radius: 10px;
-  background: #4f46e5;
+  background: #047857;
   color: #fff;
   font-size: 0.7rem;
   font-weight: 600;

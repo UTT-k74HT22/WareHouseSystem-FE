@@ -42,8 +42,8 @@ a {
 /* ========== THEME BIẾN DÙNG CHUNG ========== */
 /* Dùng :root để sau này đổi theme rất nhanh */
 :root {
-  --whs-primary: #0d6efd;      /* màu chính (có thể đổi theo brand) */
-  --whs-primary-dark: #0b5ed7;
+  --whs-primary: #047857;      /* màu chính (có thể đổi theo brand) */
+  --whs-primary-dark: #065f46;
   --whs-accent: #f97316;       /* màu nhấn (ví dụ báo cáo, biểu đồ) */
   --whs-bg: #f3f4f6;
   --whs-card-bg: #ffffff;
