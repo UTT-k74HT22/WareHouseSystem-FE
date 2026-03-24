@@ -12,6 +12,11 @@ import {AuthService} from '../../service/AuthService/auth-service.service';
 export class RegisterComponent implements OnInit {
   registerForm!: FormGroup;
   isLoading = false;
+  submitted = false;
+  errorMessage = '';
+  hidePassword = true;
+  hideConfirmPassword = true;
+  passwordMismatch = false;
 
   constructor(
     private fb: FormBuilder,
@@ -27,7 +32,12 @@ export class RegisterComponent implements OnInit {
       password: ['', [Validators.required, Validators.minLength(6)]],
       confirmPassword: ['', [Validators.required]],
       fullName: ['', [Validators.required]],
-      phoneNumber: ['', [Validators.required]]
+      phoneNumber: ['', [Validators.required]],
+      acceptTerms: [false, [Validators.requiredTrue]]
+    });
+
+    this.registerForm.valueChanges.subscribe(() => {
+      this.passwordMismatch = false;
     });
   }
 
@@ -55,15 +65,30 @@ export class RegisterComponent implements OnInit {
     return this.registerForm.get('phoneNumber');
   }
 
+  get acceptTerms() {
+    return this.registerForm.get('acceptTerms');
+  }
+
+  togglePassword(): void {
+    this.hidePassword = !this.hidePassword;
+  }
+
+  toggleConfirmPassword(): void {
+    this.hideConfirmPassword = !this.hideConfirmPassword;
+  }
+
   onSubmit(): void {
+    this.submitted = true;
+    this.errorMessage = '';
+
     if (this.registerForm.invalid) {
-      this.registerForm.markAllAsTouched();
       this.toastr.warning('Vui lòng điền đầy đủ thông tin hợp lệ', 'Thiếu thông tin');
       return;
     }
 
     const { password, confirmPassword } = this.registerForm.value;
     if (password !== confirmPassword) {
+      this.passwordMismatch = true;
       this.toastr.error('Mật khẩu xác nhận không khớp', 'Lỗi xác nhận');
       return;
     }
@@ -79,6 +104,7 @@ export class RegisterComponent implements OnInit {
     delete request.fullName;
     delete request.phoneNumber;
     delete request.confirmPassword;
+    delete request.acceptTerms;
 
     this.authService.register(request).subscribe({
       next: (response) => {
@@ -88,7 +114,8 @@ export class RegisterComponent implements OnInit {
       },
       error: (error) => {
         this.isLoading = false;
-        this.toastr.error(error.error?.message || 'Đăng ký thất bại', 'Lỗi');
+        this.errorMessage = error.error?.message || 'Đăng ký thất bại';
+        this.toastr.error(this.errorMessage, 'Lỗi');
       }
     });
   }

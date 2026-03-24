@@ -5,46 +5,50 @@
       <div class="logo-text">WMS Portal</div>
     </div>
 
-    <h1 class="auth-title">Create an account</h1>
+    <h1 class="auth-title">Tạo tài khoản mới</h1>
     <p class="auth-subtitle">
-      Already have an account?
-      <a routerLink="/login">Sign in</a>
+      Đã có tài khoản?
+      <a routerLink="/login">Đăng nhập ngay</a>
     </p>
 
     <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
-      <!-- USERNAME -->
-      <div class="form-group">
-        <label class="form-label" for="username">Username</label>
-        <input
-          id="username"
-          type="text"
-          class="form-input"
-          formControlName="username"
-          placeholder="Enter your username"
-          [class.is-invalid]="username?.touched && username?.invalid"
-        />
-        <div class="error-text" *ngIf="username?.touched && username?.invalid">
-          <span *ngIf="username?.errors?.['required']">Username is required</span>
-          <span *ngIf="username?.errors?.['minlength']">Username must be at least 3 characters</span>
-        </div>
+      <div *ngIf="errorMessage" class="error-message">
+        {{ errorMessage }}
       </div>
 
       <!-- FULL NAME -->
       <div class="form-group">
-        <label class="form-label" for="fullName">Full Name</label>
+        <label class="form-label" for="fullName">Họ và tên</label>
         <input
           id="fullName"
           type="text"
           class="form-input"
           formControlName="fullName"
-          placeholder="Enter your full name"
-          [class.is-invalid]="fullName?.touched && fullName?.invalid"
+          placeholder="Nhập họ và tên của bạn"
+          [class.is-invalid]="submitted && fullName?.invalid"
         />
-        <div class="error-text" *ngIf="fullName?.touched && fullName?.invalid">
-          <span *ngIf="fullName?.errors?.['required']">Full name is required</span>
+        <div class="error-text" *ngIf="submitted && fullName?.invalid">
+          <span *ngIf="fullName?.errors?.['required']">Họ và tên là bắt buộc</span>
         </div>
       </div>
-      
+
+      <!-- USERNAME -->
+      <div class="form-group">
+        <label class="form-label" for="username">Tên đăng nhập</label>
+        <input
+          id="username"
+          type="text"
+          class="form-input"
+          formControlName="username"
+          placeholder="Nhập tên đăng nhập"
+          [class.is-invalid]="submitted && username?.invalid"
+        />
+        <div class="error-text" *ngIf="submitted && username?.invalid">
+          <span *ngIf="username?.errors?.['required']">Tên đăng nhập là bắt buộc</span>
+          <span *ngIf="username?.errors?.['minlength']">Tên đăng nhập phải có ít nhất 3 ký tự</span>
+        </div>
+      </div>
+
       <!-- EMAIL -->
       <div class="form-group">
         <label class="form-label" for="email">Email</label>
@@ -53,71 +57,117 @@
           type="email"
           class="form-input"
           formControlName="email"
-          placeholder="Enter your email"
-          [class.is-invalid]="email?.touched && email?.invalid"
+          placeholder="Nhập địa chỉ email"
+          [class.is-invalid]="submitted && email?.invalid"
         />
-        <div class="error-text" *ngIf="email?.touched && email?.invalid">
-          <span *ngIf="email?.errors?.['required']">Email is required</span>
-          <span *ngIf="email?.errors?.['email']">Invalid email format</span>
+        <div class="error-text" *ngIf="submitted && email?.invalid">
+          <span *ngIf="email?.errors?.['required']">Email là bắt buộc</span>
+          <span *ngIf="email?.errors?.['email']">Định dạng email không hợp lệ</span>
         </div>
       </div>
 
       <!-- PHONE NUMBER -->
       <div class="form-group">
-        <label class="form-label" for="phoneNumber">Phone Number</label>
+        <label class="form-label" for="phoneNumber">Số điện thoại</label>
         <input
           id="phoneNumber"
           type="text"
           class="form-input"
           formControlName="phoneNumber"
-          placeholder="Enter your phone number"
-          [class.is-invalid]="phoneNumber?.touched && phoneNumber?.invalid"
+          placeholder="Nhập số điện thoại"
+          [class.is-invalid]="submitted && phoneNumber?.invalid"
         />
-        <div class="error-text" *ngIf="phoneNumber?.touched && phoneNumber?.invalid">
-          <span *ngIf="phoneNumber?.errors?.['required']">Phone number is required</span>
+        <div class="error-text" *ngIf="submitted && phoneNumber?.invalid">
+          <span *ngIf="phoneNumber?.errors?.['required']">Số điện thoại là bắt buộc</span>
         </div>
       </div>
 
       <!-- PASSWORD -->
       <div class="form-group">
-        <label class="form-label" for="password">Password</label>
-        <input
-          id="password"
-          type="password"
-          class="form-input"
-          formControlName="password"
-          placeholder="••••••••"
-          [class.is-invalid]="password?.touched && password?.invalid"
-        />
-        <div class="error-text" *ngIf="password?.touched && password?.invalid">
-          <span *ngIf="password?.errors?.['required']">Password is required</span>
-          <span *ngIf="password?.errors?.['minlength']">Password must be at least 6 characters</span>
+        <label class="form-label" for="password">Mật khẩu</label>
+        <div class="form-input-wrapper">
+          <input
+            id="password"
+            class="form-input"
+            formControlName="password"
+            [type]="hidePassword ? 'password' : 'text'"
+            placeholder="••••••••"
+            [class.is-invalid]="submitted && password?.invalid"
+          />
+          <button
+            type="button"
+            class="toggle-password"
+            (click)="togglePassword()"
+          >
+            <i *ngIf="hidePassword" class="fa-regular fa-eye" aria-hidden="true"></i>
+            <i *ngIf="!hidePassword" class="fa-regular fa-eye-slash" aria-hidden="true"></i>
+          </button>
+        </div>
+        <div class="error-text" *ngIf="submitted && password?.invalid">
+          <span *ngIf="password?.errors?.['required']">Mật khẩu là bắt buộc</span>
+          <span *ngIf="password?.errors?.['minlength']">Mật khẩu phải có ít nhất 6 ký tự</span>
         </div>
       </div>
 
       <!-- CONFIRM PASSWORD -->
       <div class="form-group">
-        <label class="form-label" for="confirmPassword">Confirm Password</label>
-        <input
-          id="confirmPassword"
-          type="password"
-          class="form-input"
-          formControlName="confirmPassword"
-          placeholder="••••••••"
-          [class.is-invalid]="confirmPassword?.touched && confirmPassword?.invalid"
-        />
-        <div class="error-text" *ngIf="confirmPassword?.touched && confirmPassword?.invalid">
-          <span *ngIf="confirmPassword?.errors?.['required']">Confirm password is required</span>
+        <label class="form-label" for="confirmPassword">Xác nhận mật khẩu</label>
+        <div class="form-input-wrapper">
+          <input
+            id="confirmPassword"
+            class="form-input"
+            formControlName="confirmPassword"
+            [type]="hideConfirmPassword ? 'password' : 'text'"
+            placeholder="••••••••"
+            [class.is-invalid]="submitted && confirmPassword?.invalid"
+          />
+          <button
+            type="button"
+            class="toggle-password"
+            (click)="toggleConfirmPassword()"
+          >
+            <i *ngIf="hideConfirmPassword" class="fa-regular fa-eye" aria-hidden="true"></i>
+            <i *ngIf="!hideConfirmPassword" class="fa-regular fa-eye-slash" aria-hidden="true"></i>
+          </button>
         </div>
-        <div class="error-text" *ngIf="registerForm.errors?.['passwordMismatch'] && (confirmPassword?.touched)">
-          Passwords do not match.
+        <div class="error-text" *ngIf="submitted && confirmPassword?.invalid">
+          <span *ngIf="confirmPassword?.errors?.['required']">Xác nhận mật khẩu là bắt buộc</span>
         </div>
+        <div class="error-text" *ngIf="passwordMismatch">
+          Mật khẩu xác nhận không khớp
+        </div>
+      </div>
+
+      <!-- TERMS -->
+      <div class="extra-row">
+        <label class="checkbox">
+          <input type="checkbox" formControlName="acceptTerms" />
+          <span>Tôi đồng ý với <a href="#">Điều khoản sử dụng</a></span>
+        </label>
       </div>
 
       <!-- SUBMIT -->
       <button class="btn-primary" type="submit" [disabled]="isLoading">
-        <span *ngIf="!isLoading">Create account</span>
+        <span *ngIf="!isLoading">Tạo tài khoản</span>
         <i *ngIf="isLoading" class="loading-spinner fa-solid fa-rotate" aria-hidden="true"></i>
+      </button>
+
+      <!-- DIVIDER -->
+      <div class="divider">
+        <div class="divider-line"></div>
+        <span>HOẶC</span>
+        <div class="divider-line"></div>
+      </div>
+
+      <!-- SOCIAL BUTTONS -->
+      <button type="button" class="btn-social btn-google">
+        <i class="fa-brands fa-google"></i>
+        <span>Đăng ký với Google</span>
+      </button>
+
+      <button type="button" class="btn-social btn-facebook">
+        <i class="fa-brands fa-facebook"></i>
+        <span>Đăng ký với Facebook</span>
       </button>
     </form>
   </div>
@@ -125,29 +175,30 @@
   <div class="auth-right">
     <div class="auth-right-inner">
       <div class="support-top">
-        <span>Support</span>
+        <span>Hỗ trợ</span>
         <div class="support-pill">?</div>
       </div>
 
       <div class="hero-card">
         <div>
-          <h3 class="hero-text-title">Manage your warehouse smarter</h3>
+          <h3 class="hero-text-title">Quản lý kho hàng thông minh</h3>
           <p class="hero-text-desc">
-            Control receiving, putaway, picking, packing and dispatch in one WMS
-            dashboard. Real-time visibility, fewer mistakes, faster operations.
+            Kiểm soát việc nhận hàng, sắp xếp, chọn hàng, đóng gói và xuất hàng 
+            trong một hệ thống WMS duy nhất. Theo dõi thời gian thực, ít sai sót, 
+            vận hành nhanh chóng.
           </p>
-          <button class="btn-secondary">Explore WMS features</button>
+          <button class="btn-secondary" routerLink="/home">Khám phá WMS</button>
         </div>
         <div class="hero-image-wrapper">
           <div class="hero-image">
             <img src="assets/images/whs-login.jpg" alt="Warehouse Management System" />
             <div class="metrics">
               <span>
-                Today
-                <strong>+124 orders</strong>
+                Hôm nay
+                <strong>+124 đơn</strong>
               </span>
               <span>
-                Accuracy
+                Độ chính xác
                 <strong>99.7%</strong>
               </span>
             </div>
@@ -156,21 +207,21 @@
       </div>
 
       <div>
-        <h2 class="section-title">Introducing WMS workflows</h2>
+        <h2 class="section-title">Giới thiệu quy trình WMS</h2>
         <p class="section-body">
-          From receiving to dispatch, automate every step in your warehouse.
-          Track pallets, optimize picking routes and keep inventory always up to date.
+          Từ nhận hàng đến xuất hàng, tự động hóa mọi bước trong kho của bạn.
+          Theo dõi pallet, tối ưu lộ trình chọn hàng và luôn cập nhật tồn kho.
         </p>
 
         <div class="feature-tags">
-          <span class="feature-tag">Receiving</span>
-          <span class="feature-tag">Putaway</span>
-          <span class="feature-tag">Picking</span>
-          <span class="feature-tag">Packing</span>
-          <span class="feature-tag">Loading</span>
-          <span class="feature-tag">Stocktaking</span>
-          <span class="feature-tag">Replenishment</span>
-          <span class="feature-tag">Reporting</span>
+          <span class="feature-tag">Nhận hàng</span>
+          <span class="feature-tag">Sắp xếp</span>
+          <span class="feature-tag">Chọn hàng</span>
+          <span class="feature-tag">Đóng gói</span>
+          <span class="feature-tag">Xuất hàng</span>
+          <span class="feature-tag">Kiểm kê</span>
+          <span class="feature-tag">Bổ sung</span>
+          <span class="feature-tag">Báo cáo</span>
         </div>
 
         <div class="carousel-dots">

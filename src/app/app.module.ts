@@ -7,6 +7,7 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { LoginComponent } from './authenticate/login/login.component';
 import { RegisterComponent } from './authenticate/register/register.component';
+import { LandingComponent } from './authenticate/landing/landing.component';
 import { HttpClientModule, HTTP_INTERCEPTORS } from "@angular/common/http";
 import { ReactiveFormsModule, FormsModule } from "@angular/forms";
 import { ToastrModule } from 'ngx-toastr';
@@ -43,12 +44,15 @@ import { SettingsComponent } from './pages/account/settings/settings.component';
 import { ForgotPasswordComponent } from './pages/account/forgot-password/forgot-password.component';
 import { VerifyOtpComponent } from './pages/account/verify-otp/verify-otp.component';
 import { ResetPasswordComponent } from './pages/account/reset-password/reset-password.component';
+// ── RBAC ───────────────────────────────────────────────────────
+import { RbacComponent } from './pages/rbac/rbac.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     LoginComponent,
     RegisterComponent,
+    LandingComponent,
     ToastrComponent,
     DashboardComponent,
     SidebarComponent,
@@ -82,6 +86,8 @@ import { ResetPasswordComponent } from './pages/account/reset-password/reset-pas
     ForgotPasswordComponent,
     VerifyOtpComponent,
     ResetPasswordComponent,
+    // ── RBAC ─────────────────────────────────────────────────────
+    RbacComponent,
   ],
   imports: [
     BrowserModule,

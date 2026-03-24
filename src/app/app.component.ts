@@ -18,7 +18,8 @@ export class AppComponent implements OnInit {
     '/register',
     '/forgot-password',
     '/verify-otp',
-    '/reset-password'
+    '/reset-password',
+    '/home'
   ];
 
   constructor(
@@ -40,10 +41,17 @@ export class AppComponent implements OnInit {
 
   private updateLayoutVisibility(): void {
     const currentUrl = this.router.url;
+    const path = currentUrl.split('?')[0].split('#')[0];
+
+    // Hide layout for landing page (root URL or hash routes)
+    if (path === '/' || currentUrl.startsWith('/#') || currentUrl === '/home') {
+      this.showLayout = false;
+      return;
+    }
 
     // Hide layout for public auth routes
     const isRouteWithoutLayout = this.routesWithoutLayout.some(route =>
-      currentUrl.includes(route)
+      path === route
     );
 
     if (isRouteWithoutLayout) {
@@ -59,7 +67,7 @@ export class AppComponent implements OnInit {
     }
 
     // Show layout for all other valid routes
-    this.showLayout = currentUrl !== '/';
+    this.showLayout = true;
   }
 
   private isNotFoundRoute(): boolean {

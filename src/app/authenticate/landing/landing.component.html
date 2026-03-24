@@ -1,0 +1,397 @@
+<div class="landing-wrapper">
+  <!-- HEADER / NAVBAR -->
+  <header class="landing-header">
+    <div class="header-container">
+      <div class="logo">
+        <div class="logo-icon">W</div>
+        <span class="logo-text">WMS Portal</span>
+      </div>
+      <nav class="nav-links">
+        <a href="#features">Tính năng</a>
+        <a href="#roadmap">Lộ trình phát triển</a>
+        <a href="#testimonials">Đánh giá</a>
+        <a href="#contact">Liên hệ</a>
+      </nav>
+      <div class="header-actions">
+        <button class="btn-login" (click)="goToLogin()">Đăng nhập</button>
+        <button class="btn-register" (click)="goToRegister()">Dùng thử miễn phí</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- HERO SECTION -->
+  <section class="hero-section">
+    <div class="hero-bg-effects">
+      <div class="hero-glow hero-glow-1"></div>
+      <div class="hero-glow hero-glow-2"></div>
+    </div>
+    <div class="hero-container">
+      <div class="hero-content">
+        <div class="hero-badge">
+          <i class="fa-solid fa-sparkles"></i>
+          <span>Hệ thống quản lý kho hàng hàng đầu</span>
+        </div>
+        <h1 class="hero-title">
+          Quản lý kho hàng<br/>
+          <span class="hero-title-accent">Thông minh & Hiệu quả</span>
+        </h1>
+        <p class="hero-description">
+          WMS Portal giúp doanh nghiệp tối ưu hóa quy trình kho hàng, 
+          giảm thiểu sai sót và tăng năng suất vận hành lên đến 40%.
+        </p>
+        <div class="hero-actions">
+          <button class="btn-primary-hero" (click)="goToLogin()">
+            <span>Bắt đầu ngay</span>
+            <i class="fa-solid fa-arrow-right"></i>
+          </button>
+          <button class="btn-secondary-hero" (click)="goToRegister()">
+            <i class="fa-solid fa-gift"></i>
+            <span>Dùng thử miễn phí</span>
+          </button>
+        </div>
+        <div class="hero-trust">
+          <span>Được tin tưởng bởi</span>
+          <div class="trust-logos">
+            <div class="trust-logo">
+              <i class="fa-solid fa-building"></i>
+              <span>500+ DN</span>
+            </div>
+            <div class="trust-divider"></div>
+            <div class="trust-logo">
+              <i class="fa-solid fa-users"></i>
+              <span>10K+ User</span>
+            </div>
+            <div class="trust-divider"></div>
+            <div class="trust-logo">
+              <i class="fa-solid fa-star" style="color: #facc15;"></i>
+              <span>4.9/5 Rating</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="hero-visual">
+        <div class="hero-dashboard-preview">
+          <div class="dashboard-header">
+            <div class="dashboard-dots">
+              <span></span><span></span><span></span>
+            </div>
+            <div class="dashboard-title">WMS Dashboard</div>
+          </div>
+          <div class="dashboard-content">
+            <div class="dashboard-stats">
+              <div class="mini-stat">
+                <div class="mini-stat-icon" style="background: rgba(16, 185, 129, 0.15);">
+                  <i class="fa-solid fa-boxes-stacked" style="color: #16a34a;"></i>
+                </div>
+                <div class="mini-stat-info">
+                  <span class="mini-stat-value">12,847</span>
+                  <span class="mini-stat-label">Tồn kho</span>
+                </div>
+              </div>
+              <div class="mini-stat">
+                <div class="mini-stat-icon" style="background: rgba(59, 130, 246, 0.15);">
+                  <i class="fa-solid fa-arrow-trend-up" style="color: #3b82f6;"></i>
+                </div>
+                <div class="mini-stat-info">
+                  <span class="mini-stat-value">+1,234</span>
+                  <span class="mini-stat-label">Nhập kho</span>
+                </div>
+              </div>
+              <div class="mini-stat">
+                <div class="mini-stat-icon" style="background: rgba(245, 158, 11, 0.15);">
+                  <i class="fa-solid fa-arrow-trend-down" style="color: #f59e0b;"></i>
+                </div>
+                <div class="mini-stat-info">
+                  <span class="mini-stat-value">-856</span>
+                  <span class="mini-stat-label">Xuất kho</span>
+                </div>
+              </div>
+            </div>
+            <div class="dashboard-chart-placeholder">
+              <div class="chart-bars">
+                <div class="chart-bar" style="height: 40%;"></div>
+                <div class="chart-bar" style="height: 60%;"></div>
+                <div class="chart-bar" style="height: 45%;"></div>
+                <div class="chart-bar" style="height: 80%;"></div>
+                <div class="chart-bar" style="height: 55%;"></div>
+                <div class="chart-bar" style="height: 70%;"></div>
+                <div class="chart-bar" style="height: 90%;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="hero-float-card float-card-1">
+          <i class="fa-solid fa-check-circle"></i>
+          <span>Đơn hàng hoàn thành</span>
+        </div>
+        <div class="hero-float-card float-card-2">
+          <i class="fa-solid fa-clock"></i>
+          <div class="float-card-content">
+            <strong>98%</strong>
+            <span>On-time delivery</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STATS SECTION -->
+  <section class="stats-section">
+    <div class="stats-container">
+      <div class="stat-item" *ngFor="let stat of stats">
+        <div class="stat-icon">
+          <i class="{{ stat.icon }}"></i>
+        </div>
+        <div class="stat-value">{{ stat.value }}</div>
+        <div class="stat-label">{{ stat.label }}</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES SECTION -->
+  <section class="features-section" id="features">
+    <div class="section-container">
+      <div class="section-header">
+        <span class="section-badge">Tính năng</span>
+        <h2 class="section-title">Giải pháp toàn diện cho quản lý kho</h2>
+        <p class="section-subtitle">
+          WMS Portal cung cấp đầy đủ công cụ để bạn kiểm soát mọi hoạt động trong kho hàng,
+          từ nhập xuất đến báo cáo chi tiết.
+        </p>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card" *ngFor="let feature of features">
+          <div class="feature-icon">
+            <i class="fa-solid {{ feature.icon }}"></i>
+          </div>
+          <h3 class="feature-title">{{ feature.title }}</h3>
+          <p class="feature-description">{{ feature.description }}</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FUTURE MODULES / ROADMAP SECTION -->
+  <section class="roadmap-section" id="roadmap">
+    <div class="roadmap-bg">
+      <div class="section-container">
+        <div class="section-header light">
+          <span class="section-badge roadmap-badge">
+            <i class="fa-solid fa-rocket"></i>
+            Lộ trình phát triển
+          </span>
+          <h2 class="section-title">Hệ sinh thái doanh nghiệp toàn diện</h2>
+          <p class="section-subtitle">
+            WMS Portal không chỉ là hệ thống quản lý kho - chúng tôi đang xây dựng 
+            một hệ sinh thái ERP hoàn chỉnh cho doanh nghiệp của bạn.
+          </p>
+        </div>
+        <div class="roadmap-grid">
+          <div class="roadmap-card" *ngFor="let module of futureModules">
+            <div class="roadmap-icon">
+              <i class="fa-solid {{ module.icon }}"></i>
+            </div>
+            <div class="roadmap-content">
+              <h3>{{ module.title }}</h3>
+              <p>{{ module.description }}</p>
+            </div>
+            <div class="roadmap-badge">
+              <i class="fa-solid fa-spinner fa-spin"></i>
+              <span>Đang phát triển</span>
+            </div>
+          </div>
+        </div>
+        <div class="roadmap-cta">
+          <p>
+            <i class="fa-solid fa-lightbulb"></i>
+            Đăng ký ngay để được cập nhật sớm nhất các tính năng mới!
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TESTIMONIALS SECTION -->
+  <section class="testimonials-section" id="testimonials">
+    <div class="section-container">
+      <div class="section-header">
+        <span class="section-badge">Đánh giá</span>
+        <h2 class="section-title">Khách hàng nói gì về chúng tôi</h2>
+        <p class="section-subtitle">
+          Hàng trăm doanh nghiệp đã tin tưởng và sử dụng WMS Portal 
+          để tối ưu hóa hoạt động kho hàng của mình.
+        </p>
+      </div>
+      <div class="testimonials-grid">
+        <div class="testimonial-card" *ngFor="let testimonial of testimonials">
+          <div class="testimonial-rating">
+            <i class="fa-solid fa-star" *ngFor="let star of [1,2,3,4,5]"></i>
+          </div>
+          <p class="testimonial-content">"{{ testimonial.content }}"</p>
+          <div class="testimonial-author">
+            <div class="author-avatar">{{ testimonial.avatar }}</div>
+            <div class="author-info">
+              <strong>{{ testimonial.name }}</strong>
+              <span>{{ testimonial.role }}</span>
+              <span class="company">{{ testimonial.company }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA SECTION -->
+  <section class="cta-section" id="contact">
+    <div class="cta-container">
+      <div class="cta-bg-effects">
+        <div class="cta-glow cta-glow-1"></div>
+        <div class="cta-glow cta-glow-2"></div>
+      </div>
+      <div class="cta-content">
+        <h2 class="cta-title">Sẵn sàng để bắt đầu?</h2>
+        <p class="cta-subtitle">
+          Đăng ký ngay hôm nay và trải nghiệm hệ thống quản lý kho hàng thông minh.
+          Dùng thử miễn phí 30 ngày, không cần thẻ tín dụng.
+        </p>
+        <div class="cta-actions">
+          <button class="btn-cta-primary" (click)="goToLogin()">
+            <i class="fa-solid fa-rocket"></i>
+            <span>Bắt đầu miễn phí</span>
+          </button>
+          <button class="btn-cta-secondary">
+            <i class="fa-solid fa-phone"></i>
+            <span>Liên hệ tư vấn</span>
+          </button>
+        </div>
+        <div class="cta-features">
+          <span><i class="fa-solid fa-check"></i> Không cần thẻ tín dụng</span>
+          <span><i class="fa-solid fa-check"></i> Setup trong 5 phút</span>
+          <span><i class="fa-solid fa-check"></i> Hỗ trợ 24/7</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="landing-footer">
+    <div class="footer-container">
+      <div class="footer-top">
+        <div class="footer-main">
+          <!-- Brand & Newsletter -->
+          <div class="footer-brand">
+            <div class="logo">
+              <div class="logo-icon">W</div>
+              <span class="logo-text">WMS Portal</span>
+            </div>
+            <p class="footer-brand-desc">
+              Hệ thống quản lý kho hàng thông minh, 
+              giúp doanh nghiệp tối ưu hóa vận hành và tăng trưởng bền vững.
+            </p>
+            <div class="footer-social">
+              <a href="#" class="facebook"><i class="fa-brands fa-facebook-f"></i></a>
+              <a href="#"><i class="fa-brands fa-linkedin-in"></i></a>
+              <a href="#" class="youtube"><i class="fa-brands fa-youtube"></i></a>
+              <a href="#"><i class="fa-brands fa-github"></i></a>
+            </div>
+            <div class="footer-newsletter">
+              <h4>Đăng ký nhận tin</h4>
+              <p>Nhận thông tin cập nhật và ưu đãi mới nhất</p>
+              <div class="newsletter-form">
+                <input type="email" placeholder="Nhập email của bạn">
+                <button type="button"><i class="fa-solid fa-paper-plane"></i></button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Product Links -->
+          <div class="footer-column">
+            <h4>Sản phẩm</h4>
+            <ul>
+              <li><a href="#features">Tính năng</a></li>
+              <li><a href="#roadmap">Lộ trình phát triển</a></li>
+              <li><a href="#testimonials">Đánh giá</a></li>
+              <li><a href="#">Bảng giá</a></li>
+              <li><a href="#">Tích hợp</a></li>
+            </ul>
+          </div>
+          
+          <!-- Support Links -->
+          <div class="footer-column">
+            <h4>Hỗ trợ</h4>
+            <ul>
+              <li><a href="#">Trung tâm trợ giúp</a></li>
+              <li><a href="#">Tài liệu API</a></li>
+              <li><a href="#">Hướng dẫn sử dụng</a></li>
+              <li><a href="#">Điều khoản sử dụng</a></li>
+              <li><a href="#">Chính sách bảo mật</a></li>
+            </ul>
+          </div>
+          
+          <!-- Contact Info -->
+          <div class="footer-column">
+            <h4>Liên hệ</h4>
+            <div class="footer-contact-item">
+              <i class="fa-solid fa-envelope"></i>
+              <div class="contact-info">
+                <span class="contact-label">Email</span>
+                <span class="contact-value">contact@wms-portal.com</span>
+              </div>
+            </div>
+            <div class="footer-contact-item">
+              <i class="fa-solid fa-phone"></i>
+              <div class="contact-info">
+                <span class="contact-label">Hotline</span>
+                <span class="contact-value">(028) 1234-5678</span>
+              </div>
+            </div>
+            <div class="footer-contact-item">
+              <i class="fa-solid fa-location-dot"></i>
+              <div class="contact-info">
+                <span class="contact-label">Địa chỉ</span>
+                <span class="contact-value">123 Nguyễn Huệ, Q.1, TP.HCM</span>
+              </div>
+            </div>
+            <div class="footer-contact-item">
+              <i class="fa-solid fa-clock"></i>
+              <div class="contact-info">
+                <span class="contact-label">Giờ làm việc</span>
+                <span class="contact-value">T2-T6: 8:00 - 18:00</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Footer Bottom -->
+      <div class="footer-bottom">
+        <p>&copy; 2024 WMS Portal. All rights reserved.</p>
+        <div class="footer-bottom-right">
+          <div class="footer-bottom-links">
+            <a href="#">Điều khoản</a>
+            <a href="#">Bảo mật</a>
+            <a href="#">Sitemap</a>
+          </div>
+          <p>Made with <i class="fa-solid fa-heart footer-heart"></i> in Vietnam</p>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Back to Top Button -->
+    <button class="footer-back-top" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">
+      <i class="fa-solid fa-arrow-up"></i>
+    </button>
+  </footer>
+  
+  <!-- Back to Top Script -->
+  <script>
+    window.addEventListener('scroll', function() {
+      const btn = document.querySelector('.footer-back-top');
+      if (window.scrollY > 500) {
+        btn.classList.add('visible');
+      } else {
+        btn.classList.remove('visible');
+      }
+    });
+  </script>
+</div>

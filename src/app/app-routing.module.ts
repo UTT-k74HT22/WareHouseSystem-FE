@@ -2,6 +2,7 @@ import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { LoginComponent } from './authenticate/login/login.component';
 import { RegisterComponent } from './authenticate/register/register.component';
+import { LandingComponent } from './authenticate/landing/landing.component';
 import { DashboardComponent } from './pages/dashboard/dashboard.component';
 import { WarehouseComponent } from './pages/warehouse/warehouse.component';
 import { LocationComponent } from './pages/location/location/location.component';
@@ -26,12 +27,16 @@ import { SettingsComponent } from './pages/account/settings/settings.component';
 import { VerifyOtpComponent } from './pages/account/verify-otp/verify-otp.component';
 import { AuthGuard } from './security/guards/auth.guard';
 import { GuestGuard } from './security/guards/guest.guard';
+import { RbacComponent } from './pages/rbac/rbac.component';
 
 const routes: Routes = [
   {
     path: '',
-    redirectTo: 'login',
-    pathMatch: 'full'
+    component: LandingComponent
+  },
+  {
+    path: 'home',
+    component: LandingComponent
   },
 
   // ── Public Routes (Guest Only) ──────────────────────
@@ -221,6 +226,16 @@ const routes: Routes = [
     data: {
       title: 'Nhân viên',
       subtitle: 'Quản lý thông tin nhân viên'
+    }
+  },
+  // ── RBAC ────────────────────────────────────────
+  {
+    path: 'rbac',
+    component: RbacComponent,
+    canActivate: [AuthGuard],
+    data: {
+      title: 'Phân quyền',
+      subtitle: 'Quản lý quyền và vai trò'
     }
   },
 
