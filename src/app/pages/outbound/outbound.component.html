@@ -215,54 +215,115 @@
       <button class="modal-close" (click)="closeAllModals()">✕</button>
     </div>
     <div class="modal-body" *ngIf="selectedShipment">
+      <!-- Status Stepper (Final Fix for Icons) -->
+      <div class="stepper-container" *ngIf="getShipmentStatus(selectedShipment) !== 'CANCELLED'">
+        <!-- Bước 1: Dự thảo -->
+        <div class="step-item" 
+             [class.active]="getShipmentStep() === 1" 
+             [class.completed]="getShipmentStep() > 1">
+          <div class="step-circle"><i class="fas fa-file-alt"></i></div>
+          <span class="step-label">Dự thảo</span>
+        </div>
+
+        <div class="step-line" [class.filled]="getShipmentStep() > 1"></div>
+
+        <!-- Bước 2: Picking -->
+        <div class="step-item" 
+             [class.active]="getShipmentStep() === 2" 
+             [class.completed]="getShipmentStep() > 2">
+          <div class="step-circle"><i class="fas fa-dolly"></i></div>
+          <span class="step-label">Picking</span>
+        </div>
+
+        <div class="step-line" [class.filled]="getShipmentStep() > 2"></div>
+
+        <!-- Bước 3: Packing -->
+        <div class="step-item" 
+             [class.active]="getShipmentStep() === 3" 
+             [class.completed]="getShipmentStep() > 3">
+          <div class="step-circle"><i class="fas fa-box"></i></div>
+          <span class="step-label">Packing</span>
+        </div>
+
+        <div class="step-line" [class.filled]="getShipmentStep() > 3"></div>
+
+        <!-- Bước 4: Shipped -->
+        <div class="step-item" 
+             [class.active]="getShipmentStep() === 4" 
+             [class.completed]="getShipmentStep() > 4">
+          <div class="step-circle"><i class="fas fa-truck"></i></div>
+          <span class="step-label">Shipped</span>
+        </div>
+      </div>
+
       <div class="tab-container">
-        <button class="tab-btn" [class.active]="detailTab === 'header'" (click)="detailTab = 'header'">Thông tin chung</button>
-        <button class="tab-btn" [class.active]="detailTab === 'lines'" (click)="detailTab = 'lines'">Sản phẩm chi tiết</button>
+        <button class="tab-btn" [class.active]="detailTab === 'header'" (click)="detailTab = 'header'">Tổng quan</button>
+        <button class="tab-btn" [class.active]="detailTab === 'lines'" (click)="detailTab = 'lines'">Hàng hóa chi tiết</button>
       </div>
 
       <div class="tab-content" *ngIf="detailTab === 'header'">
-        <div class="status-banner" [ngClass]="getStatusClass(selectedShipment.status)">
-          Trạng thái: <strong>{{ getStatusLabel(selectedShipment.status) }}</strong>
+        <div class="flow-card" [ngClass]="getStatusClass(selectedShipment.status)">
+          <div class="flow-icon"><i class="fa-solid fa-circle-info"></i></div>
+          <div class="flow-body">
+            <h4 class="flow-title">{{ getFlowStepTitle() }}</h4>
+            <p class="flow-text">{{ getShipmentFlowLocationText() }}</p>
+          </div>
         </div>
-        <div class="status-banner badge-progress" *ngIf="getShipmentFlowLocationText()">
-          {{ getShipmentFlowLocationText() }}
-        </div>
-        <div class="detail-grid">
-          <div class="detail-item"><span class="detail-label">Số phiếu xuất:</span><span>{{ getShipmentNumber(selectedShipment) }}</span></div>
-          <div class="detail-item"><span class="detail-label">Đơn bán hàng:</span><span>{{ getSalesOrderDisplay(getSalesOrderId(selectedShipment)) }}</span></div>
-          <div class="detail-item"><span class="detail-label">Kho:</span><span>{{ getWarehouseName(getWarehouseId(selectedShipment)) }}</span></div>
-          <div class="detail-item"><span class="detail-label">Ngày xuất:</span><span>{{ getShipmentDate(selectedShipment) | date:'dd/MM/yyyy' }}</span></div>
-          <div class="detail-item"><span class="detail-label">Nhà vận chuyển:</span><span>{{ selectedShipment.carrier || '—' }}</span></div>
-          <div class="detail-item"><span class="detail-label">Mã vận đơn:</span><span>{{ getTrackingNumber(selectedShipment) || '—' }}</span></div>
+
+        <div class="detail-grid card-style">
+          <div class="detail-item"><span class="detail-label">Mã phiếu:</span><span class="detail-value-bold">{{ getShipmentNumber(selectedShipment) }}</span></div>
+          <div class="detail-item"><span class="detail-label">Đơn hàng:</span><span class="detail-value-bold text-primary">{{ getSalesOrderDisplay(getSalesOrderId(selectedShipment)) }}</span></div>
+          <div class="detail-item"><span class="detail-label">Kho xuất:</span><span>{{ getWarehouseName(getWarehouseId(selectedShipment)) }}</span></div>
+          <div class="detail-item"><span class="detail-label">Dự kiến xuất:</span><span>{{ getShipmentDate(selectedShipment) | date:'dd/MM/yyyy' }}</span></div>
+          <div class="detail-item"><span class="detail-label">Hãng vận chuyển:</span><span>{{ selectedShipment.carrier || 'Chưa cập nhật' }}</span></div>
+          <div class="detail-item"><span class="detail-label">Vận đơn (Tracking):</span><span class="text-info">{{ getTrackingNumber(selectedShipment) || 'Chưa có' }}</span></div>
           <div class="detail-item full-width"><span class="detail-label">Ghi chú:</span><span>{{ selectedShipment.notes || '—' }}</span></div>
         </div>
       </div>
 
       <div class="tab-content" *ngIf="detailTab === 'lines'">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Sản phẩm</th>
-              <th>SKU</th>
-              <th>Vị trí</th>
-              <th>Lô</th>
-              <th>Số lượng</th>
-              <th>Lấy hàng lúc</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let line of selectedShipment.lines; let idx = index">
-              <td>{{ idx + 1 }}</td>
-              <td>{{ getLineProductName(line) }}</td>
-              <td>{{ line.sku }}</td>
-              <td>{{ getLineLocationName(line) }}</td>
-              <td>{{ getLineBatchNumber(line) || '—' }}</td>
-              <td>{{ getLineQuantity(line) }}</td>
-              <td>{{ getLinePickedAt(line) ? (getLinePickedAt(line) | date:'dd/MM/yyyy HH:mm') : '—' }}</td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="table-container shadow-sm border-0">
+          <table class="data-table styled-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Sản phẩm</th>
+                <th>Thông tin kho</th>
+                <th class="text-center">Số lượng</th>
+                <th class="text-center">Trạng thái picking</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let line of selectedShipment.lines; let idx = index">
+                <td>{{ idx + 1 }}</td>
+                <td>
+                  <div class="product-cell">
+                    <div class="product-name">{{ getLineProductName(line) }}</div>
+                    <div class="product-sku">SKU: {{ line.sku }}</div>
+                  </div>
+                </td>
+                <td>
+                  <div class="location-cell">
+                    <div class="loc-item"><i class="fa-solid fa-location-dot"></i> {{ getLineLocationName(line) }}</div>
+                    <div class="batch-item" *ngIf="getLineBatchNumber(line)">Lô : <strong>{{ getLineBatchNumber(line) }}</strong></div>
+                  </div>
+                </td>
+                <td class="text-center">
+                  <span class="qty-badge">{{ getLineQuantity(line) }}</span>
+                </td>
+                <td>
+                  <div class="pick-status" *ngIf="getLinePickedAt(line)">
+                    <span class="badge badge-completed"><i class="fa-solid fa-check"></i> Đã lấy hàng</span>
+                    <small class="pick-time">{{ getLinePickedAt(line) | date:'HH:mm dd/MM/yyyy' }}</small>
+                  </div>
+                  <div class="pick-status" *ngIf="!getLinePickedAt(line)">
+                    <span class="badge badge-draft">Chờ nhặt</span>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
     <div class="modal-footer">

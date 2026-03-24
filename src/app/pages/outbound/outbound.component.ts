@@ -339,63 +339,109 @@ export class OutboundComponent implements OnInit {
   }
 
   startPicking(id: string): void {
+    this.loading = true;
     this.outboundService.startPicking(id).subscribe({
       next: (res) => {
         if (res.success) {
           this.toastr.success('Đã bắt đầu lấy hàng.');
-          this.syncSelectedShipment(res.data, true);
+          this.refreshDetail(id);
           this.loadShipments();
+        } else {
+          this.loading = false;
+          this.toastr.error(res.message || 'Không thể bắt đầu lấy hàng.');
         }
       },
       error: (error) => {
-        this.toastr.error(error?.error?.message || 'Không thể bắt đầu lấy hàng.');
+        this.loading = false;
+        const msg = error?.error?.message || 'Không thể bắt đầu lấy hàng.';
+        const code = error?.error?.errorCode ? ` [${error.error.errorCode}]` : '';
+        this.toastr.error(msg + code);
       }
     });
   }
 
   markAsPacked(id: string): void {
+    this.loading = true;
     this.outboundService.markAsPacked(id).subscribe({
       next: (res) => {
         if (res.success) {
           this.toastr.success('Đã hoàn tất đóng gói.');
-          this.syncSelectedShipment(res.data, true);
+          this.refreshDetail(id);
           this.loadShipments();
+        } else {
+          this.loading = false;
+          this.toastr.error(res.message || 'Không thể đóng gói.');
         }
       },
       error: (error) => {
-        this.toastr.error(error?.error?.message || 'Không thể chuyển sang trạng thái đã đóng gói.');
+        this.loading = false;
+        const msg = error?.error?.message || 'Không thể đóng gói.';
+        const code = error?.error?.errorCode ? ` [${error.error.errorCode}]` : '';
+        this.toastr.error(msg + code);
       }
     });
   }
 
   ship(id: string): void {
+    this.loading = true;
     this.outboundService.ship(id).subscribe({
       next: (res) => {
         if (res.success) {
           this.toastr.success('Xác nhận xuất kho thành công.');
-          this.syncSelectedShipment(res.data, true);
+          this.refreshDetail(id);
           this.loadShipments();
           this.loadConfirmedOrders();
+        } else {
+          this.loading = false;
+          this.toastr.error(res.message || 'Xuất kho thất bại.');
         }
       },
       error: (error) => {
-        this.toastr.error(error?.error?.message || 'Xuất kho thất bại.');
+        this.loading = false;
+        const msg = error?.error?.message || 'Xuất kho thất bại.';
+        const code = error?.error?.errorCode ? ` [${error.error.errorCode}]` : '';
+        this.toastr.error(msg + code);
       }
     });
   }
 
   cancelShipment(id: string): void {
+    this.loading = true;
     this.outboundService.cancel(id).subscribe({
       next: (res) => {
         if (res.success) {
           this.toastr.success('Hủy phiếu xuất thành công.');
-          this.syncSelectedShipment(res.data, true);
+          this.refreshDetail(id);
           this.loadShipments();
           this.loadConfirmedOrders();
+        } else {
+          this.loading = false;
         }
       },
       error: (error) => {
+        this.loading = false;
         this.toastr.error(error?.error?.message || 'Hủy phiếu xuất thất bại.');
+      }
+    });
+  }
+
+  refreshDetail(id: string): void {
+    forkJoin({
+      shipment: this.outboundService.getById(id),
+      lines: this.oblService.getByShipmentId(id)
+    }).subscribe({
+      next: ({ shipment: shipmentRes, lines: linesRes }) => {
+        if (shipmentRes.success) {
+          this.selectedShipment = {
+            ...shipmentRes.data,
+            lines: shipmentRes.data.lines || (linesRes.success ? linesRes.data : [])
+          };
+        }
+        this.loading = false;
+      },
+      error: (error) => {
+        this.loading = false;
+        this.toastr.error(error?.error?.message || 'Không thể cập nhật chi tiết phiếu xuất.');
       }
     });
   }
@@ -450,7 +496,7 @@ export class OutboundComponent implements OnInit {
   }
 
   getLineLocationName(line: OutboundShipmentLinesResponse): string {
-    return line.location_name || line.locationName || 'Chưa được gán bởi workflow';
+    return line.location_name || line.locationName || 'Thông tin sẽ được cập nhật sau khi bắt đầu lấy hàng';
   }
 
   getLineQuantity(line: OutboundShipmentLinesResponse): number {
@@ -523,24 +569,36 @@ export class OutboundComponent implements OnInit {
     return labels[status] || status;
   }
 
-  getShipmentFlowLocationText(): string {
-    if (!this.selectedShipment) {
-      return '';
-    }
-
+  getShipmentStep(): number {
+    if (!this.selectedShipment) return 0;
     const status = this.getShipmentStatus(this.selectedShipment);
-    if (status === OutboundShipmentStatus.DRAFT) {
-      return 'Vị trí và lô thực tế sẽ được backend gán khi bắt đầu lấy hàng.';
+    switch (status) {
+      case 'DRAFT': return 1;
+      case 'PICKING': return 2;
+      case 'PACKED': return 3;
+      case 'SHIPPED': return 4;
+      default: return 0;
     }
-    if (status === OutboundShipmentStatus.PICKING) {
-      return 'Các dòng đã được chuyển sang khu PICKING.';
+  }
+
+  getFlowStepTitle(): string {
+    const step = this.getShipmentStep();
+    switch (step) {
+      case 1: return 'Chờ bắt đầu soạn hàng';
+      case 2: return 'Đang thực hiện lấy hàng';
+      case 3: return 'Đang đóng gói hàng hóa';
+      case 4: return 'Đã hoàn tất xuất kho';
+      default: return 'Phiếu đã hủy';
     }
-    if (status === OutboundShipmentStatus.PACKED) {
-      return 'Các dòng đã được chuyển sang khu PACKING.';
-    }
-    if (status === OutboundShipmentStatus.SHIPPED) {
-      return 'Các dòng đã đi qua STAGING trước khi xuất kho.';
-    }
-    return '';
+  }
+
+  getShipmentFlowLocationText(): string {
+    if (!this.selectedShipment) return '';
+    const status = this.getShipmentStatus(this.selectedShipment);
+    if (status === 'DRAFT') return 'Hàng đang nằm tại các vị trí lưu kho (STORAGE).';
+    if (status === 'PICKING') return 'Hàng đang được tập kết tại khu vực soạn hàng (PICKING).';
+    if (status === 'PACKED') return 'Hàng đã được chuyển đến bàn đóng gói (PACKING).';
+    if (status === 'SHIPPED') return 'Hàng đã rời khỏi khu vực chờ xuất (STAGING).';
+    return 'Quy trình đã dừng.';
   }
 }
