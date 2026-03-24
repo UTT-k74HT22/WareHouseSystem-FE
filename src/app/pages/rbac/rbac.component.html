@@ -1,0 +1,345 @@
+<div class="page-container">
+
+  <div class="page-hero">
+    <div class="hero-left">
+      <div class="hero-accent"></div>
+      <div class="hero-text">
+        <h1 class="hero-title"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> Phân quyền</h1>
+        <p class="hero-subtitle">Quản lý quyền truy cập và vai trò người dùng</p>
+      </div>
+    </div>
+    <div class="hero-actions">
+      <button class="btn btn-primary" (click)="activeTab === 'permissions' ? openCreatePermModal() : openCreateRoleModal()">
+        + Thêm {{ activeTab === 'permissions' ? 'Permission' : 'Role' }}
+      </button>
+    </div>
+  </div>
+
+  <div class="tabs-container">
+    <button class="tab-btn" [class.active]="activeTab === 'permissions'" (click)="switchTab('permissions')">
+      <i class="fa-solid fa-key" aria-hidden="true"></i> Permissions
+    </button>
+    <button class="tab-btn" [class.active]="activeTab === 'roles'" (click)="switchTab('roles')">
+      <i class="fa-solid fa-user-shield" aria-hidden="true"></i> Roles
+    </button>
+  </div>
+
+  <div class="stats-grid" *ngIf="!loading && activeTab === 'permissions'">
+    <div class="stat-item stat-total">
+      <div class="stat-bar"></div>
+      <div class="stat-body">
+        <div class="stat-label">Tổng permissions</div>
+        <div class="stat-value">{{ totalElements }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="stats-grid" *ngIf="!loading && activeTab === 'roles'">
+    <div class="stat-item stat-total">
+      <div class="stat-bar"></div>
+      <div class="stat-body">
+        <div class="stat-label">Tổng roles</div>
+        <div class="stat-value">{{ totalElements }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="filter-section">
+    <input class="search-input" type="text" [(ngModel)]="searchKeyword"
+           placeholder="Tìm kiếm..." (keyup.enter)="onSearch()" />
+    <select class="filter-select" [(ngModel)]="selectedResource" *ngIf="activeTab === 'permissions'">
+      <option value="">-- Tất cả resource --</option>
+      <option *ngFor="let r of resources" [value]="r">{{ r }}</option>
+    </select>
+    <select class="filter-select" [(ngModel)]="selectedAction" *ngIf="activeTab === 'permissions'">
+      <option value="">-- Tất cả action --</option>
+      <option value="GET">GET</option>
+      <option value="POST">POST</option>
+      <option value="PUT">PUT</option>
+      <option value="DELETE">DELETE</option>
+    </select>
+    <button class="btn btn-primary" (click)="onSearch()"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i> Tìm kiếm</button>
+    <button class="btn btn-ghost" (click)="onResetFilter()"><i class="fa-solid fa-rotate-right" aria-hidden="true"></i> Reset</button>
+  </div>
+
+  <div class="loading-state" *ngIf="loading"><span>Đang tải dữ liệu...</span></div>
+
+  <!-- PERMISSIONS TABLE -->
+  <div class="table-container" *ngIf="!loading && activeTab === 'permissions'">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Mã</th>
+          <th>Tên</th>
+          <th>Resource</th>
+          <th>Action</th>
+          <th>Mô tả</th>
+          <th>Thao tác</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let perm of permissions; let i = index">
+          <td>{{ currentPage * pageSize + i + 1 }}</td>
+          <td><code>{{ perm.code }}</code></td>
+          <td>{{ perm.name }}</td>
+          <td><span class="badge badge-resource">{{ perm.resource }}</span></td>
+          <td><span class="badge" [ngClass]="'badge-action-' + perm.action.toLowerCase()">{{ perm.action }}</span></td>
+          <td>{{ perm.description ?? '—' }}</td>
+          <td class="actions">
+            <button class="btn-icon btn-edit" (click)="openEditPermModal(perm)"><i class="fa-regular fa-pen-to-square" aria-hidden="true"></i></button>
+            <button class="btn-icon btn-delete" (click)="openDeletePermConfirm(perm)"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></button>
+          </td>
+        </tr>
+        <tr *ngIf="permissions.length === 0">
+          <td colspan="7" class="empty-state">Không có permission nào</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ROLES TABLE -->
+  <div class="table-container" *ngIf="!loading && activeTab === 'roles'">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Mã</th>
+          <th>Tên role</th>
+          <th>Mô tả</th>
+          <th>Default</th>
+          <th>Permissions</th>
+          <th>Users</th>
+          <th>Thao tác</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let role of roles; let i = index">
+          <td>{{ currentPage * pageSize + i + 1 }}</td>
+          <td><code>{{ role.code }}</code></td>
+          <td>{{ role.name }}</td>
+          <td>{{ role.description ?? '—' }}</td>
+          <td>
+            <span class="badge" [ngClass]="role.is_default ? 'badge-active' : 'badge-inactive'">
+              {{ role.is_default ? 'Default' : '—' }}
+            </span>
+          </td>
+          <td>{{ role.permission_count ?? 0 }}</td>
+          <td>{{ role.user_count ?? 0 }}</td>
+          <td class="actions">
+            <button class="btn-icon btn-view" (click)="openAssignPermModal(role)" title="Gán permissions">
+              <i class="fa-solid fa-key" aria-hidden="true"></i>
+            </button>
+            <button class="btn-icon btn-edit" (click)="openEditRoleModal(role)"><i class="fa-regular fa-pen-to-square" aria-hidden="true"></i></button>
+            <button class="btn-icon btn-delete" (click)="openDeleteRoleConfirm(role)"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></button>
+          </td>
+        </tr>
+        <tr *ngIf="roles.length === 0">
+          <td colspan="8" class="empty-state">Không có role nào</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="pagination" *ngIf="totalPages > 1">
+    <button (click)="onPageChange(currentPage - 1)" [disabled]="currentPage === 0">« Trước</button>
+    <span class="page-info">Trang {{ currentPage + 1 }} / {{ totalPages }}</span>
+    <button (click)="onPageChange(currentPage + 1)" [disabled]="currentPage >= totalPages - 1">Sau »</button>
+  </div>
+
+</div>
+
+<!-- MODAL: CREATE PERMISSION -->
+<div class="modal-overlay" *ngIf="showCreatePermModal" (click)="closeAllModals()">
+  <div class="modal-box" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Thêm permission mới</h3>
+      <button class="modal-close" (click)="closeAllModals()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Tên permission <span class="required">*</span></label>
+          <input type="text" [(ngModel)]="createPermForm.name" placeholder="VD: category.read" />
+        </div>
+        <div class="form-group">
+          <label>Resource <span class="required">*</span></label>
+          <select [(ngModel)]="createPermForm.resource">
+            <option value="">Chọn resource</option>
+            <option *ngFor="let r of resources" [value]="r">{{ r }}</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Action <span class="required">*</span></label>
+          <select [(ngModel)]="createPermForm.action">
+            <option value="GET">GET</option>
+            <option value="POST">POST</option>
+            <option value="PUT">PUT</option>
+            <option value="DELETE">DELETE</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Mô tả</label>
+          <input type="text" [(ngModel)]="createPermForm.description" placeholder="Mô tả permission" />
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" (click)="closeAllModals()">Huỷ</button>
+      <button class="btn btn-primary" (click)="onCreatePermSubmit()">Tạo permission</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: EDIT PERMISSION -->
+<div class="modal-overlay" *ngIf="showEditPermModal" (click)="closeAllModals()">
+  <div class="modal-box" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Chỉnh sửa permission</h3>
+      <button class="modal-close" (click)="closeAllModals()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Tên permission</label>
+          <input type="text" [(ngModel)]="editPermForm.name" />
+        </div>
+        <div class="form-group">
+          <label>Resource</label>
+          <select [(ngModel)]="editPermForm.resource">
+            <option *ngFor="let r of resources" [value]="r">{{ r }}</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Action</label>
+          <select [(ngModel)]="editPermAction">
+            <option value="GET">GET</option>
+            <option value="POST">POST</option>
+            <option value="PUT">PUT</option>
+            <option value="DELETE">DELETE</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Mô tả</label>
+          <input type="text" [(ngModel)]="editPermForm.description" />
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" (click)="closeAllModals()">Huỷ</button>
+      <button class="btn btn-primary" (click)="onEditPermSubmit()">Lưu thay đổi</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM: DELETE PERMISSION -->
+<div class="modal-overlay" *ngIf="showDeletePermConfirm" (click)="closeAllModals()">
+  <div class="modal-box modal-sm" (click)="$event.stopPropagation()">
+    <div class="modal-header modal-header-danger">
+      <h3>Xác nhận xóa</h3>
+      <button class="modal-close" (click)="closeAllModals()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p>Xóa permission <strong>{{ permissionToDelete?.name }}</strong>?</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" (click)="closeAllModals()">Huỷ</button>
+      <button class="btn btn-danger" (click)="onDeletePermConfirm()">Xóa</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: CREATE ROLE -->
+<div class="modal-overlay" *ngIf="showCreateRoleModal" (click)="closeAllModals()">
+  <div class="modal-box" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Thêm role mới</h3>
+      <button class="modal-close" (click)="closeAllModals()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Tên role <span class="required">*</span></label>
+        <input type="text" [(ngModel)]="createRoleForm.name" placeholder="VD: warehouse_manager" />
+      </div>
+      <div class="form-group">
+        <label>Mô tả</label>
+        <textarea [(ngModel)]="createRoleForm.description" rows="3" placeholder="Mô tả role"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" (click)="closeAllModals()">Huỷ</button>
+      <button class="btn btn-primary" (click)="onCreateRoleSubmit()">Tạo role</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: EDIT ROLE -->
+<div class="modal-overlay" *ngIf="showEditRoleModal" (click)="closeAllModals()">
+  <div class="modal-box" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Chỉnh sửa role</h3>
+      <button class="modal-close" (click)="closeAllModals()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Tên role</label>
+        <input type="text" [(ngModel)]="editRoleForm.name" />
+      </div>
+      <div class="form-group">
+        <label>Mô tả</label>
+        <textarea [(ngModel)]="editRoleForm.description" rows="3"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" (click)="closeAllModals()">Huỷ</button>
+      <button class="btn btn-primary" (click)="onEditRoleSubmit()">Lưu thay đổi</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM: DELETE ROLE -->
+<div class="modal-overlay" *ngIf="showDeleteRoleConfirm" (click)="closeAllModals()">
+  <div class="modal-box modal-sm" (click)="$event.stopPropagation()">
+    <div class="modal-header modal-header-danger">
+      <h3>Xác nhận xóa</h3>
+      <button class="modal-close" (click)="closeAllModals()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p>Xóa role <strong>{{ roleToDelete?.name }}</strong>?</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" (click)="closeAllModals()">Huỷ</button>
+      <button class="btn btn-danger" (click)="onDeleteRoleConfirm()">Xóa</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: ASSIGN PERMISSIONS TO ROLE -->
+<div class="modal-overlay" *ngIf="showAssignPermModal" (click)="closeAllModals()">
+  <div class="modal-box modal-lg" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Gán permissions cho role: {{ selectedRole?.name }}</h3>
+      <button class="modal-close" (click)="closeAllModals()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="permission-list">
+        <div class="permission-item" *ngFor="let perm of allAvailablePermissions"
+             (click)="togglePermissionSelection(perm.id)"
+             [class.selected]="isPermissionSelected(perm.id)">
+          <input type="checkbox" [checked]="isPermissionSelected(perm.id)" />
+          <span class="perm-name">{{ perm.name }}</span>
+          <span class="badge badge-resource">{{ perm.resource }}</span>
+          <span class="badge" [ngClass]="'badge-action-' + perm.action.toLowerCase()">{{ perm.action }}</span>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" (click)="closeAllModals()">Huỷ</button>
+      <button class="btn btn-primary" (click)="onAssignPermSubmit()">Lưu</button>
+    </div>
+  </div>
+</div>
