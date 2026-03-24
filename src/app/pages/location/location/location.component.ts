@@ -72,7 +72,6 @@ export class LocationComponent implements OnInit {
   private initCreateForm(): CreateLocationRequest {
     return {
       warehouse_id: '',
-      code: '',
       name: '',
       zone: '',
       type: LocationType.STORAGE,

@@ -487,7 +487,6 @@ export class BatchComponent implements OnInit {
   private initCreateForm(): CreateBatchRequest {
     return {
       product_id: '',
-      batch_number: '',
       manufacturing_date: new Date().toISOString().slice(0, 10),
       expiry_date: '',
       supplier_batch_number: '',
@@ -510,7 +509,6 @@ export class BatchComponent implements OnInit {
   private normalizeCreateRequest(): CreateBatchRequest {
     return {
       product_id: this.createForm.product_id,
-      batch_number: this.createForm.batch_number.trim(),
       manufacturing_date: this.createForm.manufacturing_date,
       expiry_date: this.createForm.expiry_date || undefined,
       supplier_batch_number: this.createForm.supplier_batch_number?.trim() || undefined,
@@ -544,16 +542,6 @@ export class BatchComponent implements OnInit {
     const selectedProduct = this.creatableProducts.find((product) => product.id === request.product_id);
     if (!selectedProduct) {
       this.toastr.warning('Sản phẩm đã chọn không hợp lệ hoặc không hỗ trợ theo dõi lô.');
-      return false;
-    }
-
-    if (!request.batch_number) {
-      this.toastr.warning('Vui lòng nhập mã lô.');
-      return false;
-    }
-
-    if (request.batch_number.length > 50) {
-      this.toastr.warning('Mã lô không được vượt quá 50 ký tự.');
       return false;
     }
 

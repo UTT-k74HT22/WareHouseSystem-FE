@@ -35,19 +35,19 @@
 }
 
 .segmented-control__button:hover {
-  color: #4338ca;
-  background: #eef2ff;
+  color: #065f46;
+  background: #d1fae5;
 }
 
 .segmented-control__button.active {
   color: #ffffff;
-  background: #4f46e5;
-  box-shadow: 0 8px 18px rgba(79, 70, 229, 0.2);
+  background: #047857;
+  box-shadow: 0 8px 18px rgba(4, 120, 87, 0.2);
 }
 
 .table-link {
   padding: 0;
-  color: #4338ca;
+  color: #065f46;
   font: inherit;
   font-weight: 600;
   text-align: left;

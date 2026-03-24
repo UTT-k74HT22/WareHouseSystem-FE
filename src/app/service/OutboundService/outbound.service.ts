@@ -4,10 +4,10 @@ import { Observable } from 'rxjs';
 import { BaseURL } from '../../../environments/BaseURL';
 import { ApiResponse } from '../../dto/response/ApiResponse';
 import { PageResponse } from '../../dto/response/PageResponse';
-import { OutboundShipmentResponse } from '../../dto/response/OutboundShipment/OutboundShipmentResponse';
+import { OutboundShipmentsResponse } from '../../dto/response/OutboundShipment/OutboundShipmentResponse';
 import {
-  CreateOutboundShipmentRequest,
-  UpdateOutboundShipmentRequest
+  OutboundShipmentsRequest,
+  UpdateOutboundShipmentsRequest
 } from '../../dto/request/OutboundShipment/OutboundShipmentRequest';
 
 @Injectable({ providedIn: 'root' })
@@ -17,28 +17,52 @@ export class OutboundService {
   constructor(private http: HttpClient) {}
 
   /** GET /api/v1/outbound-shipments */
-  getAll(page = 0, size = 10): Observable<ApiResponse<PageResponse<OutboundShipmentResponse>>> {
-    const params = new HttpParams().set('page', page).set('size', size);
-    return this.http.get<ApiResponse<PageResponse<OutboundShipmentResponse>>>(this.apiUrl, { params });
+  getAll(filters: any = {}, page = 0, size = 10): Observable<ApiResponse<PageResponse<OutboundShipmentsResponse>>> {
+    let params = new HttpParams()
+      .set('page', page.toString())
+      .set('size', size.toString());
+
+    Object.keys(filters).forEach(key => {
+      if (filters[key]) {
+        params = params.set(key, filters[key]);
+      }
+    });
+
+    return this.http.get<ApiResponse<PageResponse<OutboundShipmentsResponse>>>(this.apiUrl, { params });
   }
 
   /** GET /api/v1/outbound-shipments/:id */
-  getById(id: string): Observable<ApiResponse<OutboundShipmentResponse>> {
-    return this.http.get<ApiResponse<OutboundShipmentResponse>>(`${this.apiUrl}/${id}`);
+  getById(id: string): Observable<ApiResponse<OutboundShipmentsResponse>> {
+    return this.http.get<ApiResponse<OutboundShipmentsResponse>>(`${this.apiUrl}/${id}`);
   }
 
   /** POST /api/v1/outbound-shipments */
-  create(request: CreateOutboundShipmentRequest): Observable<ApiResponse<OutboundShipmentResponse>> {
-    return this.http.post<ApiResponse<OutboundShipmentResponse>>(this.apiUrl, request);
+  create(request: OutboundShipmentsRequest): Observable<ApiResponse<OutboundShipmentsResponse>> {
+    return this.http.post<ApiResponse<OutboundShipmentsResponse>>(this.apiUrl, request);
   }
 
   /** PUT /api/v1/outbound-shipments/:id */
-  update(id: string, request: UpdateOutboundShipmentRequest): Observable<ApiResponse<OutboundShipmentResponse>> {
-    return this.http.put<ApiResponse<OutboundShipmentResponse>>(`${this.apiUrl}/${id}`, request);
+  update(id: string, request: UpdateOutboundShipmentsRequest): Observable<ApiResponse<OutboundShipmentsResponse>> {
+    return this.http.put<ApiResponse<OutboundShipmentsResponse>>(`${this.apiUrl}/${id}`, request);
   }
 
-  /** DELETE /api/v1/outbound-shipments/:id */
-  delete(id: string): Observable<ApiResponse<void>> {
-    return this.http.delete<ApiResponse<void>>(`${this.apiUrl}/${id}`);
+  /** PUT /api/v1/outbound-shipments/:id/start-picking */
+  startPicking(id: string): Observable<ApiResponse<OutboundShipmentsResponse>> {
+    return this.http.put<ApiResponse<OutboundShipmentsResponse>>(`${this.apiUrl}/${id}/start-picking`, {});
+  }
+
+  /** PUT /api/v1/outbound-shipments/:id/mark-as-packed */
+  markAsPacked(id: string): Observable<ApiResponse<OutboundShipmentsResponse>> {
+    return this.http.put<ApiResponse<OutboundShipmentsResponse>>(`${this.apiUrl}/${id}/mark-as-packed`, {});
+  }
+
+  /** PUT /api/v1/outbound-shipments/:id/ship */
+  ship(id: string): Observable<ApiResponse<OutboundShipmentsResponse>> {
+    return this.http.put<ApiResponse<OutboundShipmentsResponse>>(`${this.apiUrl}/${id}/ship`, {});
+  }
+
+  /** PUT /api/v1/outbound-shipments/:id/cancel */
+  cancel(id: string): Observable<ApiResponse<OutboundShipmentsResponse>> {
+    return this.http.put<ApiResponse<OutboundShipmentsResponse>>(`${this.apiUrl}/${id}/cancel`, {});
   }
 }

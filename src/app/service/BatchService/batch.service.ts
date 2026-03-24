@@ -5,6 +5,8 @@ import { BaseURL } from '../../../environments/BaseURL';
 import { ApiResponse } from '../../dto/response/ApiResponse';
 import { PageResponse } from '../../dto/response/PageResponse';
 import { BatchResponse } from '../../dto/response/Batch/BatchResponse';
+import { BatchByProductResponse } from '../../dto/response/Batch/BatchByProductResponse';
+import { BatchFifoRecommendationResponse } from '../../dto/response/Batch/BatchFifoRecommendationResponse';
 import {
   ChangeBatchStatusRequest,
   CreateBatchRequest,
@@ -51,5 +53,23 @@ export class BatchService {
   /** PUT /api/v1/batches/:id/release */
   release(id: string): Observable<BatchResponse> {
     return this.http.put<BatchResponse>(`${this.apiUrl}/${id}/release`, {});
+  }
+
+  /** GET /api/v1/batches/fifo-recommendations */
+  getFifoRecommendations(productId: string, warehouseId: string, limit = 5): Observable<ApiResponse<BatchFifoRecommendationResponse[]>> {
+    const params = new HttpParams()
+      .set('product_id', productId)
+      .set('warehouse_id', warehouseId)
+      .set('limit', limit.toString());
+    return this.http.get<ApiResponse<BatchFifoRecommendationResponse[]>>(`${this.apiUrl}/fifo-recommendations`, { params });
+  }
+
+  /** GET /api/v1/batches/by-product/:productId */
+  getByProduct(productId: string, warehouseId?: string): Observable<ApiResponse<BatchByProductResponse[]>> {
+    let params = new HttpParams();
+    if (warehouseId) {
+      params = params.set('warehouse_id', warehouseId);
+    }
+    return this.http.get<ApiResponse<BatchByProductResponse[]>>(`${this.apiUrl}/by-product/${productId}`, { params });
   }
 }

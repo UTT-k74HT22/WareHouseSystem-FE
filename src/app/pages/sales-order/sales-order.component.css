@@ -1,1 +1,96 @@
-/* Sales Order Component — specific overrides (base from whs-pages.css) */
+.link {
+  color: var(--primary-color);
+  text-decoration: none;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.link:hover {
+  text-decoration: underline;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.text-primary {
+  color: var(--primary-color);
+}
+
+.font-bold {
+  font-weight: 700;
+}
+
+.mt-4 {
+  margin-top: 1.5rem;
+}
+
+.status-banner {
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  margin-bottom: 1.5rem;
+  font-size: 0.95rem;
+}
+
+.badge-draft { background-color: #f1f5f9; color: #64748b; }
+.badge-confirmed { background-color: #ecfdf5; color: #059669; }
+.badge-progress { background-color: #eff6ff; color: #2563eb; }
+.badge-completed { background-color: #f0fdf4; color: #16a34a; }
+.badge-cancelled { background-color: #fef2f2; color: #dc2626; }
+
+.status-banner.badge-draft { border-left: 4px solid #64748b; }
+.status-banner.badge-confirmed { border-left: 4px solid #059669; }
+.status-banner.badge-progress { border-left: 4px solid #2563eb; }
+.status-banner.badge-completed { border-left: 4px solid #16a34a; }
+.status-banner.badge-cancelled { border-left: 4px solid #dc2626; }
+
+.line-table select, .line-table input {
+  width: 100%;
+  padding: 0.4rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+}
+
+.lines-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  margin-top: 1.5rem;
+}
+
+.lines-header h4 {
+  margin: 0;
+  color: var(--secondary-color);
+}
+
+.required {
+  color: #dc2626;
+  margin-left: 2px;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  background: #f8fafc;
+  padding: 1.25rem;
+  border-radius: 8px;
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.detail-label {
+  font-size: 0.8rem;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  margin-bottom: 0.25rem;
+}
+
+.full-width {
+  grid-column: span 2;
+}

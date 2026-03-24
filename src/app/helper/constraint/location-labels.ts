@@ -12,6 +12,6 @@ export const LOCATION_TYPE_LABELS: Record<LocationType, string> = {
   [LocationType.STORAGE]: 'Kho lưu trữ',
   [LocationType.PICKING]: 'Khu vực lấy hàng',
   [LocationType.PACKING]: 'Khu vực đóng gói',
-  [LocationType.STAGING]: 'Khu vực tập kết',
+  [LocationType.STAGING]: 'Khu vực chờ xuất',
   [LocationType.RETURN]: 'Khu vực hoàn trả'
 };

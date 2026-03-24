@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
 import { BaseURL } from '../../../environments/BaseURL';
 import { WareHouseResponse } from '../../dto/response/WareHouse/WareHouseResponse';
 import { ApiResponse } from "../../dto/response/ApiResponse";
@@ -40,7 +41,16 @@ export class WarehouseService {
   }
 
   getList(): Observable<ApiResponse<WareHouseResponse[]>> {
-    return this.http.get<ApiResponse<WareHouseResponse[]>>(`${this.apiUrl}/all`);
+    return this.http.get<ApiResponse<WareHouseResponse[]>>(`${this.apiUrl}/all`).pipe(
+      catchError(() =>
+        this.getAll(0, 200).pipe(
+          map((response) => ({
+            ...response,
+            data: response.data?.content || []
+          }))
+        )
+      )
+    );
   }
 
   /**

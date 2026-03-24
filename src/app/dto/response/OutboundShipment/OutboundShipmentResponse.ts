@@ -1,22 +1,31 @@
-import { OutboundShipmentStatus } from '../../../helper/enums/OutboundShipmentStatus';
+import { OutboundShipmentLinesResponse } from '../OutboundShipmentLine/OutboundShipmentLineResponse';
 
-export interface OutboundShipmentResponse {
+export interface OutboundShipmentsResponse {
   id: string;
-  shipment_number: string;
-  sales_order_id: string | null;
-  sales_order_number: string | null;
-  customer_id: string;
-  customer_name: string;
-  warehouse_id: string;
-  warehouse_name: string;
-  status: OutboundShipmentStatus;
-  expected_date: string;
-  shipped_date: string;
+  shipment_number?: string;
+  shipmentNumber?: string;
+  sales_order_id?: string;
+  salesOrderId?: string;
+  warehouse_id?: string;
+  warehouseId?: string;
+  shipment_date?: string;
+  shipmentDate?: string;
+  status: string;
+  tracking_number?: string | null;
+  trackingNumber?: string | null;
   carrier: string | null;
-  tracking_number: string | null;
+  shipped_at?: string | null;
+  shippedAt?: string | null;
+  confirmed_by?: string | null;
+  confirmedBy?: string | null;
   notes: string | null;
-  created_by: string;
-  created_at: string;
-  updated_by: string;
-  updated_at: string;
+  lines?: OutboundShipmentLinesResponse[];
+  created_at?: string;
+  createdAt?: string;
+  updated_at?: string;
+  updatedAt?: string;
+  created_by?: string;
+  createdBy?: string;
+  updated_by?: string;
+  updatedBy?: string;
 }

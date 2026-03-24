@@ -24,7 +24,6 @@ import { LocationComponent } from './pages/location/location/location.component'
 import { ProductComponent } from './pages/product/product.component';
 import { CategoryComponent } from './pages/category/category.component';
 import { BusinessPartnerComponent } from './pages/business-partner/business-partner.component';
-import { UomComponent } from './pages/uom/uom.component';
 import { BatchComponent } from './pages/batch/batch.component';
 // ── Operations ───────────────────────────────────────────────
 import { PurchaseOrderComponent } from './pages/purchase-order/purchase-order.component';
@@ -33,7 +32,6 @@ import { InboundComponent } from './pages/inbound/inbound.component';
 import { OutboundComponent } from './pages/outbound/outbound.component';
 // ── Stock & Inventory ────────────────────────────────────────
 import { InventoryComponent } from './pages/inventory/inventory.component';
-import { StockMovementsComponent, StockAdjustmentsComponent, StockTransfersComponent } from './pages/stock/stock.component';
 // ── Employee ─────────────────────────────────────────────────
 import { EmployeeComponent } from './pages/employee/employee.component';
 // ── Account ──────────────────────────────────────────────────
@@ -61,7 +59,6 @@ import { ResetPasswordComponent } from './pages/account/reset-password/reset-pas
     ProductComponent,
     CategoryComponent,
     BusinessPartnerComponent,
-    UomComponent,
     BatchComponent,
     // ── Operations ───────────────────────────────────────────
     PurchaseOrderComponent,
@@ -70,9 +67,6 @@ import { ResetPasswordComponent } from './pages/account/reset-password/reset-pas
     OutboundComponent,
     // ── Stock & Inventory ────────────────────────────────────
     InventoryComponent,
-    StockMovementsComponent,
-    StockAdjustmentsComponent,
-    StockTransfersComponent,
     // ── Employee ─────────────────────────────────────────────
     EmployeeComponent,
     // ── Account ──────────────────────────────────────────────

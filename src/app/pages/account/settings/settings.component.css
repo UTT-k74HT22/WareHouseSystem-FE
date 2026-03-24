@@ -61,7 +61,7 @@
 .account-tab.active {
   background: var(--whs-primary);
   color: #fff;
-  box-shadow: 0 2px 8px rgba(13, 110, 253, 0.3);
+  box-shadow: 0 2px 8px rgba(4, 120, 87, 0.3);
 }
 
 /* ─── Page Header ───────────────────────────────────────── */
@@ -80,14 +80,14 @@
   width: 52px;
   height: 52px;
   border-radius: 16px;
-  background: linear-gradient(135deg, rgba(13, 110, 253, 0.12), rgba(99, 102, 241, 0.08));
+  background: linear-gradient(135deg, rgba(4, 120, 87, 0.12), rgba(99, 102, 241, 0.08));
   color: var(--whs-primary);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 22px;
   flex-shrink: 0;
-  box-shadow: 0 2px 8px rgba(13, 110, 253, 0.1);
+  box-shadow: 0 2px 8px rgba(4, 120, 87, 0.1);
 }
 
 .page-header-title {
@@ -133,7 +133,7 @@
   width: 44px;
   height: 44px;
   border-radius: 12px;
-  background: linear-gradient(135deg, rgba(13, 110, 253, 0.1), rgba(13, 110, 253, 0.04));
+  background: linear-gradient(135deg, rgba(4, 120, 87, 0.1), rgba(4, 120, 87, 0.04));
   color: var(--whs-primary);
   display: flex;
   align-items: center;
@@ -255,7 +255,7 @@
 
 .setting-select:focus {
   border-color: var(--whs-primary);
-  box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.1);
+  box-shadow: 0 0 0 3px rgba(4, 120, 87, 0.1);
 }
 
 .setting-select:hover {
@@ -292,7 +292,7 @@
   color: var(--whs-primary);
   font-weight: 700;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  border: 1px solid rgba(13, 110, 253, 0.15);
+  border: 1px solid rgba(4, 120, 87, 0.15);
 }
 
 .theme-option:hover:not(.selected) {
@@ -346,7 +346,7 @@
 
 .toggle-switch input:checked + .toggle-slider {
   background: linear-gradient(135deg, var(--whs-primary), #0b5ed7);
-  box-shadow: 0 2px 8px rgba(13, 110, 253, 0.3);
+  box-shadow: 0 2px 8px rgba(4, 120, 87, 0.3);
 }
 
 .toggle-switch:hover input:checked + .toggle-slider {
@@ -400,13 +400,13 @@
   font-weight: 700;
   cursor: pointer;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 14px rgba(13, 110, 253, 0.25);
+  box-shadow: 0 4px 14px rgba(4, 120, 87, 0.25);
   letter-spacing: 0.01em;
 }
 
 .btn-save:hover {
   background: linear-gradient(135deg, #0b5ed7, #084298);
-  box-shadow: 0 8px 24px rgba(13, 110, 253, 0.35);
+  box-shadow: 0 8px 24px rgba(4, 120, 87, 0.35);
   transform: translateY(-2px);
 }
 

@@ -1,4 +1,6 @@
 import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { UnitsOfMeasureResponse } from '../../dto/response/UOM/UnitsOfMeasureResponse';
 import { UOMService } from '../../service/UOMService/uom.service';
 import { ToastrService } from '../../service/SystemService/toastr.service';
@@ -8,6 +10,8 @@ import { UnitsOfMeasureType } from '../../helper/enums/UnitsOfMeasureType';
 
 @Component({
   selector: 'app-uom',
+  standalone: true,
+  imports: [CommonModule, FormsModule],
   templateUrl: './uom.component.html',
   styleUrls: ['./uom.component.css']
 })

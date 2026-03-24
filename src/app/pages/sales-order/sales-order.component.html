@@ -1,46 +1,74 @@
 <div class="page-container">
-
   <div class="page-hero">
     <div class="hero-left">
       <div class="hero-accent"></div>
       <div class="hero-text">
-        <h1 class="hero-title"><i class="fa-solid fa-file-invoice" aria-hidden="true"></i> Đơn bán hàng (SO)</h1>
-        <p class="hero-subtitle">Quản lý đơn hàng giao đến khách hàng</p>
+        <h1 class="hero-title"><i class="fa-solid fa-file-invoice-dollar" aria-hidden="true"></i> Đơn bán hàng</h1>
+        <p class="hero-subtitle">Quản lý các đơn đặt hàng từ khách hàng, từ khâu tạo nháp đến khâu xác nhận để giữ tồn kho.</p>
       </div>
     </div>
     <div class="hero-actions">
-      <button class="btn btn-ghost">Xuất Excel</button>
-      <button class="btn btn-primary" (click)="openCreateModal()" [disabled]="!backendReady">+ Tạo đơn bán</button>
+      <button class="btn btn-ghost" (click)="loadOrders()">
+        <i class="fa-solid fa-rotate-right" aria-hidden="true"></i> Làm mới
+      </button>
+      <button class="btn btn-primary" (click)="openCreateModal()">+ Tạo đơn hàng</button>
     </div>
   </div>
 
-  <div class="info-box">
-    API `sales-orders` phía backend hiện chưa có method REST thực thi. FE đã khóa luồng tạo/xem/xóa để tránh gọi sai BE.
+  <div class="stats-grid" *ngIf="!loading">
+    <div class="stat-item stat-total">
+      <div class="stat-bar"></div>
+      <div class="stat-body"><div class="stat-label">Tổng đơn hàng</div><div class="stat-value">{{ totalElements }}</div></div>
+    </div>
+    <div class="stat-item stat-active">
+      <div class="stat-bar"></div>
+      <div class="stat-body"><div class="stat-label">Đang nháp</div><div class="stat-value">{{ getDraftCount() }}</div></div>
+    </div>
+    <div class="stat-item stat-info">
+      <div class="stat-bar"></div>
+      <div class="stat-body"><div class="stat-label">Đã xác nhận</div><div class="stat-value">{{ getConfirmedCount() }}</div></div>
+    </div>
+    <div class="stat-item stat-full">
+      <div class="stat-bar"></div>
+      <div class="stat-body"><div class="stat-label">Hoàn thành</div><div class="stat-value">{{ getCompletedCount() }}</div></div>
+    </div>
   </div>
 
   <div class="filter-section">
-    <input class="search-input" type="text" [(ngModel)]="searchKeyword" placeholder="Tìm theo số đơn, khách hàng..." (keyup.enter)="onSearch()" />
+    <input
+      class="search-input"
+      type="text"
+      [(ngModel)]="searchKeyword"
+      placeholder="Tìm theo mã đơn hàng..."
+      (keyup.enter)="onSearch()" />
+
     <select class="filter-select" [(ngModel)]="selectedStatus">
       <option value="">-- Tất cả trạng thái --</option>
       <option value="DRAFT">Nháp</option>
       <option value="CONFIRMED">Đã xác nhận</option>
-      <option value="IN_PROGRESS">Đang xử lý</option>
+      <option value="PARTIALLY_SHIPPED">Giao một phần</option>
       <option value="COMPLETED">Hoàn thành</option>
       <option value="CANCELLED">Đã huỷ</option>
     </select>
-    <button class="btn btn-primary" (click)="onSearch()"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i> Tìm kiếm</button>
-    <button class="btn btn-ghost" (click)="onResetFilter()"><i class="fa-solid fa-rotate-right" aria-hidden="true"></i> Reset</button>
+
+    <button class="btn btn-primary" (click)="onSearch()">
+      <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i> Tìm kiếm
+    </button>
+    <button class="btn btn-ghost" (click)="onResetFilter()">
+      <i class="fa-solid fa-rotate-right" aria-hidden="true"></i> Đặt lại
+    </button>
+
     <div class="view-toggle">
-      <button class="btn-view-toggle" [class.active]="viewMode === 'grid'" (click)="viewMode = 'grid'" title="Chế độ lưới">
+      <button class="btn-view-toggle" [class.active]="viewMode === 'grid'" (click)="viewMode = 'grid'">
         <i class="fa-solid fa-grip" aria-hidden="true"></i>
       </button>
-      <button class="btn-view-toggle" [class.active]="viewMode === 'list'" (click)="viewMode = 'list'" title="Chế độ danh sách">
+      <button class="btn-view-toggle" [class.active]="viewMode === 'list'" (click)="viewMode = 'list'">
         <i class="fa-solid fa-list" aria-hidden="true"></i>
       </button>
     </div>
   </div>
 
-  <div class="loading-state" *ngIf="loading"><span>Đang tải dữ liệu...</span></div>
+  <div class="loading-state" *ngIf="loading"><span>Đang tải danh sách đơn hàng...</span></div>
 
   <div class="table-container" *ngIf="!loading && viewMode === 'list'">
     <table class="data-table">
@@ -49,7 +77,7 @@
           <th>#</th>
           <th>Số đơn hàng</th>
           <th>Khách hàng</th>
-          <th>Kho xuất</th>
+          <th>Kho</th>
           <th>Ngày đặt</th>
           <th>Ngày giao dự kiến</th>
           <th>Tổng tiền</th>
@@ -60,20 +88,24 @@
       <tbody>
         <tr *ngFor="let order of orders; let i = index">
           <td>{{ currentPage * pageSize + i + 1 }}</td>
-          <td><a class="link" (click)="openDetailModal(order)">{{ order.order_number }}</a></td>
-          <td>{{ order.customer_name }}</td>
-          <td>{{ order.warehouse_name }}</td>
+          <td><a class="link" (click)="openDetailModal(order)">{{ order.so_number }}</a></td>
+          <td>{{ getCustomerName(order.customer_id) }}</td>
+          <td>{{ getWarehouseName(order.warehouse_id) }}</td>
           <td>{{ order.order_date | date:'dd/MM/yyyy' }}</td>
-          <td>{{ order.expected_date | date:'dd/MM/yyyy' }}</td>
-          <td>{{ order.total_amount | number:'1.0-0' }} {{ order.currency }}</td>
+          <td>{{ order.requested_delivery_date | date:'dd/MM/yyyy' }}</td>
+          <td class="text-right">{{ order.total_amount | number }} {{ order.currency }}</td>
           <td><span class="badge" [ngClass]="getStatusClass(order.status)">{{ getStatusLabel(order.status) }}</span></td>
           <td class="actions">
-            <button class="btn-icon" (click)="openDetailModal(order)"><i class="fa-regular fa-eye" aria-hidden="true"></i></button>
-            <button class="btn-icon btn-delete" (click)="openDeleteConfirm(order)" [disabled]="order.status !== 'DRAFT'"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></button>
+            <button class="btn-icon" (click)="openDetailModal(order)" title="Xem chi tiết">
+              <i class="fa-regular fa-eye" aria-hidden="true"></i>
+            </button>
+            <button class="btn-icon btn-delete" (click)="openCancelConfirm(order)" [disabled]="!canCancelOrder(order)" title="Hủy đơn hàng">
+              <i class="fa-regular fa-trash-can" aria-hidden="true"></i>
+            </button>
           </td>
         </tr>
         <tr *ngIf="orders.length === 0">
-          <td colspan="9" class="empty-state">Backend chưa sẵn sàng cho sales orders.</td>
+          <td colspan="9" class="empty-state">Không tìm thấy đơn hàng nào.</td>
         </tr>
       </tbody>
     </table>
@@ -81,17 +113,21 @@
 
   <div class="entity-grid" *ngIf="!loading && viewMode === 'grid'">
     <div class="entity-card" *ngFor="let order of orders">
-      <h3 class="entity-card__title">{{ order.order_number }}</h3>
-      <p class="entity-card__sub">{{ order.customer_name }}</p>
+      <h3 class="entity-card__title">{{ order.so_number }}</h3>
+      <p class="entity-card__sub">{{ getCustomerName(order.customer_id) }}</p>
       <div class="entity-card__meta">
-        <div class="entity-card__row">Kho: {{ order.warehouse_name }}</div>
-        <div class="entity-card__row">Ngày đặt: {{ order.order_date | date:'dd/MM/yyyy' }}</div>
-        <div class="entity-card__row">Tổng tiền: {{ order.total_amount | number:'1.0-0' }} {{ order.currency }}</div>
+        <div class="entity-card__row">Kho: {{ getWarehouseName(order.warehouse_id) }}</div>
+        <div class="entity-card__row">Ngày: {{ order.order_date | date:'dd/MM/yyyy' }}</div>
+        <div class="entity-card__row">Tổng: {{ order.total_amount | number }} {{ order.currency }}</div>
         <div class="entity-card__row"><span class="badge" [ngClass]="getStatusClass(order.status)">{{ getStatusLabel(order.status) }}</span></div>
       </div>
       <div class="entity-card__actions">
-        <button class="btn-icon" (click)="openDetailModal(order)"><i class="fa-regular fa-eye" aria-hidden="true"></i></button>
-        <button class="btn-icon btn-delete" (click)="openDeleteConfirm(order)" [disabled]="order.status !== 'DRAFT'"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></button>
+        <button class="btn-icon" (click)="openDetailModal(order)" title="Xem chi tiết">
+          <i class="fa-regular fa-eye" aria-hidden="true"></i>
+        </button>
+        <button class="btn-icon btn-delete" (click)="openCancelConfirm(order)" [disabled]="!canCancelOrder(order)" title="Hủy đơn hàng">
+          <i class="fa-regular fa-trash-can" aria-hidden="true"></i>
+        </button>
       </div>
     </div>
   </div>
@@ -101,82 +137,185 @@
     <span class="page-info">Trang {{ currentPage + 1 }} / {{ totalPages }}</span>
     <button (click)="onPageChange(currentPage + 1)" [disabled]="currentPage >= totalPages - 1">Sau »</button>
   </div>
-
 </div>
 
-<!-- MODAL: TẠO ĐƠN BÁN -->
+<!-- Modal Create -->
 <div class="modal-overlay" *ngIf="showCreateModal" (click)="closeAllModals()">
-  <div class="modal-box" (click)="$event.stopPropagation()">
-    <div class="modal-header"><h3>Tạo đơn bán hàng mới</h3><button class="modal-close" (click)="closeAllModals()">✕</button></div>
+  <div class="modal-box modal-lg" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Tạo đơn bán hàng mới</h3>
+      <button class="modal-close" (click)="closeAllModals()">✕</button>
+    </div>
     <div class="modal-body">
-      <div class="form-row">
-        <div class="form-group">
-          <label>Khách hàng <span class="required">*</span></label>
-          <select [(ngModel)]="createForm.customer_id">
-            <option value="">-- Chọn khách hàng --</option>
-            <option *ngFor="let c of customers" [value]="c.id">{{ c.name }}</option>
-          </select>
+      <form [formGroup]="createForm">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Khách hàng <span class="required">*</span></label>
+            <select formControlName="customer_id">
+              <option value="">-- Chọn khách hàng --</option>
+              <option *ngFor="let customer of customers" [value]="customer.id">{{ customer.name }}</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Kho xuất <span class="required">*</span></label>
+            <select formControlName="warehouse_id">
+              <option value="">-- Chọn kho --</option>
+              <option *ngFor="let wh of warehouses" [value]="wh.id">{{ wh.name }}</option>
+            </select>
+          </div>
         </div>
-        <div class="form-group">
-          <label>Kho xuất <span class="required">*</span></label>
-          <select [(ngModel)]="createForm.warehouse_id">
-            <option value="">-- Chọn kho --</option>
-            <option *ngFor="let w of warehouses" [value]="w.id">{{ w.name }}</option>
-          </select>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Ngày đặt hàng <span class="required">*</span></label>
+            <input type="date" formControlName="order_date" />
+          </div>
+          <div class="form-group">
+            <label>Ngày giao dự kiến <span class="required">*</span></label>
+            <input type="date" formControlName="requested_delivery_date" />
+          </div>
         </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>Ngày giao dự kiến</label>
-          <input type="date" [(ngModel)]="createForm.expected_date" />
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Tiền tệ</label>
+            <select formControlName="currency">
+              <option value="VND">VND</option>
+              <option value="USD">USD</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Ghi chú</label>
+            <input type="text" formControlName="notes" placeholder="Nhập ghi chú nếu có..." />
+          </div>
         </div>
-        <div class="form-group">
-          <label>Tiền tệ</label>
-          <input type="text" [(ngModel)]="createForm.currency" placeholder="VND" />
+
+        <div class="lines-section">
+          <div class="lines-header">
+            <h4>Danh sách sản phẩm</h4>
+            <button type="button" class="btn btn-secondary btn-sm" (click)="addLine()">+ Thêm dòng</button>
+          </div>
+          
+          <table class="data-table line-table">
+            <thead>
+              <tr>
+                <th>Sản phẩm <span class="required">*</span></th>
+                <th width="120">Số lượng <span class="required">*</span></th>
+                <th width="150">Đơn giá <span class="required">*</span></th>
+                <th>Thành tiền</th>
+                <th width="50"></th>
+              </tr>
+            </thead>
+            <tbody formArrayName="lines">
+              <tr *ngFor="let line of lines.controls; let i = index" [formGroupName]="i">
+                <td>
+                  <select formControlName="product_id">
+                    <option value="">-- Chọn sản phẩm --</option>
+                    <option *ngFor="let p of products" [value]="p.id">{{ p.name }} ({{ p.sku }})</option>
+                  </select>
+                </td>
+                <td><input type="number" formControlName="quantity_ordered" min="0.01" /></td>
+                <td><input type="number" formControlName="unit_price" min="0" /></td>
+                <td class="text-right">
+                  {{ (line.get('quantity_ordered')?.value * line.get('unit_price')?.value) | number }}
+                </td>
+                <td>
+                  <button type="button" class="btn-icon btn-delete" (click)="removeLine(i)">
+                    <i class="fa-solid fa-xmark"></i>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+            <tfoot>
+              <tr>
+                <td colspan="3" class="text-right font-bold">Tổng cộng:</td>
+                <td class="text-right font-bold text-primary">{{ calculateTotal() | number }}</td>
+                <td></td>
+              </tr>
+            </tfoot>
+          </table>
         </div>
-      </div>
-      <div class="form-group">
-        <label>Ghi chú</label>
-        <textarea [(ngModel)]="createForm.notes" rows="3"></textarea>
-      </div>
-      <div class="info-box"><i class="fa-regular fa-lightbulb" aria-hidden="true"></i> Sau khi tạo đơn bán, bạn có thể thêm dòng sản phẩm vào đơn.</div>
+      </form>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" (click)="closeAllModals()">Huỷ</button>
-      <button class="btn btn-primary" (click)="onCreateSubmit()">Tạo đơn bán</button>
+      <button class="btn btn-primary" (click)="onCreateSubmit()" [disabled]="createForm.invalid">Lưu đơn hàng</button>
     </div>
   </div>
 </div>
 
-<!-- MODAL: CHI TIẾT -->
+<!-- Modal Detail -->
 <div class="modal-overlay" *ngIf="showDetailModal" (click)="closeAllModals()">
   <div class="modal-box modal-lg" (click)="$event.stopPropagation()">
-    <div class="modal-header"><h3>Chi tiết: {{ selectedOrder?.order_number }}</h3><button class="modal-close" (click)="closeAllModals()">✕</button></div>
-    <div class="modal-body" *ngIf="selectedOrder">
-      <div class="detail-grid">
-        <div class="detail-item"><span class="detail-label">Khách hàng:</span><span>{{ selectedOrder.customer_name }}</span></div>
-        <div class="detail-item"><span class="detail-label">Kho:</span><span>{{ selectedOrder.warehouse_name }}</span></div>
-        <div class="detail-item"><span class="detail-label">Trạng thái:</span>
-          <span class="badge" [ngClass]="getStatusClass(selectedOrder.status)">{{ getStatusLabel(selectedOrder.status) }}</span>
-        </div>
-        <div class="detail-item"><span class="detail-label">Tổng tiền:</span><span>{{ selectedOrder.total_amount | number:'1.0-0' }} {{ selectedOrder.currency }}</span></div>
-      </div>
-      <div class="info-box"><i class="fa-regular fa-clipboard" aria-hidden="true"></i> Dòng đơn hàng (Sales Order Lines) sẽ hiển thị tại đây.</div>
+    <div class="modal-header">
+      <h3>Chi tiết đơn hàng: {{ selectedOrder?.so_number }}</h3>
+      <button class="modal-close" (click)="closeAllModals()">✕</button>
     </div>
-    <div class="modal-footer"><button class="btn btn-ghost" (click)="closeAllModals()">Đóng</button></div>
+    <div class="modal-body" *ngIf="selectedOrder">
+      <div class="status-banner" [ngClass]="getStatusClass(selectedOrder.status)">
+        Trạng thái hiện tại: <strong>{{ getStatusLabel(selectedOrder.status) }}</strong>
+      </div>
+
+      <div class="detail-grid">
+        <div class="detail-item"><span class="detail-label">Số đơn hàng:</span><span>{{ selectedOrder.so_number }}</span></div>
+        <div class="detail-item"><span class="detail-label">Khách hàng:</span><span>{{ getCustomerName(selectedOrder.customer_id) }}</span></div>
+        <div class="detail-item"><span class="detail-label">Kho xuất:</span><span>{{ getWarehouseName(selectedOrder.warehouse_id) }}</span></div>
+        <div class="detail-item"><span class="detail-label">Ngày đặt:</span><span>{{ selectedOrder.order_date | date:'dd/MM/yyyy' }}</span></div>
+        <div class="detail-item"><span class="detail-label">Ngày giao dự kiến:</span><span>{{ selectedOrder.requested_delivery_date | date:'dd/MM/yyyy' }}</span></div>
+        <div class="detail-item"><span class="detail-label">Tiền tệ:</span><span>{{ selectedOrder.currency }}</span></div>
+        <div class="detail-item full-width"><span class="detail-label">Ghi chú:</span><span>{{ selectedOrder.notes || '—' }}</span></div>
+      </div>
+
+      <div class="lines-section mt-4">
+        <h4>Chi tiết sản phẩm</h4>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Sản phẩm</th>
+              <th>Số lượng đặt</th>
+              <th>Đã giao</th>
+              <th>Đơn giá</th>
+              <th>Thành tiền</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let line of selectedOrder.lines; let idx = index">
+              <td>{{ idx + 1 }}</td>
+              <td>{{ line.product_name || getProductName(line.product_id) }}</td>
+              <td>{{ line.quantity_ordered }}</td>
+              <td>{{ line.quantity_shipped }}</td>
+              <td class="text-right">{{ line.unit_price | number }}</td>
+              <td class="text-right">{{ line.line_total | number }}</td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="5" class="text-right font-bold">Tổng tiền:</td>
+              <td class="text-right font-bold text-primary">{{ selectedOrder.total_amount | number }} {{ selectedOrder.currency }}</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" (click)="closeAllModals()">Đóng</button>
+      <button class="btn btn-danger" *ngIf="selectedOrder && canCancelOrder(selectedOrder)" (click)="openCancelConfirm(selectedOrder)">Huỷ đơn hàng</button>
+      <button class="btn btn-success" *ngIf="selectedOrder && canConfirmOrder(selectedOrder)" (click)="confirmOrder(selectedOrder.id)">Xác nhận đơn hàng</button>
+    </div>
   </div>
 </div>
 
-<!-- CONFIRM: XOÁ -->
-<div class="modal-overlay" *ngIf="showDeleteConfirm" (click)="closeAllModals()">
+<!-- Cancel Confirm Modal -->
+<div class="modal-overlay" *ngIf="showCancelConfirm" (click)="closeAllModals()">
   <div class="modal-box modal-sm" (click)="$event.stopPropagation()">
-    <div class="modal-header modal-header-danger"><h3>Xác nhận xoá</h3><button class="modal-close" (click)="closeAllModals()">✕</button></div>
-    <div class="modal-body"><p>Xoá đơn <strong>{{ orderToDelete?.order_number }}</strong>?</p></div>
+    <div class="modal-header"><h3>Xác nhận hủy</h3></div>
+    <div class="modal-body">
+      Bạn có chắc chắn muốn hủy đơn hàng <strong>{{ orderToCancel?.so_number }}</strong>? Thao tác này sẽ bám theo ràng buộc trạng thái từ backend.
+    </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" (click)="closeAllModals()">Huỷ</button>
-      <button class="btn btn-danger" (click)="onDeleteConfirm()">Xoá</button>
+      <button class="btn btn-danger" (click)="onCancelConfirm()">Xác nhận hủy</button>
     </div>
   </div>
 </div>
-
-

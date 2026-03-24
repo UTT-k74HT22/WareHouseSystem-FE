@@ -43,7 +43,7 @@
 }
 
 .btn-icon:hover {
-  background: #eef2ff;
+  background: #d1fae5;
   border-color: var(--whs-primary);
   color: var(--whs-primary);
 }
@@ -73,14 +73,14 @@
 .header-user:hover {
   background: #f1f5f9;
   border-color: var(--whs-primary);
-  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.12);
+  box-shadow: 0 2px 8px rgba(4, 120, 87, 0.12);
 }
 
 .avatar {
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  background: linear-gradient(135deg, #047857, #7c3aed);
   color: #ffffff;
   display: flex;
   align-items: center;
@@ -157,7 +157,7 @@
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  background: linear-gradient(135deg, #047857, #7c3aed);
   color: #ffffff;
   display: flex;
   align-items: center;
