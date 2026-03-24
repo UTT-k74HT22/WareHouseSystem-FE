@@ -587,6 +587,7 @@ export class PurchaseOrderComponent implements OnInit {
       [OrderStatus.DRAFT]: 'Nháp',
       [OrderStatus.CONFIRMED]: 'Đã xác nhận',
       [OrderStatus.PARTIALLY_RECEIVED]: 'Nhận một phần',
+      [OrderStatus.PARTIALLY_SHIPPED]: 'Giao một phần',
       [OrderStatus.IN_PROGRESS]: 'Đang xử lý',
       [OrderStatus.COMPLETED]: 'Hoàn thành',
       [OrderStatus.CANCELLED]: 'Đã huỷ'
@@ -599,6 +600,7 @@ export class PurchaseOrderComponent implements OnInit {
       [OrderStatus.DRAFT]: 'badge-draft',
       [OrderStatus.CONFIRMED]: 'badge-confirmed',
       [OrderStatus.PARTIALLY_RECEIVED]: 'badge-progress',
+      [OrderStatus.PARTIALLY_SHIPPED]: 'badge-progress',
       [OrderStatus.IN_PROGRESS]: 'badge-progress',
       [OrderStatus.COMPLETED]: 'badge-completed',
       [OrderStatus.CANCELLED]: 'badge-cancelled'

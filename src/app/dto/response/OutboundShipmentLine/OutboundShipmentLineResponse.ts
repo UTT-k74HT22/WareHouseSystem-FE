@@ -1,0 +1,33 @@
+export interface OutboundShipmentLinesResponse {
+  id: string;
+  outbound_shipment_id?: string;
+  outboundShipmentId?: string;
+  sales_order_line_id?: string;
+  salesOrderLineId?: string;
+  product_id?: string;
+  productId?: string;
+  sku: string;
+  product_name?: string;
+  productName?: string;
+  batch_id?: string | null;
+  batchId?: string | null;
+  batch_number?: string | null;
+  batchNumber?: string | null;
+  location_id?: string;
+  locationId?: string;
+  location_name?: string;
+  locationName?: string;
+  line_number?: number;
+  lineNumber?: number;
+  quantity_shipped?: number;
+  quantityShipped?: number;
+  picked_at?: string | null;
+  pickedAt?: string | null;
+  picked_by?: string | null;
+  pickedBy?: string | null;
+  notes: string | null;
+  created_at?: string;
+  createdAt?: string;
+  updated_at?: string;
+  updatedAt?: string;
+}

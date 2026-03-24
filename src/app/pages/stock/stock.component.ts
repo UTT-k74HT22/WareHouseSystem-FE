@@ -1,4 +1,6 @@
+import { CommonModule } from '@angular/common';
 import { Component, OnDestroy, OnInit } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { Subscription, catchError, forkJoin, map, of } from 'rxjs';
 import { ToastrService } from 'ngx-toastr';
 
@@ -106,6 +108,8 @@ function hasNoFractionOverflow(value: number): boolean {
 
 @Component({
   selector: 'app-stock-movements',
+  standalone: true,
+  imports: [CommonModule, FormsModule],
   templateUrl: './stock-movements.component.html',
   styleUrls: ['./stock-movements.component.css'],
 })
@@ -350,6 +354,8 @@ export class StockMovementsComponent implements OnInit {
 
 @Component({
   selector: 'app-stock-adjustments',
+  standalone: true,
+  imports: [CommonModule, FormsModule],
   templateUrl: './stock-adjustments.component.html',
   styleUrls: ['./stock-adjustments.component.css'],
 })
@@ -1040,6 +1046,8 @@ export class StockAdjustmentsComponent implements OnInit, OnDestroy {
 
 @Component({
   selector: 'app-stock-transfers',
+  standalone: true,
+  imports: [CommonModule, FormsModule],
   templateUrl: './stock-transfers.component.html',
   styleUrls: ['./stock-transfers.component.css'],
 })

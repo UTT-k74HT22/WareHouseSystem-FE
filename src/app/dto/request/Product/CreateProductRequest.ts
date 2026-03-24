@@ -1,7 +1,6 @@
 import { ProductStatus } from '../../../helper/enums/ProductStatus';
 
 export interface CreateProductRequest {
-  sku: string;
   name: string;
   description?: string;
   category_id: string;

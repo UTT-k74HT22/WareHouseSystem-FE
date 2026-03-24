@@ -17,8 +17,17 @@ export class SalesOrderService {
   constructor(private http: HttpClient) {}
 
   /** GET /api/v1/sales-orders */
-  getAll(page = 0, size = 10): Observable<ApiResponse<PageResponse<SalesOrderResponse>>> {
-    const params = new HttpParams().set('page', page).set('size', size);
+  getAll(filters: any = {}, page = 0, size = 10): Observable<ApiResponse<PageResponse<SalesOrderResponse>>> {
+    let params = new HttpParams()
+      .set('page', page.toString())
+      .set('size', size.toString());
+
+    Object.keys(filters).forEach(key => {
+      if (filters[key]) {
+        params = params.set(key, filters[key]);
+      }
+    });
+
     return this.http.get<ApiResponse<PageResponse<SalesOrderResponse>>>(this.apiUrl, { params });
   }
 
@@ -37,8 +46,13 @@ export class SalesOrderService {
     return this.http.put<ApiResponse<SalesOrderResponse>>(`${this.apiUrl}/${id}`, request);
   }
 
-  /** DELETE /api/v1/sales-orders/:id */
-  delete(id: string): Observable<ApiResponse<void>> {
-    return this.http.delete<ApiResponse<void>>(`${this.apiUrl}/${id}`);
+  /** PUT /api/v1/sales-orders/:id/confirm */
+  confirm(id: string): Observable<ApiResponse<SalesOrderResponse>> {
+    return this.http.put<ApiResponse<SalesOrderResponse>>(`${this.apiUrl}/${id}/confirm`, {});
+  }
+
+  /** PUT /api/v1/sales-orders/:id/cancel */
+  cancel(id: string): Observable<ApiResponse<SalesOrderResponse>> {
+    return this.http.put<ApiResponse<SalesOrderResponse>>(`${this.apiUrl}/${id}/cancel`, {});
   }
 }

@@ -4,6 +4,7 @@ export interface SalesOrderLineResponse {
   product_id: string;
   line_number: number;
   quantity_ordered: number;
+  quantity_shipped: number;
   unit_price: number;
   line_total: number;
   notes: string | null;
@@ -13,3 +14,5 @@ export interface SalesOrderLineResponse {
   product_name?: string;
   product_sku?: string;
 }
+
+export type SalesOrderLinesResponse = SalesOrderLineResponse;
