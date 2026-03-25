@@ -56,9 +56,7 @@
 
 @media (max-width: 992px) {
   .movement-table th:nth-child(5),
-  .movement-table td:nth-child(5),
-  .movement-table th:nth-child(7),
-  .movement-table td:nth-child(7) {
+  .movement-table td:nth-child(5) {
     display: none;
   }
 }

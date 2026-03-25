@@ -12,9 +12,12 @@ export class VerifyOtpComponent implements OnInit {
   verifyOtpForm!: FormGroup;
   submitted = false;
   isLoading = false;
+  isResending = false;
   errorMessage?: string;
   successMessage?: string;
   email?: string;
+  countdown = 0;
+  countdownInterval: any;
 
   constructor(
     private formBuilder: FormBuilder,
@@ -58,15 +61,50 @@ export class VerifyOtpComponent implements OnInit {
         this.isLoading = false;
         const resetToken = response.data?.resetToken;
         if (!resetToken) {
-          this.errorMessage = 'OTP verified but reset token was not returned.';
+          this.errorMessage = 'OTP đã được xác minh nhưng không nhận được token đặt lại.';
           return;
         }
         this.router.navigate(['/reset-password', resetToken]);
       },
       (error) => {
         this.isLoading = false;
-        this.errorMessage = error?.error?.message || 'An error occurred. Please try again.';
+        this.errorMessage = error?.error?.message || 'Đã xảy ra lỗi. Vui lòng thử lại.';
       }
     );
+  }
+
+  resendOtp(): void {
+    if (this.countdown > 0 || !this.email) {
+      return;
+    }
+
+    this.isResending = true;
+    this.errorMessage = undefined;
+    this.successMessage = undefined;
+
+    this.authService.forgotPassword({ email: this.email }).subscribe(
+      () => {
+        this.isResending = false;
+        this.successMessage = 'Đã gửi lại mã OTP.';
+        this.startCountdown();
+      },
+      (error) => {
+        this.isResending = false;
+        this.errorMessage = error?.error?.message || 'Đã xảy ra lỗi. Vui lòng thử lại.';
+      }
+    );
+  }
+
+  private startCountdown(): void {
+    this.countdown = 60;
+    if (this.countdownInterval) {
+      clearInterval(this.countdownInterval);
+    }
+    this.countdownInterval = setInterval(() => {
+      this.countdown--;
+      if (this.countdown <= 0) {
+        clearInterval(this.countdownInterval);
+      }
+    }, 1000);
   }
 }

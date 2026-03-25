@@ -10,17 +10,17 @@
     </div>
     <div class="hero-actions">
       <button class="btn btn-primary" (click)="activeTab === 'permissions' ? openCreatePermModal() : openCreateRoleModal()">
-        + Thêm {{ activeTab === 'permissions' ? 'Permission' : 'Role' }}
+        + Thêm {{ activeTab === 'permissions' ? 'Quyền' : 'Vai trò' }}
       </button>
     </div>
   </div>
 
   <div class="tabs-container">
     <button class="tab-btn" [class.active]="activeTab === 'permissions'" (click)="switchTab('permissions')">
-      <i class="fa-solid fa-key" aria-hidden="true"></i> Permissions
+      <i class="fa-solid fa-key" aria-hidden="true"></i> Quyền
     </button>
     <button class="tab-btn" [class.active]="activeTab === 'roles'" (click)="switchTab('roles')">
-      <i class="fa-solid fa-user-shield" aria-hidden="true"></i> Roles
+      <i class="fa-solid fa-user-shield" aria-hidden="true"></i> Vai trò
     </button>
   </div>
 
@@ -59,7 +59,7 @@
       <option value="DELETE">DELETE</option>
     </select>
     <button class="btn btn-primary" (click)="onSearch()"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i> Tìm kiếm</button>
-    <button class="btn btn-ghost" (click)="onResetFilter()"><i class="fa-solid fa-rotate-right" aria-hidden="true"></i> Reset</button>
+    <button class="btn btn-ghost" (click)="onResetFilter()"><i class="fa-solid fa-rotate-right" aria-hidden="true"></i> Đặt lại</button>
   </div>
 
   <div class="loading-state" *ngIf="loading"><span>Đang tải dữ liệu...</span></div>
@@ -121,7 +121,7 @@
           <td>{{ role.description ?? '—' }}</td>
           <td>
             <span class="badge" [ngClass]="role.is_default ? 'badge-active' : 'badge-inactive'">
-              {{ role.is_default ? 'Default' : '—' }}
+              {{ role.is_default ? 'Mặc định' : '—' }}
             </span>
           </td>
           <td>{{ role.permission_count ?? 0 }}</td>

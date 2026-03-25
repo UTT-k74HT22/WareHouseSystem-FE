@@ -9,3 +9,30 @@
   color: #166534;
   margin-bottom: 16px;
 }
+
+.resend-otp {
+  text-align: center;
+  margin: 12px 0;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.btn-link {
+  background: none;
+  border: none;
+  color: #047857;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 4px 8px;
+  text-decoration: underline;
+}
+
+.btn-link:hover {
+  color: #065f46;
+}
+
+.btn-link:disabled {
+  color: #9ca3af;
+  cursor: not-allowed;
+}
