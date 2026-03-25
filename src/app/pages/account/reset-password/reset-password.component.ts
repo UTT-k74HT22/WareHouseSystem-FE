@@ -82,13 +82,13 @@ export class ResetPasswordComponent implements OnInit {
     this.authService.resetPassword(this.token, { new_password: newPassword }).subscribe(
       () => {
         this.isLoading = false;
-        this.successMessage = 'Your password has been reset successfully.';
+        this.successMessage = 'Mật khẩu của bạn đã được đặt lại thành công.';
         this.resetPasswordForm.reset();
         setTimeout(() => this.router.navigate(['/login']), 2000);
       },
       (error) => {
         this.isLoading = false;
-        this.errorMessage = error.error.message || 'An error occurred. Please try again.';
+        this.errorMessage = error.error.message || 'Đã xảy ra lỗi. Vui lòng thử lại.';
       }
     );
   }

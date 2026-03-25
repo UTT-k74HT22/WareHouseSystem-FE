@@ -45,12 +45,12 @@ export class ForgotPasswordComponent implements OnInit {
     this.authService.forgotPassword({ email }).subscribe(
       () => {
         this.isLoading = false;
-        this.successMessage = 'An email has been sent with a link to reset your password.';
+        this.successMessage = 'Đã gửi email với liên kết đặt lại mật khẩu.';
         this.router.navigate(['/verify-otp'], { queryParams: { email } });
       },
       (error) => {
         this.isLoading = false;
-        this.errorMessage = error.error.message || 'An error occurred. Please try again.';
+        this.errorMessage = error.error.message || 'Đã xảy ra lỗi. Vui lòng thử lại.';
       }
     );
   }

@@ -40,9 +40,24 @@
 
       <!-- SUBMIT -->
       <button class="btn-primary" type="submit" [disabled]="isLoading">
-        <span *ngIf="!isLoading">Verify</span>
+        <span *ngIf="!isLoading">Xác minh</span>
         <i *ngIf="isLoading" class="loading-spinner fa-solid fa-rotate" aria-hidden="true"></i>
       </button>
+
+      <!-- RESEND OTP -->
+      <div class="resend-otp">
+        <span *ngIf="countdown > 0">Gửi lại mã sau {{ countdown }}s</span>
+        <button 
+          *ngIf="countdown === 0" 
+          type="button" 
+          class="btn-link" 
+          (click)="resendOtp()" 
+          [disabled]="isResending"
+        >
+          <span *ngIf="!isResending">Gửi lại mã OTP</span>
+          <i *ngIf="isResending" class="loading-spinner fa-solid fa-rotate" aria-hidden="true"></i>
+        </button>
+      </div>
 
       <!-- DIVIDER -->
       <div class="divider">

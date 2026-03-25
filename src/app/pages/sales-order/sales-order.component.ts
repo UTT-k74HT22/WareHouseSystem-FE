@@ -308,7 +308,16 @@ export class SalesOrderComponent implements OnInit {
         }
       },
       error: (error) => {
-        this.toastr.error(error?.error?.message || 'Hủy đơn hàng thất bại.');
+        const errorMsg = error?.error?.message || '';
+        let displayMsg = 'Hủy đơn hàng thất bại.';
+        
+        if (errorMsg.toLowerCase().includes('cannot cancel sales order with active shipments')) {
+          displayMsg = 'Không thể hủy đơn hàng vì có phiếu xuất đang hoạt động.';
+        } else if (errorMsg.toLowerCase().includes('cannot cancel')) {
+          displayMsg = 'Không thể hủy đơn hàng này.';
+        }
+        
+        this.toastr.error(displayMsg);
         this.showCancelConfirm = false;
         this.orderToCancel = null;
         if (this.selectedOrder?.id === orderId) {
