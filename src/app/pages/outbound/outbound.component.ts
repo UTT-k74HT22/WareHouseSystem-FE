@@ -211,10 +211,16 @@ export class OutboundComponent implements OnInit {
 
   buildLineForm(soLine: SalesOrderLineResponse): FormGroup {
     const remaining = Number(soLine.quantity_ordered) - Number(soLine.quantity_shipped || 0);
+    const product = this.products.find((p) => p.id === soLine.product_id);
+    
     return this.fb.group({
       sales_order_line_id: [soLine.id, Validators.required],
       product_id: [soLine.product_id, Validators.required],
-      product_name: [soLine.product_name || this.getSalesOrderLineProductDisplay(soLine)],
+      product_name: [soLine.product_name || product?.name || 'Không rõ tên'],
+      product_sku: [soLine.product_sku || product?.sku || 'N/A'],
+      qty_ordered: [soLine.quantity_ordered],
+      qty_shipped_total: [soLine.quantity_shipped || 0],
+      qty_remaining: [remaining],
       quantity_shipped: [remaining, [Validators.required, Validators.min(0.01), Validators.max(remaining)]],
       notes: ['']
     });
@@ -526,7 +532,15 @@ export class OutboundComponent implements OnInit {
   }
 
   getLineProductName(line: OutboundShipmentLinesResponse): string {
-    return line.product_name || line.productName || 'Không rõ sản phẩm';
+    if (line.product_name || line.productName) return line.product_name || line.productName || '';
+    
+    const productId = line.product_id || line.productId;
+    if (productId) {
+      const product = this.products.find(p => p.id === productId);
+      if (product) return product.name;
+    }
+    
+    return 'Không rõ sản phẩm';
   }
 
   getLineBatchNumber(line: OutboundShipmentLinesResponse): string | null {
@@ -534,7 +548,10 @@ export class OutboundComponent implements OnInit {
   }
 
   getLineLocationName(line: OutboundShipmentLinesResponse): string {
-    return line.location_name || line.locationName || 'Thông tin sẽ được cập nhật sau khi bắt đầu lấy hàng';
+    const locName = line.location_name || line.locationName;
+    if (locName) return locName;
+
+    return 'Thông tin kho chưa cập nhật';
   }
 
   getLineQuantity(line: OutboundShipmentLinesResponse): number {

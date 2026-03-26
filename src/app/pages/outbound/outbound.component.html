@@ -187,14 +187,29 @@
               <thead>
                 <tr>
                   <th>Sản phẩm</th>
-                  <th width="150" class="text-center">Số lượng <span class="required">*</span></th>
+                  <th width="100" class="text-center">Đơn hàng</th>
+                  <th width="100" class="text-center">Đã xuất</th>
+                  <th width="100" class="text-center">Còn lại</th>
+                  <th width="150" class="text-center">Xuất đợt này <span class="required">*</span></th>
                   <th>Ghi chú line</th>
                 </tr>
               </thead>
               <tbody formArrayName="lines">
                 <tr *ngFor="let line of lines.controls; let i = index" [formGroupName]="i">
-                  <td>{{ line.get('product_name')?.value }}</td>
-                  <td><input type="number" formControlName="quantity_shipped" class="form-input text-center" /></td>
+                  <td>
+                    <div class="product-cell">
+                      <span class="product-name">{{ line.get('product_name')?.value }}</span>
+                      <span class="product-sku">SKU: {{ line.get('product_sku')?.value }}</span>
+                    </div>
+                  </td>
+                  <td class="text-center">{{ line.get('qty_ordered')?.value | number:'1.0-0' }}</td>
+                  <td class="text-center text-muted">{{ line.get('qty_shipped_total')?.value | number:'1.0-0' }}</td>
+                  <td class="text-center font-bold" [class.text-warning]="line.get('qty_remaining')?.value > 0">
+                    {{ line.get('qty_remaining')?.value | number:'1.0-0' }}
+                  </td>
+                  <td>
+                    <input type="number" formControlName="quantity_shipped" class="form-input text-center" style="font-weight: 700; color: #2563eb;" />
+                  </td>
                   <td><input type="text" formControlName="notes" class="form-input" placeholder="Ghi chú..." /></td>
                 </tr>
               </tbody>
