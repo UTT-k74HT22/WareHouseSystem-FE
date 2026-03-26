@@ -28,6 +28,7 @@ export class SalesOrderComponent implements OnInit {
   totalPages = 0;
   loading = false;
   viewMode: 'grid' | 'list' = 'list';
+  detailTab: 'header' | 'lines' = 'header';
 
   searchKeyword = '';
   selectedStatus: '' | OrderStatus = '';
@@ -186,6 +187,10 @@ export class SalesOrderComponent implements OnInit {
 
   canCancelOrder(order: SalesOrderResponse): boolean {
     return order.status === OrderStatus.DRAFT || order.status === OrderStatus.CONFIRMED;
+  }
+
+  canEditOrder(order: SalesOrderResponse): boolean {
+    return order.status === OrderStatus.DRAFT;
   }
 
   onSearch(): void {

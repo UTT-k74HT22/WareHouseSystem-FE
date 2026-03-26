@@ -157,6 +157,10 @@
                 <span class="info-label">Sức chứa:</span>
                 <span class="info-text">{{ location.capacity }}</span>
               </div>
+              <div class="info-item">
+                <span class="info-label">Đã dùng:</span>
+                <span class="info-text">{{ location.used_capacity }}</span>
+              </div>
             </div>
           </div>
 
@@ -183,6 +187,7 @@
             <th style="width: 120px;">Khu vực</th>
             <th style="width: 120px;">Loại</th>
             <th style="width: 100px;">Sức chứa</th>
+            <th style="width: 100px;">Đã dùng</th>
             <th style="width: 130px;">Trạng thái</th>
             <th style="width: 180px;" class="text-center">Thao tác</th>
           </tr>
@@ -211,6 +216,9 @@
             </td>
             <td>
               <span>{{ location.capacity }}</span>
+            </td>
+            <td>
+              <span>{{ location.used_capacity }}</span>
             </td>
             <td>
               <span class="status-badge" [ngClass]="getStatusClass(location.status)">
@@ -320,6 +328,10 @@
             <div class="detail-item">
               <label>Sức chứa</label>
               <span>{{ selectedLocation.capacity }}</span>
+            </div>
+            <div class="detail-item">
+              <label>Đã dùng</label>
+              <span>{{ selectedLocation.used_capacity }}</span>
             </div>
             <div class="detail-item">
               <label>Trạng thái</label>

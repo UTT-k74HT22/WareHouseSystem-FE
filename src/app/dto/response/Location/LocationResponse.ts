@@ -11,6 +11,7 @@ export interface LocationResponse {
   zone: string;
   type: LocationType;
   capacity: number;
+  used_capacity: number;
   status: LocationStatus;
   notes: string;
   created_by: string;

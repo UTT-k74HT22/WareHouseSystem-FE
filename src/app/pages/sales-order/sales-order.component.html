@@ -141,13 +141,31 @@
 
 <!-- Modal Create -->
 <div class="modal-overlay" *ngIf="showCreateModal" (click)="closeAllModals()">
-  <div class="modal-box modal-lg" (click)="$event.stopPropagation()">
+  <div class="modal-box modal-xl" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h3>Tạo đơn bán hàng mới</h3>
+      <div class="modal-title-section">
+        <div class="modal-icon">
+          <i class="fa-solid fa-file-invoice" aria-hidden="true"></i>
+        </div>
+        <div>
+          <h3>Tạo đơn bán hàng mới</h3>
+          <p class="modal-subtitle">Điền thông tin để tạo đơn bán hàng mới</p>
+        </div>
+      </div>
       <button class="modal-close" (click)="closeAllModals()">✕</button>
     </div>
+
     <div class="modal-body">
+      <div class="info-box">
+        <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+        <div>Đơn bán hàng mới sẽ được tạo với trạng thái <strong>Nháp</strong>. Bạn có thể chỉnh sửa sau khi tạo.</div>
+      </div>
+
       <form [formGroup]="createForm">
+        <div class="form-section-title">
+          <i class="fa-solid fa-user" aria-hidden="true"></i> Thông tin đơn hàng
+        </div>
+        
         <div class="form-row">
           <div class="form-group">
             <label>Khách hàng <span class="required">*</span></label>
@@ -190,118 +208,224 @@
           </div>
         </div>
 
-        <div class="lines-section">
+        <div class="lines-section mt-4">
           <div class="lines-header">
-            <h4>Danh sách sản phẩm</h4>
-            <button type="button" class="btn btn-secondary btn-sm" (click)="addLine()">+ Thêm dòng</button>
+            <h4><i class="fa-solid fa-boxes-packing" aria-hidden="true"></i> Danh sách sản phẩm</h4>
+            <button type="button" class="btn btn-secondary btn-sm" (click)="addLine()">
+              <i class="fa-solid fa-plus" aria-hidden="true"></i> Thêm dòng
+            </button>
           </div>
           
-          <table class="data-table line-table">
-            <thead>
-              <tr>
-                <th>Sản phẩm <span class="required">*</span></th>
-                <th width="120">Số lượng <span class="required">*</span></th>
-                <th width="150">Đơn giá <span class="required">*</span></th>
-                <th>Thành tiền</th>
-                <th width="50"></th>
-              </tr>
-            </thead>
-            <tbody formArrayName="lines">
-              <tr *ngFor="let line of lines.controls; let i = index" [formGroupName]="i">
-                <td>
-                  <select formControlName="product_id">
-                    <option value="">-- Chọn sản phẩm --</option>
-                    <option *ngFor="let p of products" [value]="p.id">{{ p.name }} ({{ p.sku }})</option>
-                  </select>
-                </td>
-                <td><input type="number" formControlName="quantity_ordered" min="0.01" /></td>
-                <td><input type="number" formControlName="unit_price" min="0" /></td>
-                <td class="text-right">
-                  {{ (line.get('quantity_ordered')?.value * line.get('unit_price')?.value) | number }}
-                </td>
-                <td>
-                  <button type="button" class="btn-icon btn-delete" (click)="removeLine(i)">
-                    <i class="fa-solid fa-xmark"></i>
-                  </button>
-                </td>
-              </tr>
-            </tbody>
-            <tfoot>
-              <tr>
-                <td colspan="3" class="text-right font-bold">Tổng cộng:</td>
-                <td class="text-right font-bold text-primary">{{ calculateTotal() | number }}</td>
-                <td></td>
-              </tr>
-            </tfoot>
-          </table>
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th style="width: 40%;">Sản phẩm <span class="required">*</span></th>
+                  <th style="width: 15%;" class="text-center">Số lượng <span class="required">*</span></th>
+                  <th style="width: 20%;" class="text-right">Đơn giá <span class="required">*</span></th>
+                  <th style="width: 20%;" class="text-right">Thành tiền</th>
+                  <th style="width: 5%;"></th>
+                </tr>
+              </thead>
+              <tbody formArrayName="lines">
+                <tr *ngFor="let line of lines.controls; let i = index" [formGroupName]="i">
+                  <td>
+                    <select formControlName="product_id" class="form-control">
+                      <option value="">-- Chọn sản phẩm --</option>
+                      <option *ngFor="let p of products" [value]="p.id">{{ p.name }} ({{ p.sku }})</option>
+                    </select>
+                  </td>
+                  <td>
+                    <input type="number" formControlName="quantity_ordered" min="0.01" class="form-control text-center" />
+                  </td>
+                  <td>
+                    <input type="number" formControlName="unit_price" min="0" class="form-control text-right" />
+                  </td>
+                  <td class="text-right">
+                    <span class="font-bold">{{ (line.get('quantity_ordered')?.value * line.get('unit_price')?.value) | number:'1.0-0' }}</span>
+                  </td>
+                  <td class="text-center">
+                    <button type="button" class="btn-icon btn-delete" (click)="removeLine(i)" title="Xóa dòng">
+                      <i class="fa-solid fa-trash-can" aria-hidden="true"></i>
+                    </button>
+                  </td>
+                </tr>
+                <tr *ngIf="lines.length === 0">
+                  <td colspan="5" class="text-center py-4 text-muted">
+                    <i class="fa-solid fa-box-open fa-2x mb-2 d-block"></i>
+                    Chưa có sản phẩm nào. Nhấn "Thêm dòng" để bắt đầu.
+                  </td>
+                </tr>
+              </tbody>
+              <tfoot *ngIf="lines.length > 0">
+                <tr>
+                  <td colspan="3" class="text-right font-bold">Tổng cộng:</td>
+                  <td class="text-right font-bold text-primary" style="font-size: 1.1rem;">
+                    {{ calculateTotal() | number:'1.0-0' }} {{ createForm.get('currency')?.value }}
+                  </td>
+                  <td></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
         </div>
       </form>
     </div>
+
     <div class="modal-footer">
-      <button class="btn btn-ghost" (click)="closeAllModals()">Huỷ</button>
-      <button class="btn btn-primary" (click)="onCreateSubmit()" [disabled]="createForm.invalid">Lưu đơn hàng</button>
+      <button class="btn btn-ghost" (click)="closeAllModals()">
+        <i class="fa-solid fa-xmark" aria-hidden="true"></i> Huỷ
+      </button>
+      <button class="btn btn-primary" (click)="onCreateSubmit()" [disabled]="createForm.invalid">
+        <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Lưu đơn hàng
+      </button>
     </div>
   </div>
 </div>
 
 <!-- Modal Detail -->
 <div class="modal-overlay" *ngIf="showDetailModal" (click)="closeAllModals()">
-  <div class="modal-box modal-lg" (click)="$event.stopPropagation()">
+  <div class="modal-box modal-xl" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h3>Chi tiết đơn hàng: {{ selectedOrder?.so_number }}</h3>
+      <div class="modal-title-section">
+        <div class="modal-icon">
+          <i class="fa-solid fa-file-invoice" aria-hidden="true"></i>
+        </div>
+        <div>
+          <h3>{{ selectedOrder?.so_number }}</h3>
+          <span class="badge" [ngClass]="getStatusClass(selectedOrder?.status)">{{ getStatusLabel(selectedOrder?.status) }}</span>
+        </div>
+      </div>
       <button class="modal-close" (click)="closeAllModals()">✕</button>
     </div>
+
+    <!-- Detail Action Bar -->
+    <div class="detail-action-bar" *ngIf="selectedOrder">
+      <button class="btn btn-ghost" (click)="openEditModal()" *ngIf="canEditOrder(selectedOrder)" title="Sửa thông tin đơn hàng">
+        <i class="fa-regular fa-pen-to-square" aria-hidden="true"></i> Sửa header
+      </button>
+      <button class="btn btn-primary" (click)="confirmOrder(selectedOrder.id)" *ngIf="canConfirmOrder(selectedOrder)" [disabled]="!selectedOrder.lines || selectedOrder.lines.length === 0"
+              [title]="!selectedOrder.lines || selectedOrder.lines.length === 0 ? 'Cần ít nhất 1 dòng sản phẩm để xác nhận' : 'Xác nhận đơn hàng'">
+        <i class="fa-solid fa-check-double" aria-hidden="true"></i> Xác nhận đơn
+      </button>
+      <button class="btn-danger-outline" (click)="openCancelConfirm(selectedOrder)" *ngIf="canCancelOrder(selectedOrder)">
+        <i class="fa-regular fa-trash-can" aria-hidden="true"></i> Huỷ đơn
+      </button>
+    </div>
+
+    <!-- Tabs -->
+    <div class="detail-tabs">
+      <button class="detail-tab" [class.active]="detailTab === 'header'" (click)="detailTab = 'header'">
+        <i class="fa-regular fa-file-lines" aria-hidden="true"></i> Thông tin chung
+      </button>
+      <button class="detail-tab" [class.active]="detailTab === 'lines'" (click)="detailTab = 'lines'">
+        <i class="fa-solid fa-list-ol" aria-hidden="true"></i> Dòng đơn hàng
+        <span class="tab-count" *ngIf="selectedOrder?.lines && selectedOrder.lines.length > 0">{{ selectedOrder.lines.length }}</span>
+      </button>
+    </div>
+
     <div class="modal-body" *ngIf="selectedOrder">
-      <div class="status-banner" [ngClass]="getStatusClass(selectedOrder.status)">
-        Trạng thái hiện tại: <strong>{{ getStatusLabel(selectedOrder.status) }}</strong>
+
+      <!-- ═══ TAB: THÔNG TIN CHUNG ═══ -->
+      <div *ngIf="detailTab === 'header'">
+        <div class="detail-grid">
+          <div class="detail-item"><span class="detail-label">Số đơn hàng:</span><span><strong>{{ selectedOrder.so_number }}</strong></span></div>
+          <div class="detail-item"><span class="detail-label">Khách hàng:</span><span>{{ selectedOrder.customer_name ?? selectedOrder.customer_id }}</span></div>
+          <div class="detail-item"><span class="detail-label">Kho xuất:</span><span>{{ selectedOrder.warehouse_name ?? selectedOrder.warehouse_id }}</span></div>
+          <div class="detail-item"><span class="detail-label">Trạng thái:</span><span class="badge" [ngClass]="getStatusClass(selectedOrder.status)">{{ getStatusLabel(selectedOrder.status) }}</span></div>
+          <div class="detail-item"><span class="detail-label">Ngày đặt:</span><span>{{ selectedOrder.order_date | date:'dd/MM/yyyy' }}</span></div>
+          <div class="detail-item"><span class="detail-label">Ngày giao dự kiến:</span><span>{{ selectedOrder.requested_delivery_date ? (selectedOrder.requested_delivery_date | date:'dd/MM/yyyy') : '—' }}</span></div>
+          <div class="detail-item"><span class="detail-label">Tiền tệ:</span><span>{{ selectedOrder.currency }}</span></div>
+          <div class="detail-item"><span class="detail-label">Điều khoản TT:</span><span>{{ selectedOrder.payment_terms ?? '—' }}</span></div>
+        </div>
+
+        <div class="detail-section-title">Tổng hợp tài chính</div>
+        <div class="detail-grid">
+          <div class="detail-item"><span class="detail-label">Subtotal:</span><span>{{ selectedOrder.sub_total | number:'1.0-0' }} {{ selectedOrder.currency }}</span></div>
+          <div class="detail-item"><span class="detail-label">Thuế:</span><span>{{ selectedOrder.tax_amount | number:'1.0-0' }} {{ selectedOrder.currency }}</span></div>
+          <div class="detail-item detail-item--highlight"><span class="detail-label">Tổng tiền:</span><span><strong>{{ selectedOrder.total_amount | number:'1.0-0' }} {{ selectedOrder.currency }}</strong></span></div>
+        </div>
+
+        <div class="detail-section-title" *ngIf="selectedOrder.notes">Ghi chú</div>
+        <div class="detail-notes" *ngIf="selectedOrder.notes">{{ selectedOrder.notes }}</div>
+
+        <div class="detail-section-title">Thông tin hệ thống</div>
+        <div class="detail-grid">
+          <div class="detail-item"><span class="detail-label">Xác nhận lúc:</span><span>{{ selectedOrder.confirmed_at ? (selectedOrder.confirmed_at | date:'dd/MM/yyyy HH:mm') : '—' }}</span></div>
+          <div class="detail-item"><span class="detail-label">Người xác nhận:</span><span>{{ selectedOrder.confirmed_by ?? '—' }}</span></div>
+          <div class="detail-item"><span class="detail-label">Tạo lúc:</span><span>{{ selectedOrder.created_at | date:'dd/MM/yyyy HH:mm' }}</span></div>
+          <div class="detail-item"><span class="detail-label">Cập nhật lúc:</span><span>{{ selectedOrder.updated_at | date:'dd/MM/yyyy HH:mm' }}</span></div>
+        </div>
       </div>
 
-      <div class="detail-grid">
-        <div class="detail-item"><span class="detail-label">Số đơn hàng:</span><span>{{ selectedOrder.so_number }}</span></div>
-        <div class="detail-item"><span class="detail-label">Khách hàng:</span><span>{{ getCustomerName(selectedOrder.customer_id) }}</span></div>
-        <div class="detail-item"><span class="detail-label">Kho xuất:</span><span>{{ getWarehouseName(selectedOrder.warehouse_id) }}</span></div>
-        <div class="detail-item"><span class="detail-label">Ngày đặt:</span><span>{{ selectedOrder.order_date | date:'dd/MM/yyyy' }}</span></div>
-        <div class="detail-item"><span class="detail-label">Ngày giao dự kiến:</span><span>{{ selectedOrder.requested_delivery_date | date:'dd/MM/yyyy' }}</span></div>
-        <div class="detail-item"><span class="detail-label">Tiền tệ:</span><span>{{ selectedOrder.currency }}</span></div>
-        <div class="detail-item full-width"><span class="detail-label">Ghi chú:</span><span>{{ selectedOrder.notes || '—' }}</span></div>
-      </div>
+      <!-- ═══ TAB: DÒNG ĐƠN HÀNG ═══ -->
+      <div *ngIf="detailTab === 'lines'">
+        <div class="lines-header">
+          <h4><i class="fa-solid fa-list-ol" aria-hidden="true"></i> Dòng đơn hàng ({{ selectedOrder.lines?.length || 0 }})</h4>
+        </div>
 
-      <div class="lines-section mt-4">
-        <h4>Chi tiết sản phẩm</h4>
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Sản phẩm</th>
-              <th>Số lượng đặt</th>
-              <th>Đã giao</th>
-              <th>Đơn giá</th>
-              <th>Thành tiền</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let line of selectedOrder.lines; let idx = index">
-              <td>{{ idx + 1 }}</td>
-              <td>{{ line.product_name || getProductName(line.product_id) }}</td>
-              <td>{{ line.quantity_ordered }}</td>
-              <td>{{ line.quantity_shipped }}</td>
-              <td class="text-right">{{ line.unit_price | number }}</td>
-              <td class="text-right">{{ line.line_total | number }}</td>
-            </tr>
-          </tbody>
-          <tfoot>
-            <tr>
-              <td colspan="5" class="text-right font-bold">Tổng tiền:</td>
-              <td class="text-right font-bold text-primary">{{ selectedOrder.total_amount | number }} {{ selectedOrder.currency }}</td>
-            </tr>
-          </tfoot>
-        </table>
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th style="width: 50px;">#</th>
+                <th>Sản phẩm</th>
+                <th style="width: 120px;" class="text-center">SL đặt</th>
+                <th style="width: 100px;" class="text-center">Đã giao</th>
+                <th style="width: 100px;" class="text-center">Còn lại</th>
+                <th style="width: 150px;" class="text-right">Đơn giá</th>
+                <th style="width: 150px;" class="text-right">Thành tiền</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let line of selectedOrder.lines; let idx = index">
+                <td>{{ idx + 1 }}</td>
+                <td>
+                  <div class="product-cell">
+                    <span class="product-name">{{ line.product_name ?? line.product_id }}</span>
+                    <span class="product-sku" *ngIf="line.product_sku">{{ line.product_sku }}</span>
+                  </div>
+                </td>
+                <td class="text-center">
+                  <span class="qty-badge">{{ line.quantity_ordered | number:'1.0-0' }}</span>
+                </td>
+                <td class="text-center">
+                  <span class="qty-badge qty-received">{{ line.quantity_shipped || 0 }}</span>
+                </td>
+                <td class="text-center">
+                  <span class="qty-badge" [class.qty-warning]="(line.quantity_ordered - (line.quantity_shipped || 0)) > 0">
+                    {{ (line.quantity_ordered - (line.quantity_shipped || 0)) | number:'1.0-0' }}
+                  </span>
+                </td>
+                <td class="text-right">{{ line.unit_price | number:'1.0-0' }}</td>
+                <td class="text-right">
+                  <span class="line-total">{{ line.line_total | number:'1.0-0' }}</span>
+                </td>
+              </tr>
+              <tr *ngIf="!selectedOrder.lines || selectedOrder.lines.length === 0">
+                <td colspan="7" class="empty-state">
+                  <div class="empty-lines-message">
+                    <i class="fa-regular fa-clipboard" aria-hidden="true"></i>
+                    <p>Chưa có dòng đơn hàng nào</p>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+            <tfoot *ngIf="selectedOrder.lines && selectedOrder.lines.length > 0">
+              <tr class="summary-row">
+                <td colspan="6" class="text-right font-bold total-label">Tổng cộng:</td>
+                <td class="text-right font-bold text-primary total-value">{{ selectedOrder.total_amount | number:'1.0-0' }} {{ selectedOrder.currency }}</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
       </div>
     </div>
+
     <div class="modal-footer">
-      <button class="btn btn-ghost" (click)="closeAllModals()">Đóng</button>
-      <button class="btn btn-danger" *ngIf="selectedOrder && canCancelOrder(selectedOrder)" (click)="openCancelConfirm(selectedOrder)">Huỷ đơn hàng</button>
-      <button class="btn btn-success" *ngIf="selectedOrder && canConfirmOrder(selectedOrder)" (click)="confirmOrder(selectedOrder.id)">Xác nhận đơn hàng</button>
+      <button class="btn btn-ghost" (click)="closeAllModals()">
+        <i class="fa-solid fa-xmark" aria-hidden="true"></i> Đóng
+      </button>
     </div>
   </div>
 </div>
@@ -309,13 +433,30 @@
 <!-- Cancel Confirm Modal -->
 <div class="modal-overlay" *ngIf="showCancelConfirm" (click)="closeAllModals()">
   <div class="modal-box modal-sm" (click)="$event.stopPropagation()">
-    <div class="modal-header"><h3>Xác nhận hủy</h3></div>
+    <div class="modal-header">
+      <div class="modal-title-section">
+        <div class="modal-icon modal-icon-danger">
+          <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+        </div>
+        <div>
+          <h3>Xác nhận hủy đơn hàng</h3>
+        </div>
+      </div>
+      <button class="modal-close" (click)="closeAllModals()">✕</button>
+    </div>
     <div class="modal-body">
-      Bạn có chắc chắn muốn hủy đơn hàng <strong>{{ orderToCancel?.so_number }}</strong>? Thao tác này sẽ bám theo ràng buộc trạng thái từ backend.
+      <div class="confirm-message">
+        <p>Bạn có chắc chắn muốn hủy đơn hàng <strong>{{ orderToCancel?.so_number }}</strong>?</p>
+        <p class="warning-text">Thao tác này không thể hoàn tác!</p>
+      </div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-ghost" (click)="closeAllModals()">Huỷ</button>
-      <button class="btn btn-danger" (click)="onCancelConfirm()">Xác nhận hủy</button>
+      <button class="btn btn-ghost" (click)="closeAllModals()">
+        <i class="fa-solid fa-xmark" aria-hidden="true"></i> Huỷ
+      </button>
+      <button class="btn-danger-outline" (click)="onCancelConfirm()">
+        <i class="fa-solid fa-check" aria-hidden="true"></i> Xác nhận hủy
+      </button>
     </div>
   </div>
 </div>

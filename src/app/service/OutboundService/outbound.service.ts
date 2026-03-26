@@ -65,4 +65,9 @@ export class OutboundService {
   cancel(id: string): Observable<ApiResponse<OutboundShipmentsResponse>> {
     return this.http.put<ApiResponse<OutboundShipmentsResponse>>(`${this.apiUrl}/${id}/cancel`, {});
   }
+
+  /** PUT /api/v1/outbound-shipments/:id/confirm-dispatch */
+  confirmDispatch(id: string): Observable<ApiResponse<OutboundShipmentsResponse>> {
+    return this.http.put<ApiResponse<OutboundShipmentsResponse>>(`${this.apiUrl}/${id}/confirm-dispatch`, {});
+  }
 }
