@@ -26,7 +26,7 @@
     </div>
     <div class="stat-item stat-info">
       <div class="stat-bar"></div>
-      <div class="stat-body"><div class="stat-label">Đang lấy hàng</div><div class="stat-value">{{ pickingCount }}</div></div>
+      <div class="stat-body"><div class="stat-label">Đang xử lý</div><div class="stat-value">{{ pickingCount }}</div></div>
     </div>
     <div class="stat-item stat-full">
       <div class="stat-bar"></div>
@@ -134,12 +134,19 @@
 <div class="modal-overlay" *ngIf="showCreateModal" (click)="closeAllModals()">
   <div class="modal-box modal-lg" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h3>Tạo phiếu xuất kho</h3>
+      <div class="modal-title-section">
+        <div class="modal-icon"><i class="fa-solid fa-truck-fast"></i></div>
+        <div>
+          <h3>Tạo phiếu xuất kho</h3>
+          <p class="modal-subtitle">Lên kế hoạch xuất kho cho đơn bán hàng</p>
+        </div>
+      </div>
       <button class="modal-close" (click)="closeAllModals()">✕</button>
     </div>
     <div class="modal-body">
       <form [formGroup]="createForm">
-        <div class="form-row">
+        <div class="form-section-title"><i class="fa-solid fa-file-invoice"></i> Thông tin cơ bản</div>
+        <div class="form-grid">
           <div class="form-group">
             <label>Đơn bán hàng <span class="required">*</span></label>
             <select formControlName="sales_order_id" (change)="onOrderSelect($any($event.target).value)">
@@ -153,9 +160,6 @@
             <label>Ngày xuất kho <span class="required">*</span></label>
             <input type="date" formControlName="shipment_date" />
           </div>
-        </div>
-
-        <div class="form-row">
           <div class="form-group">
             <label>Nhà vận chuyển</label>
             <input type="text" formControlName="carrier" placeholder="VD: Giao hàng nhanh, VNPost..." />
@@ -166,103 +170,135 @@
           </div>
         </div>
 
-        <div class="form-row">
-          <div class="form-group">
-            <label>Ghi chú</label>
-            <input type="text" formControlName="notes" placeholder="Nhập ghi chú nếu có..." />
-          </div>
+        <div class="form-group mt-3">
+          <label>Ghi chú</label>
+          <input type="text" formControlName="notes" placeholder="Nhập ghi chú nếu có..." />
         </div>
 
-        <div class="lines-section" *ngIf="lines.length > 0">
-          <div class="lines-header">
-            <h4>Chi tiết hàng xuất</h4>
+        <div class="lines-section mt-4" *ngIf="lines.length > 0">
+          <div class="form-section-title"><i class="fa-solid fa-boxes-stacked"></i> Danh sách hàng xuất</div>
+          <div class="info-box mb-3">
+            <i class="fa-solid fa-circle-info"></i>
+            <div>Số lượng sẽ được hệ thống giữ chỗ (reserve) sau khi phiếu được tạo.</div>
           </div>
-          <p class="hero-subtitle" style="margin-bottom: 0.75rem;">
-            Bản nháp chỉ chốt số lượng cần xuất. Vị trí và lô sẽ được backend map theo reservation khi bắt đầu lấy hàng.
-          </p>
           
-          <table class="data-table line-table">
-            <thead>
-              <tr>
-                <th>Sản phẩm</th>
-                <th width="120">Số lượng <span class="required">*</span></th>
-                <th>Ghi chú</th>
-              </tr>
-            </thead>
-            <tbody formArrayName="lines">
-              <tr *ngFor="let line of lines.controls; let i = index" [formGroupName]="i">
-                <td>{{ line.get('product_name')?.value }}</td>
-                <td><input type="number" formControlName="quantity_shipped" /></td>
-                <td><input type="text" formControlName="notes" placeholder="Ghi chú pick nếu cần..." /></td>
-              </tr>
-            </tbody>
-          </table>
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Sản phẩm</th>
+                  <th width="100" class="text-center">Đơn hàng</th>
+                  <th width="100" class="text-center">Đã xuất</th>
+                  <th width="100" class="text-center">Còn lại</th>
+                  <th width="150" class="text-center">Xuất đợt này <span class="required">*</span></th>
+                  <th>Ghi chú line</th>
+                </tr>
+              </thead>
+              <tbody formArrayName="lines">
+                <tr *ngFor="let line of lines.controls; let i = index" [formGroupName]="i">
+                  <td>
+                    <div class="product-cell">
+                      <span class="product-name">{{ line.get('product_name')?.value }}</span>
+                      <span class="product-sku">SKU: {{ line.get('product_sku')?.value }}</span>
+                    </div>
+                  </td>
+                  <td class="text-center">{{ line.get('qty_ordered')?.value | number:'1.0-0' }}</td>
+                  <td class="text-center text-muted">{{ line.get('qty_shipped_total')?.value | number:'1.0-0' }}</td>
+                  <td class="text-center font-bold" [class.text-warning]="line.get('qty_remaining')?.value > 0">
+                    {{ line.get('qty_remaining')?.value | number:'1.0-0' }}
+                  </td>
+                  <td>
+                    <input type="number" formControlName="quantity_shipped" class="form-input text-center" style="font-weight: 700; color: #2563eb;" />
+                  </td>
+                  <td><input type="text" formControlName="notes" class="form-input" placeholder="Ghi chú..." /></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </form>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" (click)="closeAllModals()">Huỷ</button>
-      <button class="btn btn-primary" (click)="onCreateSubmit()" [disabled]="createForm.invalid">Lưu phiếu xuất</button>
+      <button class="btn btn-primary" (click)="onCreateSubmit()">Lưu phiếu xuất</button>
     </div>
   </div>
 </div>
 
 <!-- Modal Detail -->
 <div class="modal-overlay" *ngIf="showDetailModal" (click)="closeAllModals()">
-  <div class="modal-box modal-lg" (click)="$event.stopPropagation()">
+  <div class="modal-box modal-xl" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h3>Chi tiết phiếu xuất: {{ getShipmentNumber(selectedShipment) }}</h3>
+      <div class="modal-title-section">
+        <div class="modal-icon"><i class="fa-solid fa-truck-ramp-box"></i></div>
+        <div>
+          <h3>{{ getShipmentNumber(selectedShipment) }}</h3>
+          <span class="badge" [ngClass]="getStatusClass(getShipmentStatus(selectedShipment))">{{ getStatusLabel(getShipmentStatus(selectedShipment)) }}</span>
+        </div>
+      </div>
       <button class="modal-close" (click)="closeAllModals()">✕</button>
     </div>
+
+    <!-- Detail Action Bar -->
+    <div class="detail-action-bar" *ngIf="selectedShipment">
+      <button class="btn btn-primary" *ngIf="selectedShipment?.status === 'DRAFT'" (click)="startPicking(selectedShipment.id)">
+        <i class="fa-solid fa-hand-holding-hand"></i> Bắt đầu lấy hàng
+      </button>
+      <button class="btn btn-primary" *ngIf="selectedShipment?.status === 'PICKING'" (click)="markAsPacked(selectedShipment.id)">
+        <i class="fa-solid fa-box-archive"></i> Hoàn tất đóng gói
+      </button>
+      <button class="btn btn-success" *ngIf="selectedShipment?.status === 'PACKED'" (click)="ship(selectedShipment.id)">
+        <i class="fa-solid fa-truck-arrow-right"></i> Xác nhận xuất kho
+      </button>
+      <button class="btn btn-success" *ngIf="selectedShipment?.status === 'STAGING'" (click)="confirmDispatch(selectedShipment.id)">
+        <i class="fa-solid fa-check-double"></i> Xác nhận giao hàng
+      </button>
+      <button class="btn btn-danger-outline" *ngIf="selectedShipment?.status !== 'SHIPPED' && selectedShipment?.status !== 'CANCELLED'" 
+              (click)="cancelShipment(selectedShipment.id)">
+        <i class="fa-regular fa-circle-xmark"></i> Huỷ phiếu
+      </button>
+    </div>
+
+    <!-- Tabs -->
+    <div class="detail-tabs">
+      <button class="detail-tab" [class.active]="detailTab === 'header'" (click)="detailTab = 'header'">
+        <i class="fa-regular fa-file-lines"></i> Thông tin chung
+      </button>
+      <button class="detail-tab" [class.active]="detailTab === 'lines'" (click)="detailTab = 'lines'">
+        <i class="fa-solid fa-list-ol"></i> Hàng hóa chi tiết
+        <span class="tab-count" *ngIf="selectedShipment?.lines && selectedShipment.lines.length > 0">{{ selectedShipment.lines.length }}</span>
+      </button>
+    </div>
+
     <div class="modal-body" *ngIf="selectedShipment">
-      <!-- Status Stepper (Final Fix for Icons) -->
+      
+      <!-- Stepper Section (Visual Flow) -->
+      <div class="detail-section-title" style="margin-top: 0; border-top: none;">Tiến độ xử lý</div>
       <div class="stepper-container" *ngIf="getShipmentStatus(selectedShipment) !== 'CANCELLED'">
-        <!-- Bước 1: Dự thảo -->
-        <div class="step-item" 
-             [class.active]="getShipmentStep() === 1" 
-             [class.completed]="getShipmentStep() > 1">
+        <div class="step-item" [class.active]="getShipmentStep() === 1" [class.completed]="getShipmentStep() > 1">
           <div class="step-circle"><i class="fas fa-file-alt"></i></div>
           <span class="step-label">Dự thảo</span>
         </div>
-
         <div class="step-line" [class.filled]="getShipmentStep() > 1"></div>
-
-        <!-- Bước 2: Picking -->
-        <div class="step-item" 
-             [class.active]="getShipmentStep() === 2" 
-             [class.completed]="getShipmentStep() > 2">
+        <div class="step-item" [class.active]="getShipmentStep() === 2" [class.completed]="getShipmentStep() > 2">
           <div class="step-circle"><i class="fas fa-dolly"></i></div>
           <span class="step-label">Picking</span>
         </div>
-
         <div class="step-line" [class.filled]="getShipmentStep() > 2"></div>
-
-        <!-- Bước 3: Packing -->
-        <div class="step-item" 
-             [class.active]="getShipmentStep() === 3" 
-             [class.completed]="getShipmentStep() > 3">
+        <div class="step-item" [class.active]="getShipmentStep() === 3" [class.completed]="getShipmentStep() > 3">
           <div class="step-circle"><i class="fas fa-box"></i></div>
           <span class="step-label">Packing</span>
         </div>
-
         <div class="step-line" [class.filled]="getShipmentStep() > 3"></div>
-
-        <!-- Bước 4: Shipped -->
-        <div class="step-item" 
-             [class.active]="getShipmentStep() === 4" 
-             [class.completed]="getShipmentStep() > 4">
+        <div class="step-item" [class.active]="getShipmentStep() === 4" [class.completed]="getShipmentStep() > 4">
           <div class="step-circle"><i class="fas fa-truck"></i></div>
           <span class="step-label">Shipped</span>
         </div>
       </div>
 
-      <div class="tab-container">
-        <button class="tab-btn" [class.active]="detailTab === 'header'" (click)="detailTab = 'header'">Tổng quan</button>
-        <button class="tab-btn" [class.active]="detailTab === 'lines'" (click)="detailTab = 'lines'">Hàng hóa chi tiết</button>
-      </div>
-
-      <div class="tab-content" *ngIf="detailTab === 'header'">
-        <div class="flow-card" [ngClass]="getStatusClass(selectedShipment.status)">
+      <!-- ═══ TAB: THÔNG TIN CHUNG ═══ -->
+      <div *ngIf="detailTab === 'header'">
+        <div class="flow-card mb-4" [ngClass]="getStatusClass(selectedShipment.status)">
           <div class="flow-icon"><i class="fa-solid fa-circle-info"></i></div>
           <div class="flow-body">
             <h4 class="flow-title">{{ getFlowStepTitle() }}</h4>
@@ -270,27 +306,53 @@
           </div>
         </div>
 
-        <div class="detail-grid card-style">
-          <div class="detail-item"><span class="detail-label">Mã phiếu:</span><span class="detail-value-bold">{{ getShipmentNumber(selectedShipment) }}</span></div>
-          <div class="detail-item"><span class="detail-label">Đơn hàng:</span><span class="detail-value-bold text-primary">{{ getSalesOrderDisplay(getSalesOrderId(selectedShipment)) }}</span></div>
+        <div class="detail-grid">
+          <div class="detail-item"><span class="detail-label">Số phiếu xuất:</span><span><strong>{{ getShipmentNumber(selectedShipment) }}</strong></span></div>
+          <div class="detail-item"><span class="detail-label">Đơn bán hàng:</span><span class="text-primary"><strong>{{ getSalesOrderDisplay(getSalesOrderId(selectedShipment)) }}</strong></span></div>
+          <div class="detail-item"><span class="detail-label">Khách hàng:</span><span>{{ selectedOrder?.customer_name || '—' }}</span></div>
           <div class="detail-item"><span class="detail-label">Kho xuất:</span><span>{{ getWarehouseName(getWarehouseId(selectedShipment)) }}</span></div>
+          <div class="detail-item"><span class="detail-label">Trạng thái:</span><span class="badge" [ngClass]="getStatusClass(getShipmentStatus(selectedShipment))">{{ getStatusLabel(getShipmentStatus(selectedShipment)) }}</span></div>
           <div class="detail-item"><span class="detail-label">Dự kiến xuất:</span><span>{{ getShipmentDate(selectedShipment) | date:'dd/MM/yyyy' }}</span></div>
           <div class="detail-item"><span class="detail-label">Hãng vận chuyển:</span><span>{{ selectedShipment.carrier || 'Chưa cập nhật' }}</span></div>
           <div class="detail-item"><span class="detail-label">Vận đơn (Tracking):</span><span class="text-info">{{ getTrackingNumber(selectedShipment) || 'Chưa có' }}</span></div>
-          <div class="detail-item full-width"><span class="detail-label">Ghi chú:</span><span>{{ selectedShipment.notes || '—' }}</span></div>
+        </div>
+
+        <div class="detail-section-title">Tổng hợp hàng hóa</div>
+        <div class="detail-grid">
+          <div class="detail-item"><span class="detail-label">Số dòng hàng:</span><span>{{ selectedShipment.lines?.length || 0 }}</span></div>
+          <div class="detail-item detail-item--highlight"><span class="detail-label">Tổng số lượng:</span><span><strong>{{ getTotalQuantity() | number:'1.0-0' }}</strong></span></div>
+          <div class="detail-item" *ngIf="selectedOrder"><span class="detail-label">Ngày yêu cầu giao:</span><span>{{ selectedOrder.requested_delivery_date | date:'dd/MM/yyyy' }}</span></div>
+        </div>
+
+        <div class="detail-section-title" *ngIf="selectedShipment.notes">Ghi chú phiếu</div>
+        <div class="detail-notes" *ngIf="selectedShipment.notes">{{ selectedShipment.notes }}</div>
+
+        <div class="detail-section-title">Thông tin hệ thống</div>
+        <div class="detail-grid">
+          <div class="detail-item"><span class="detail-label">Tạo bởi:</span><span>{{ getCreatedBy(selectedShipment) }}</span></div>
+          <div class="detail-item"><span class="detail-label">Tạo lúc:</span><span>{{ getCreatedAt(selectedShipment) | date:'dd/MM/yyyy HH:mm' }}</span></div>
+          <div class="detail-item"><span class="detail-label">Xác nhận bởi:</span><span>{{ getConfirmedBy(selectedShipment) || '—' }}</span></div>
+          <div class="detail-item"><span class="detail-label">Xuất kho lúc:</span><span>{{ getShippedAt(selectedShipment) ? (getShippedAt(selectedShipment) | date:'dd/MM/yyyy HH:mm') : '—' }}</span></div>
+          <div class="detail-item"><span class="detail-label">Cập nhật bởi:</span><span>{{ getUpdatedBy(selectedShipment) || '—' }}</span></div>
+          <div class="detail-item"><span class="detail-label">Cập nhật lúc:</span><span>{{ getUpdatedAt(selectedShipment) ? (getUpdatedAt(selectedShipment) | date:'dd/MM/yyyy HH:mm') : '—' }}</span></div>
         </div>
       </div>
 
-      <div class="tab-content" *ngIf="detailTab === 'lines'">
-        <div class="table-container shadow-sm border-0">
-          <table class="data-table styled-table">
+      <!-- ═══ TAB: DÒNG ĐƠN HÀNG ═══ -->
+      <div *ngIf="detailTab === 'lines'">
+        <div class="lines-header">
+          <h4><i class="fa-solid fa-list-ol"></i> Dòng hàng xuất ({{ selectedShipment.lines?.length || 0 }})</h4>
+        </div>
+
+        <div class="table-container">
+          <table class="data-table">
             <thead>
               <tr>
-                <th>#</th>
+                <th width="50">#</th>
                 <th>Sản phẩm</th>
                 <th>Thông tin kho</th>
                 <th class="text-center">Số lượng</th>
-                <th class="text-center">Trạng thái picking</th>
+                <th>Trạng thái & Lấy hàng</th>
               </tr>
             </thead>
             <tbody>
@@ -298,42 +360,45 @@
                 <td>{{ idx + 1 }}</td>
                 <td>
                   <div class="product-cell">
-                    <div class="product-name">{{ getLineProductName(line) }}</div>
-                    <div class="product-sku">SKU: {{ line.sku }}</div>
+                    <span class="product-name">{{ getLineProductName(line) }}</span>
+                    <span class="product-sku">SKU: {{ line.sku }}</span>
                   </div>
                 </td>
                 <td>
                   <div class="location-cell">
                     <div class="loc-item"><i class="fa-solid fa-location-dot"></i> {{ getLineLocationName(line) }}</div>
-                    <div class="batch-item" *ngIf="getLineBatchNumber(line)">Lô : <strong>{{ getLineBatchNumber(line) }}</strong></div>
+                    <div class="batch-item" *ngIf="getLineBatchNumber(line)">Lô: <strong>{{ getLineBatchNumber(line) }}</strong></div>
                   </div>
                 </td>
                 <td class="text-center">
-                  <span class="qty-badge">{{ getLineQuantity(line) }}</span>
+                  <span class="qty-badge">{{ getLineQuantity(line) | number:'1.0-2' }}</span>
                 </td>
                 <td>
                   <div class="pick-status" *ngIf="getLinePickedAt(line)">
                     <span class="badge badge-completed"><i class="fa-solid fa-check"></i> Đã lấy hàng</span>
-                    <small class="pick-time">{{ getLinePickedAt(line) | date:'HH:mm dd/MM/yyyy' }}</small>
+                    <div class="text-muted" style="font-size: 0.75rem; margin-top: 4px;">
+                      {{ getLinePickedBy(line) }} lúc {{ getLinePickedAt(line) | date:'HH:mm dd/MM/yyyy' }}
+                    </div>
                   </div>
                   <div class="pick-status" *ngIf="!getLinePickedAt(line)">
-                    <span class="badge badge-draft">Chờ nhặt</span>
+                    <span class="badge badge-draft">Chờ lấy hàng</span>
+                  </div>
+                  <div class="text-muted mt-1" *ngIf="line.notes" style="font-style: italic; font-size: 0.8rem;">
+                    "{{ line.notes }}"
                   </div>
                 </td>
+              </tr>
+              <tr *ngIf="!selectedShipment.lines || selectedShipment.lines.length === 0">
+                <td colspan="5" class="empty-state">Chưa có dòng hàng nào</td>
               </tr>
             </tbody>
           </table>
         </div>
       </div>
     </div>
+
     <div class="modal-footer">
       <button class="btn btn-ghost" (click)="closeAllModals()">Đóng</button>
-      <button class="btn btn-danger" *ngIf="selectedShipment?.status !== 'SHIPPED' && selectedShipment?.status !== 'CANCELLED'" 
-              (click)="cancelShipment(selectedShipment.id)">Huỷ phiếu</button>
-      
-      <button class="btn btn-primary" *ngIf="selectedShipment?.status === 'DRAFT'" (click)="startPicking(selectedShipment.id)">Bắt đầu lấy hàng</button>
-      <button class="btn btn-primary" *ngIf="selectedShipment?.status === 'PICKING'" (click)="markAsPacked(selectedShipment.id)">Hoàn tất đóng gói</button>
-      <button class="btn btn-success" *ngIf="selectedShipment?.status === 'PACKED'" (click)="ship(selectedShipment.id)">Xác nhận xuất kho</button>
     </div>
   </div>
 </div>

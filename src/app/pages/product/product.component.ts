@@ -153,11 +153,22 @@ export class ProductComponent implements OnInit {
   }
 
   onCreateSubmit(): void {
-    // TODO: validate + gọi productService.create(this.createForm)
+    if (!this.createForm.name.trim()) {
+      this.toastr.error('Sản phẩm', 'Vui lòng nhập tên sản phẩm.');
+      return;
+    }
+    if (!this.createForm.category_id) {
+      this.toastr.error('Sản phẩm', 'Vui lòng chọn danh mục.');
+      return;
+    }
+    if (!this.createForm.uom_id) {
+      this.toastr.error('Sản phẩm', 'Vui lòng chọn đơn vị tính.');
+      return;
+    }
     this.productService.create(this.createForm).subscribe({
       next: (res) => {
         if (res.success) {
-          this.toastr.success('Tạo sản phẩm thành công!');
+          this.toastr.success('Sản phẩm', 'Tạo sản phẩm thành công!');
           this.showCreateModal = false;
           this.loadProducts();
         }

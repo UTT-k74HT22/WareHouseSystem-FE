@@ -167,7 +167,7 @@ export class OutboundComponent implements OnInit {
     this.draftCount = this.shipments.filter((shipment) => this.getShipmentStatus(shipment) === OutboundShipmentStatus.DRAFT).length;
     this.pickingCount = this.shipments.filter((shipment) => {
       const status = this.getShipmentStatus(shipment);
-      return status === OutboundShipmentStatus.PICKING || status === OutboundShipmentStatus.PACKED;
+      return status === OutboundShipmentStatus.PICKING || status === OutboundShipmentStatus.PACKED || status === OutboundShipmentStatus.STAGING;
     }).length;
     this.shippedCount = this.shipments.filter((shipment) => this.getShipmentStatus(shipment) === OutboundShipmentStatus.SHIPPED).length;
   }
@@ -211,10 +211,16 @@ export class OutboundComponent implements OnInit {
 
   buildLineForm(soLine: SalesOrderLineResponse): FormGroup {
     const remaining = Number(soLine.quantity_ordered) - Number(soLine.quantity_shipped || 0);
+    const product = this.products.find((p) => p.id === soLine.product_id);
+    
     return this.fb.group({
       sales_order_line_id: [soLine.id, Validators.required],
       product_id: [soLine.product_id, Validators.required],
-      product_name: [soLine.product_name || this.getSalesOrderLineProductDisplay(soLine)],
+      product_name: [soLine.product_name || product?.name || 'Không rõ tên'],
+      product_sku: [soLine.product_sku || product?.sku || 'N/A'],
+      qty_ordered: [soLine.quantity_ordered],
+      qty_shipped_total: [soLine.quantity_shipped || 0],
+      qty_remaining: [remaining],
       quantity_shipped: [remaining, [Validators.required, Validators.min(0.01), Validators.max(remaining)]],
       notes: ['']
     });
@@ -258,7 +264,7 @@ export class OutboundComponent implements OnInit {
   onCreateSubmit(): void {
     if (this.createForm.invalid) {
       this.createForm.markAllAsTouched();
-      this.toastr.warning('Vui lòng điền đầy đủ thông tin hợp lệ.');
+      this.toastr.warning('Xuất kho', 'Vui lòng điền đầy đủ thông tin hợp lệ.');
       return;
     }
 
@@ -267,7 +273,7 @@ export class OutboundComponent implements OnInit {
       .filter((line) => Number(line.quantity_shipped) > 0);
 
     if (validLines.length === 0) {
-      this.toastr.warning('Phiếu xuất phải có ít nhất một dòng hàng hợp lệ.');
+      this.toastr.warning('Xuất kho', 'Phiếu xuất phải có ít nhất một dòng hàng hợp lệ.');
       return;
     }
 
@@ -293,7 +299,7 @@ export class OutboundComponent implements OnInit {
 
         forkJoin(lineRequests).subscribe({
           next: () => {
-            this.toastr.success('Tạo phiếu xuất kho thành công.');
+            this.toastr.success('Xuất kho', 'Tạo phiếu xuất kho thành công.');
             this.showCreateModal = false;
             this.loading = false;
             this.loadShipments();
@@ -302,13 +308,13 @@ export class OutboundComponent implements OnInit {
           },
           error: (error) => {
             this.loading = false;
-            this.toastr.error(error?.error?.message || 'Tạo dòng phiếu xuất thất bại.');
+            this.toastr.error('Xuất kho', error?.error?.message || 'Tạo dòng phiếu xuất thất bại.');
           }
         });
       },
       error: (error) => {
         this.loading = false;
-        this.toastr.error(error?.error?.message || 'Có lỗi xảy ra khi tạo phiếu xuất.');
+        this.toastr.error('Xuất kho', error?.error?.message || 'Có lỗi xảy ra khi tạo phiếu xuất.');
       }
     });
   }
@@ -317,16 +323,31 @@ export class OutboundComponent implements OnInit {
     this.loading = true;
     this.detailTab = 'header';
 
-    forkJoin({
-      shipment: this.outboundService.getById(shipment.id),
-      lines: this.oblService.getByShipmentId(shipment.id)
-    }).subscribe({
-      next: ({ shipment: shipmentRes, lines: linesRes }) => {
-        if (shipmentRes.success) {
+    const shipmentId = shipment.id;
+    const salesOrderId = shipment.sales_order_id || shipment.salesOrderId || '';
+
+    const requests: any = {
+      shipment: this.outboundService.getById(shipmentId),
+      lines: this.oblService.getByShipmentId(shipmentId)
+    };
+
+    if (salesOrderId) {
+      requests.order = this.soService.getById(salesOrderId);
+    }
+
+    forkJoin(requests).subscribe({
+      next: (res: any) => {
+        if (res.shipment.success) {
+          const enrichedLines = (res.lines && res.lines.success) ? res.lines.data : (res.shipment.data.lines || []);
           this.selectedShipment = {
-            ...shipmentRes.data,
-            lines: shipmentRes.data.lines || (linesRes.success ? linesRes.data : [])
+            ...res.shipment.data,
+            lines: enrichedLines
           };
+          
+          if (res.order && res.order.success) {
+            this.selectedOrder = res.order.data;
+          }
+          
           this.showDetailModal = true;
         }
         this.loading = false;
@@ -343,19 +364,19 @@ export class OutboundComponent implements OnInit {
     this.outboundService.startPicking(id).subscribe({
       next: (res) => {
         if (res.success) {
-          this.toastr.success('Đã bắt đầu lấy hàng.');
+          this.toastr.success('Xuất kho', 'Đã bắt đầu lấy hàng.');
           this.refreshDetail(id);
           this.loadShipments();
         } else {
           this.loading = false;
-          this.toastr.error(res.message || 'Không thể bắt đầu lấy hàng.');
+          this.toastr.error('Xuất kho', res.message || 'Không thể bắt đầu lấy hàng.');
         }
       },
       error: (error) => {
         this.loading = false;
         const msg = error?.error?.message || 'Không thể bắt đầu lấy hàng.';
         const code = error?.error?.errorCode ? ` [${error.error.errorCode}]` : '';
-        this.toastr.error(msg + code);
+        this.toastr.error('Xuất kho', msg + code);
       }
     });
   }
@@ -365,19 +386,19 @@ export class OutboundComponent implements OnInit {
     this.outboundService.markAsPacked(id).subscribe({
       next: (res) => {
         if (res.success) {
-          this.toastr.success('Đã hoàn tất đóng gói.');
+          this.toastr.success('Xuất kho', 'Đã hoàn tất đóng gói.');
           this.refreshDetail(id);
           this.loadShipments();
         } else {
           this.loading = false;
-          this.toastr.error(res.message || 'Không thể đóng gói.');
+          this.toastr.error('Xuất kho', res.message || 'Không thể đóng gói.');
         }
       },
       error: (error) => {
         this.loading = false;
         const msg = error?.error?.message || 'Không thể đóng gói.';
         const code = error?.error?.errorCode ? ` [${error.error.errorCode}]` : '';
-        this.toastr.error(msg + code);
+        this.toastr.error('Xuất kho', msg + code);
       }
     });
   }
@@ -387,20 +408,20 @@ export class OutboundComponent implements OnInit {
     this.outboundService.ship(id).subscribe({
       next: (res) => {
         if (res.success) {
-          this.toastr.success('Xác nhận xuất kho thành công.');
+          this.toastr.success('Xuất kho', 'Xác nhận xuất kho thành công.');
           this.refreshDetail(id);
           this.loadShipments();
           this.loadConfirmedOrders();
         } else {
           this.loading = false;
-          this.toastr.error(res.message || 'Xuất kho thất bại.');
+          this.toastr.error('Xuất kho', res.message || 'Xuất kho thất bại.');
         }
       },
       error: (error) => {
         this.loading = false;
         const msg = error?.error?.message || 'Xuất kho thất bại.';
         const code = error?.error?.errorCode ? ` [${error.error.errorCode}]` : '';
-        this.toastr.error(msg + code);
+        this.toastr.error('Xuất kho', msg + code);
       }
     });
   }
@@ -410,7 +431,7 @@ export class OutboundComponent implements OnInit {
     this.outboundService.cancel(id).subscribe({
       next: (res) => {
         if (res.success) {
-          this.toastr.success('Hủy phiếu xuất thành công.');
+          this.toastr.success('Xuất kho', 'Hủy phiếu xuất thành công.');
           this.refreshDetail(id);
           this.loadShipments();
           this.loadConfirmedOrders();
@@ -420,7 +441,30 @@ export class OutboundComponent implements OnInit {
       },
       error: (error) => {
         this.loading = false;
-        this.toastr.error(error?.error?.message || 'Hủy phiếu xuất thất bại.');
+        this.toastr.error('Xuất kho', error?.error?.message || 'Hủy phiếu xuất thất bại.');
+      }
+    });
+  }
+
+  confirmDispatch(id: string): void {
+    this.loading = true;
+    this.outboundService.confirmDispatch(id).subscribe({
+      next: (res) => {
+        if (res.success) {
+          this.toastr.success('Xuất kho', 'Xác nhận giao hàng thành công.');
+          this.refreshDetail(id);
+          this.loadShipments();
+          this.loadConfirmedOrders();
+        } else {
+          this.loading = false;
+          this.toastr.error('Xuất kho', res.message || 'Xác nhận giao hàng thất bại.');
+        }
+      },
+      error: (error) => {
+        this.loading = false;
+        const msg = error?.error?.message || 'Xác nhận giao hàng thất bại.';
+        const code = error?.error?.errorCode ? ` [${error.error.errorCode}]` : '';
+        this.toastr.error('Xuất kho', msg + code);
       }
     });
   }
@@ -461,6 +505,7 @@ export class OutboundComponent implements OnInit {
     this.showCreateModal = false;
     this.showDetailModal = false;
     this.selectedShipment = null;
+    this.selectedOrder = null;
   }
 
   getShipmentNumber(shipment: OutboundShipmentsResponse | null | undefined): string {
@@ -488,7 +533,15 @@ export class OutboundComponent implements OnInit {
   }
 
   getLineProductName(line: OutboundShipmentLinesResponse): string {
-    return line.product_name || line.productName || 'Không rõ sản phẩm';
+    if (line.product_name || line.productName) return line.product_name || line.productName || '';
+    
+    const productId = line.product_id || line.productId;
+    if (productId) {
+      const product = this.products.find(p => p.id === productId);
+      if (product) return product.name;
+    }
+    
+    return 'Không rõ sản phẩm';
   }
 
   getLineBatchNumber(line: OutboundShipmentLinesResponse): string | null {
@@ -496,7 +549,10 @@ export class OutboundComponent implements OnInit {
   }
 
   getLineLocationName(line: OutboundShipmentLinesResponse): string {
-    return line.location_name || line.locationName || 'Thông tin sẽ được cập nhật sau khi bắt đầu lấy hàng';
+    const locName = line.location_name || line.locationName;
+    if (locName) return locName;
+
+    return 'Thông tin kho chưa cập nhật';
   }
 
   getLineQuantity(line: OutboundShipmentLinesResponse): number {
@@ -512,6 +568,7 @@ export class OutboundComponent implements OnInit {
       DRAFT: 'Nháp',
       PICKING: 'Đang lấy hàng',
       PACKED: 'Đã đóng gói',
+      STAGING: 'Chờ giao',
       SHIPPED: 'Đã xuất kho',
       CANCELLED: 'Đã hủy'
     };
@@ -523,6 +580,7 @@ export class OutboundComponent implements OnInit {
       DRAFT: 'badge-draft',
       PICKING: 'badge-progress',
       PACKED: 'badge-confirmed',
+      STAGING: 'badge-progress',
       SHIPPED: 'badge-completed',
       CANCELLED: 'badge-cancelled'
     };
@@ -576,7 +634,8 @@ export class OutboundComponent implements OnInit {
       case 'DRAFT': return 1;
       case 'PICKING': return 2;
       case 'PACKED': return 3;
-      case 'SHIPPED': return 4;
+      case 'STAGING': return 4;
+      case 'SHIPPED': return 5;
       default: return 0;
     }
   }
@@ -587,9 +646,43 @@ export class OutboundComponent implements OnInit {
       case 1: return 'Chờ bắt đầu soạn hàng';
       case 2: return 'Đang thực hiện lấy hàng';
       case 3: return 'Đang đóng gói hàng hóa';
-      case 4: return 'Đã hoàn tất xuất kho';
+      case 4: return 'Hàng đang chờ giao';
+      case 5: return 'Đã hoàn tất xuất kho';
       default: return 'Phiếu đã hủy';
     }
+  }
+
+  getTotalQuantity(): number {
+    if (!this.selectedShipment || !this.selectedShipment.lines) return 0;
+    return this.selectedShipment.lines.reduce((sum, line) => sum + this.getLineQuantity(line), 0);
+  }
+
+  getLinePickedBy(line: OutboundShipmentLinesResponse): string | null {
+    return line.picked_by || line.pickedBy || null;
+  }
+
+  getCreatedBy(shipment: OutboundShipmentsResponse | null | undefined): string {
+    return shipment?.created_by || shipment?.createdBy || 'System';
+  }
+
+  getCreatedAt(shipment: OutboundShipmentsResponse | null | undefined): string | null {
+    return shipment?.created_at || shipment?.createdAt || null;
+  }
+
+  getUpdatedBy(shipment: OutboundShipmentsResponse | null | undefined): string | null {
+    return shipment?.updated_by || shipment?.updatedBy || null;
+  }
+
+  getUpdatedAt(shipment: OutboundShipmentsResponse | null | undefined): string | null {
+    return shipment?.updated_at || shipment?.updatedAt || null;
+  }
+
+  getConfirmedBy(shipment: OutboundShipmentsResponse | null | undefined): string | null {
+    return shipment?.confirmed_by || shipment?.confirmedBy || null;
+  }
+
+  getShippedAt(shipment: OutboundShipmentsResponse | null | undefined): string | null {
+    return shipment?.shipped_at || shipment?.shippedAt || null;
   }
 
   getShipmentFlowLocationText(): string {
@@ -598,7 +691,8 @@ export class OutboundComponent implements OnInit {
     if (status === 'DRAFT') return 'Hàng đang nằm tại các vị trí lưu kho (STORAGE).';
     if (status === 'PICKING') return 'Hàng đang được tập kết tại khu vực soạn hàng (PICKING).';
     if (status === 'PACKED') return 'Hàng đã được chuyển đến bàn đóng gói (PACKING).';
-    if (status === 'SHIPPED') return 'Hàng đã rời khỏi khu vực chờ xuất (STAGING).';
+    if (status === 'STAGING') return 'Hàng đang chờ tại khu vực chờ giao (STAGING).';
+    if (status === 'SHIPPED') return 'Hàng đã rời khỏi kho.';
     return 'Quy trình đã dừng.';
   }
 }

@@ -243,6 +243,18 @@ export class LocationComponent implements OnInit {
   }
 
   onSubmitCreate(): void {
+    if (!this.createForm.warehouse_id) {
+      this.toastr.error('Vị trí', 'Vui lòng chọn kho.');
+      return;
+    }
+    if (!this.createForm.name?.trim()) {
+      this.toastr.error('Vị trí', 'Vui lòng nhập tên vị trí.');
+      return;
+    }
+    if (!this.createForm.zone?.trim()) {
+      this.toastr.error('Vị trí', 'Vui lòng nhập khu vực.');
+      return;
+    }
     this.loading = true;
 
     this.locationService.create(this.createForm).subscribe({

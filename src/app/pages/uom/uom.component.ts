@@ -31,7 +31,7 @@ export class UomComponent implements OnInit {
   selectedUOM: UnitsOfMeasureResponse | null = null;
   uomToDelete: UnitsOfMeasureResponse | null = null;
 
-  createForm: CreateUOMRequest = { code: '', name: '', type: UnitsOfMeasureType.COUNT };
+  createForm: CreateUOMRequest = { name: '', type: UnitsOfMeasureType.COUNT };
   editForm: UpdateUOMRequest = {};
 
   constructor(
@@ -74,15 +74,23 @@ export class UomComponent implements OnInit {
   onResetFilter(): void { this.searchKeyword = ''; this.applyFilter(); }
 
   openCreateModal(): void {
-    this.createForm = { code: '', name: '', type: UnitsOfMeasureType.COUNT };
+    this.createForm = { name: '', type: UnitsOfMeasureType.COUNT };
     this.showCreateModal = true;
   }
 
   onCreateSubmit(): void {
+    if (!this.createForm.name.trim()) {
+      this.toastr.error('Đơn vị tính', 'Vui lòng nhập tên đơn vị tính.');
+      return;
+    }
+    if (!this.createForm.type) {
+      this.toastr.error('Đơn vị tính', 'Vui lòng chọn loại đơn vị tính.');
+      return;
+    }
     this.uomService.create(this.createForm).subscribe({
       next: (res) => {
         if (res.success) {
-          this.toastr.success('Tạo đơn vị tính thành công!');
+          this.toastr.success('Đơn vị tính', 'Tạo đơn vị tính thành công!');
           this.showCreateModal = false;
           this.loadUOMs();
         }

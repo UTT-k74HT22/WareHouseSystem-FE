@@ -92,10 +92,18 @@ export class BusinessPartnerComponent implements OnInit {
   }
 
   onCreateSubmit(): void {
+    if (!this.createForm.name.trim()) {
+      this.toastr.error('Đối tác', 'Vui lòng nhập tên đối tác.');
+      return;
+    }
+    if (!this.createForm.type) {
+      this.toastr.error('Đối tác', 'Vui lòng chọn loại đối tác.');
+      return;
+    }
     this.bpService.create(this.createForm).subscribe({
       next: (res) => {
         if (res.success) {
-          this.toastr.success('Tạo đối tác thành công!');
+          this.toastr.success('Đối tác', 'Tạo đối tác thành công!');
           this.showCreateModal = false;
           this.loadPartners();
         }
@@ -164,7 +172,6 @@ export class BusinessPartnerComponent implements OnInit {
 
   private initCreateForm(): CreateBusinessPartnerRequest {
     return {
-      code: '',
       name: '',
       type: BusinessPartnerType.SUPPLIER,
       city: 'Vietnam',

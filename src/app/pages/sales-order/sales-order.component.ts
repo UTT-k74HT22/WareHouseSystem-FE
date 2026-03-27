@@ -28,6 +28,7 @@ export class SalesOrderComponent implements OnInit {
   totalPages = 0;
   loading = false;
   viewMode: 'grid' | 'list' = 'list';
+  detailTab: 'header' | 'lines' = 'header';
 
   searchKeyword = '';
   selectedStatus: '' | OrderStatus = '';
@@ -188,6 +189,10 @@ export class SalesOrderComponent implements OnInit {
     return order.status === OrderStatus.DRAFT || order.status === OrderStatus.CONFIRMED;
   }
 
+  canEditOrder(order: SalesOrderResponse): boolean {
+    return order.status === OrderStatus.DRAFT;
+  }
+
   onSearch(): void {
     this.currentPage = 0;
     this.loadOrders();
@@ -224,27 +229,27 @@ export class SalesOrderComponent implements OnInit {
 
   onCreateSubmit(): void {
     if (this.createForm.invalid) {
-      this.toastr.warning('Vui lòng điền đầy đủ thông tin hợp lệ.');
+      this.toastr.warning('Đơn bán hàng', 'Vui lòng điền đầy đủ thông tin hợp lệ.');
       this.createForm.markAllAsTouched();
       return;
     }
 
     if (this.lines.length === 0) {
-      this.toastr.warning('Đơn hàng phải có ít nhất một dòng sản phẩm.');
+      this.toastr.warning('Đơn bán hàng', 'Đơn hàng phải có ít nhất một dòng sản phẩm.');
       return;
     }
 
     this.soService.create(this.createForm.value).subscribe({
       next: (res) => {
         if (res.success) {
-          this.toastr.success('Tạo đơn bán hàng thành công.');
+          this.toastr.success('Đơn bán hàng', 'Tạo đơn bán hàng thành công.');
           this.showCreateModal = false;
           this.loadOrders();
           this.openDetailModal(res.data);
         }
       },
       error: (error) => {
-        this.toastr.error(error?.error?.message || 'Có lỗi xảy ra khi tạo đơn bán hàng.');
+        this.toastr.error('Đơn bán hàng', error?.error?.message || 'Có lỗi xảy ra khi tạo đơn bán hàng.');
       }
     });
   }
@@ -270,13 +275,13 @@ export class SalesOrderComponent implements OnInit {
     this.soService.confirm(id).subscribe({
       next: (res) => {
         if (res.success) {
-          this.toastr.success('Xác nhận đơn hàng thành công.');
+          this.toastr.success('Đơn bán hàng', 'Xác nhận đơn hàng thành công.');
           this.selectedOrder = res.data;
           this.loadOrders();
         }
       },
       error: (error) => {
-        this.toastr.error(error?.error?.message || 'Xác nhận đơn hàng thất bại.');
+        this.toastr.error('Đơn bán hàng', error?.error?.message || 'Xác nhận đơn hàng thất bại.');
         if (this.selectedOrder?.id === id) {
           this.openDetailModal(this.selectedOrder);
         }
@@ -298,7 +303,7 @@ export class SalesOrderComponent implements OnInit {
     this.soService.cancel(orderId).subscribe({
       next: (res) => {
         if (res.success) {
-          this.toastr.success('Hủy đơn hàng thành công.');
+          this.toastr.success('Đơn bán hàng', 'Hủy đơn hàng thành công.');
           this.showCancelConfirm = false;
           this.orderToCancel = null;
           if (this.selectedOrder?.id === orderId) {
@@ -317,7 +322,7 @@ export class SalesOrderComponent implements OnInit {
           displayMsg = 'Không thể hủy đơn hàng này.';
         }
         
-        this.toastr.error(displayMsg);
+        this.toastr.error('Đơn bán hàng', displayMsg);
         this.showCancelConfirm = false;
         this.orderToCancel = null;
         if (this.selectedOrder?.id === orderId) {

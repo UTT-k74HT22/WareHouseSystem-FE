@@ -13,8 +13,9 @@
 
 .movement-table th:nth-child(1),
 .movement-table td:nth-child(1) {
-  width: 44px;
+  width: 50px;
   text-align: center;
+  white-space: nowrap;
 }
 
 .movement-table th:nth-child(2),
