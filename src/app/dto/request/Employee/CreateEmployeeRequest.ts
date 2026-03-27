@@ -8,7 +8,6 @@ export interface CreateEmployeeRequest {
   last_name: string;
   email: string;
   phone_number?: string;
-  employee_code: string;
   department?: string;
   position?: string;
   hire_date?: string;

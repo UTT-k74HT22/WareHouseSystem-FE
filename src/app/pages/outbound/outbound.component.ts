@@ -264,7 +264,7 @@ export class OutboundComponent implements OnInit {
   onCreateSubmit(): void {
     if (this.createForm.invalid) {
       this.createForm.markAllAsTouched();
-      this.toastr.warning('Vui lòng điền đầy đủ thông tin hợp lệ.');
+      this.toastr.warning('Xuất kho', 'Vui lòng điền đầy đủ thông tin hợp lệ.');
       return;
     }
 
@@ -273,7 +273,7 @@ export class OutboundComponent implements OnInit {
       .filter((line) => Number(line.quantity_shipped) > 0);
 
     if (validLines.length === 0) {
-      this.toastr.warning('Phiếu xuất phải có ít nhất một dòng hàng hợp lệ.');
+      this.toastr.warning('Xuất kho', 'Phiếu xuất phải có ít nhất một dòng hàng hợp lệ.');
       return;
     }
 
@@ -299,7 +299,7 @@ export class OutboundComponent implements OnInit {
 
         forkJoin(lineRequests).subscribe({
           next: () => {
-            this.toastr.success('Tạo phiếu xuất kho thành công.');
+            this.toastr.success('Xuất kho', 'Tạo phiếu xuất kho thành công.');
             this.showCreateModal = false;
             this.loading = false;
             this.loadShipments();
@@ -308,13 +308,13 @@ export class OutboundComponent implements OnInit {
           },
           error: (error) => {
             this.loading = false;
-            this.toastr.error(error?.error?.message || 'Tạo dòng phiếu xuất thất bại.');
+            this.toastr.error('Xuất kho', error?.error?.message || 'Tạo dòng phiếu xuất thất bại.');
           }
         });
       },
       error: (error) => {
         this.loading = false;
-        this.toastr.error(error?.error?.message || 'Có lỗi xảy ra khi tạo phiếu xuất.');
+        this.toastr.error('Xuất kho', error?.error?.message || 'Có lỗi xảy ra khi tạo phiếu xuất.');
       }
     });
   }
@@ -338,9 +338,10 @@ export class OutboundComponent implements OnInit {
     forkJoin(requests).subscribe({
       next: (res: any) => {
         if (res.shipment.success) {
+          const enrichedLines = (res.lines && res.lines.success) ? res.lines.data : (res.shipment.data.lines || []);
           this.selectedShipment = {
             ...res.shipment.data,
-            lines: res.shipment.data.lines || (res.lines.success ? res.lines.data : [])
+            lines: enrichedLines
           };
           
           if (res.order && res.order.success) {
@@ -363,19 +364,19 @@ export class OutboundComponent implements OnInit {
     this.outboundService.startPicking(id).subscribe({
       next: (res) => {
         if (res.success) {
-          this.toastr.success('Đã bắt đầu lấy hàng.');
+          this.toastr.success('Xuất kho', 'Đã bắt đầu lấy hàng.');
           this.refreshDetail(id);
           this.loadShipments();
         } else {
           this.loading = false;
-          this.toastr.error(res.message || 'Không thể bắt đầu lấy hàng.');
+          this.toastr.error('Xuất kho', res.message || 'Không thể bắt đầu lấy hàng.');
         }
       },
       error: (error) => {
         this.loading = false;
         const msg = error?.error?.message || 'Không thể bắt đầu lấy hàng.';
         const code = error?.error?.errorCode ? ` [${error.error.errorCode}]` : '';
-        this.toastr.error(msg + code);
+        this.toastr.error('Xuất kho', msg + code);
       }
     });
   }
@@ -385,19 +386,19 @@ export class OutboundComponent implements OnInit {
     this.outboundService.markAsPacked(id).subscribe({
       next: (res) => {
         if (res.success) {
-          this.toastr.success('Đã hoàn tất đóng gói.');
+          this.toastr.success('Xuất kho', 'Đã hoàn tất đóng gói.');
           this.refreshDetail(id);
           this.loadShipments();
         } else {
           this.loading = false;
-          this.toastr.error(res.message || 'Không thể đóng gói.');
+          this.toastr.error('Xuất kho', res.message || 'Không thể đóng gói.');
         }
       },
       error: (error) => {
         this.loading = false;
         const msg = error?.error?.message || 'Không thể đóng gói.';
         const code = error?.error?.errorCode ? ` [${error.error.errorCode}]` : '';
-        this.toastr.error(msg + code);
+        this.toastr.error('Xuất kho', msg + code);
       }
     });
   }
@@ -407,20 +408,20 @@ export class OutboundComponent implements OnInit {
     this.outboundService.ship(id).subscribe({
       next: (res) => {
         if (res.success) {
-          this.toastr.success('Xác nhận xuất kho thành công.');
+          this.toastr.success('Xuất kho', 'Xác nhận xuất kho thành công.');
           this.refreshDetail(id);
           this.loadShipments();
           this.loadConfirmedOrders();
         } else {
           this.loading = false;
-          this.toastr.error(res.message || 'Xuất kho thất bại.');
+          this.toastr.error('Xuất kho', res.message || 'Xuất kho thất bại.');
         }
       },
       error: (error) => {
         this.loading = false;
         const msg = error?.error?.message || 'Xuất kho thất bại.';
         const code = error?.error?.errorCode ? ` [${error.error.errorCode}]` : '';
-        this.toastr.error(msg + code);
+        this.toastr.error('Xuất kho', msg + code);
       }
     });
   }
@@ -430,7 +431,7 @@ export class OutboundComponent implements OnInit {
     this.outboundService.cancel(id).subscribe({
       next: (res) => {
         if (res.success) {
-          this.toastr.success('Hủy phiếu xuất thành công.');
+          this.toastr.success('Xuất kho', 'Hủy phiếu xuất thành công.');
           this.refreshDetail(id);
           this.loadShipments();
           this.loadConfirmedOrders();
@@ -440,7 +441,7 @@ export class OutboundComponent implements OnInit {
       },
       error: (error) => {
         this.loading = false;
-        this.toastr.error(error?.error?.message || 'Hủy phiếu xuất thất bại.');
+        this.toastr.error('Xuất kho', error?.error?.message || 'Hủy phiếu xuất thất bại.');
       }
     });
   }
@@ -450,20 +451,20 @@ export class OutboundComponent implements OnInit {
     this.outboundService.confirmDispatch(id).subscribe({
       next: (res) => {
         if (res.success) {
-          this.toastr.success('Xác nhận giao hàng thành công.');
+          this.toastr.success('Xuất kho', 'Xác nhận giao hàng thành công.');
           this.refreshDetail(id);
           this.loadShipments();
           this.loadConfirmedOrders();
         } else {
           this.loading = false;
-          this.toastr.error(res.message || 'Xác nhận giao hàng thất bại.');
+          this.toastr.error('Xuất kho', res.message || 'Xác nhận giao hàng thất bại.');
         }
       },
       error: (error) => {
         this.loading = false;
         const msg = error?.error?.message || 'Xác nhận giao hàng thất bại.';
         const code = error?.error?.errorCode ? ` [${error.error.errorCode}]` : '';
-        this.toastr.error(msg + code);
+        this.toastr.error('Xuất kho', msg + code);
       }
     });
   }

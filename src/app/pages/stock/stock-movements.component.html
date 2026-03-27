@@ -54,7 +54,7 @@
       </thead>
       <tbody>
         <tr *ngFor="let m of movements; let i = index">
-          <td>{{ currentPage * pageSize + i + 1 }}</td>
+          <td>{{ startIndex + i + 1 }}</td>
           <td><code>{{ getMovementDisplayCode(m) }}</code></td>
           <td><span class="badge" [ngClass]="getTypeClass(m.movement_type)">{{ getTypeLabel(m.movement_type) }}</span></td>
           <td>

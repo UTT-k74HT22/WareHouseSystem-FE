@@ -97,10 +97,14 @@ export class CategoryComponent implements OnInit {
   }
 
   onCreateSubmit(): void {
+    if (!this.createForm.name.trim()) {
+      this.toastr.error('Danh mục', 'Vui lòng nhập tên danh mục.');
+      return;
+    }
     this.categoryService.create(this.createForm).subscribe({
       next: (res) => {
         if (res.success) {
-          this.toastr.success('Tạo danh mục thành công!');
+          this.toastr.success('Danh mục', 'Tạo danh mục thành công!');
           this.showCreateModal = false;
           this.loadCategories();
         }
@@ -179,7 +183,7 @@ export class CategoryComponent implements OnInit {
   }
 
   private initCreateForm(): CreateCategoryRequest {
-    return { code: '', name: '', status: CategoryStatus.ACTIVE };
+    return { name: '', status: CategoryStatus.ACTIVE };
   }
 
   private applyFilter(): void {

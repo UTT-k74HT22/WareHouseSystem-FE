@@ -221,14 +221,14 @@ export class InboundComponent implements OnInit {
 
   onCreateSubmit(): void {
     if (!this.createForm.purchase_order_id) {
-      this.toastr.warning('Vui lòng chọn đơn mua hàng để tạo phiếu nhập.');
+      this.toastr.warning('Nhập kho', 'Vui lòng chọn đơn mua hàng để tạo phiếu nhập.');
       return;
     }
 
     this.inboundService.create(this.createForm).subscribe({
       next: (res) => {
         if (res.success) {
-          this.toastr.success('Tạo phiếu nhập thành công.');
+          this.toastr.success('Nhập kho', 'Tạo phiếu nhập thành công.');
           this.showCreateModal = false;
           this.loadReceipts();
           this.openDetailModal(res.data);
@@ -236,7 +236,7 @@ export class InboundComponent implements OnInit {
         }
       },
       error: (error) => {
-        this.toastr.error(error?.error?.message || 'Tạo phiếu nhập thất bại.');
+        this.toastr.error('Nhập kho', error?.error?.message || 'Tạo phiếu nhập thất bại.');
       }
     });
   }
@@ -383,7 +383,7 @@ export class InboundComponent implements OnInit {
     this.inboundService.confirm(receiptId).subscribe({
       next: (res) => {
         if (res.success) {
-          this.toastr.success('Xác nhận phiếu nhập thành công.');
+          this.toastr.success('Nhập kho', 'Xác nhận phiếu nhập thành công.');
           this.showConfirmConfirm = false;
           this.receiptToConfirm = null;
           this.selectedReceipt = res.data;
@@ -393,7 +393,7 @@ export class InboundComponent implements OnInit {
         }
       },
       error: (error) => {
-        this.toastr.error(error?.error?.message || 'Xác nhận phiếu nhập thất bại.');
+        this.toastr.error('Nhập kho', error?.error?.message || 'Xác nhận phiếu nhập thất bại.');
         this.showConfirmConfirm = false;
         this.receiptToConfirm = null;
         this.refreshSelectedReceiptIfOpen(receiptId);
@@ -858,7 +858,7 @@ export class InboundComponent implements OnInit {
 
     this.inboundReferenceDataService.loadLineReferences(receipt.warehouse_id).subscribe({
       next: ({ locations, batches }) => {
-        this.receiptLocations = locations;
+        this.receiptLocations = locations.filter(loc => loc.type === 'STORAGE');
         this.batchCatalog = batches;
         this.loadingLineReferences = false;
         this.syncLineFormForCurrentSelection();
@@ -868,7 +868,7 @@ export class InboundComponent implements OnInit {
         this.receiptLocations = [];
         this.batchCatalog = [];
         if (!silent) {
-          this.toastr.error('Không tải được dữ liệu vị trí/lô cho màn sửa dòng phiếu nhập.');
+          this.toastr.error('Nhập kho', 'Không tải được dữ liệu vị trí/lô cho màn sửa dòng phiếu nhập.');
         }
       }
     });
