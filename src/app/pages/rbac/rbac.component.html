@@ -269,6 +269,13 @@
         <label>Mô tả</label>
         <textarea [(ngModel)]="createRoleForm.description" rows="3" placeholder="Mô tả role"></textarea>
       </div>
+      <label class="checkbox-field">
+        <input type="checkbox" [(ngModel)]="createRoleForm.is_default" />
+        <span>
+          <strong>Đặt là role mặc định</strong>
+          <small>Role này sẽ được gán mặc định theo quy tắc backend.</small>
+        </span>
+      </label>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" (click)="closeAllModals()">Huỷ</button>
@@ -293,6 +300,13 @@
         <label>Mô tả</label>
         <textarea [(ngModel)]="editRoleForm.description" rows="3"></textarea>
       </div>
+      <label class="checkbox-field">
+        <input type="checkbox" [(ngModel)]="editRoleForm.is_default" />
+        <span>
+          <strong>Role mặc định</strong>
+          <small>Bật để chuyển role này thành mặc định, tắt để gỡ trạng thái mặc định.</small>
+        </span>
+      </label>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" (click)="closeAllModals()">Huỷ</button>
@@ -327,13 +341,71 @@
     </div>
     <div class="modal-body">
       <div class="permission-list">
-        <div class="permission-item" *ngFor="let perm of allAvailablePermissions"
-             (click)="togglePermissionSelection(perm.id)"
-             [class.selected]="isPermissionSelected(perm.id)">
-          <input type="checkbox" [checked]="isPermissionSelected(perm.id)" />
-          <span class="perm-name">{{ perm.name }}</span>
-          <span class="badge badge-resource">{{ perm.resource }}</span>
-          <span class="badge" [ngClass]="'badge-action-' + perm.action.toLowerCase()">{{ perm.action }}</span>
+        <div
+          class="permission-group"
+          *ngFor="let group of permissionGroups"
+          style="border: 1px solid #dbe3f0; border-radius: 10px; background: #ffffff; overflow: hidden; margin-bottom: 12px;">
+          <div
+            class="permission-group-header"
+            [style.background]="isPermissionGroupSelected(group) ? '#eef2ff' : '#f8fafc'"
+            style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px;">
+            <div style="display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0;">
+              <input
+                type="checkbox"
+                [checked]="isPermissionGroupSelected(group)"
+                [indeterminate]="isPermissionGroupPartial(group)"
+                style="width: 18px; height: 18px; margin: 0; flex-shrink: 0; accent-color: #4f46e5;"
+                (change)="togglePermissionGroupSelection(group, $any($event.target).checked)" />
+              <div style="display: flex; flex-direction: column; gap: 4px; min-width: 0;">
+                <div style="font-size: 14px; font-weight: 700; line-height: 1.3; color: #0f172a;">
+                  {{ formatPermissionGroupLabel(group.resource) }}
+                </div>
+                <div style="font-size: 12px; line-height: 1.4; color: #64748b;">
+                  {{ group.resource }}
+                </div>
+              </div>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 12px; flex-shrink: 0;">
+              <span
+                style="font-size: 12px; font-weight: 700; color: #4f46e5; background: #eef2ff; border: 1px solid #c7d2fe; border-radius: 999px; padding: 4px 10px;">
+                {{ getSelectedPermissionsCount(group) }}/{{ group.permissions.length }}
+              </span>
+              <button
+                type="button"
+                class="group-toggle-btn"
+                [class.expanded]="isPermissionGroupExpanded(group.resource)"
+                aria-label="Toggle permission group"
+                (click)="togglePermissionGroup(group.resource)">
+                <i class="fa-solid fa-chevron-down group-toggle-icon" aria-hidden="true"></i>
+              </button>
+            </div>
+          </div>
+
+          <div
+            class="permission-group-children"
+            [class.expanded]="isPermissionGroupExpanded(group.resource)">
+            <div class="permission-group-children-inner">
+              <label
+                class="permission-item"
+                *ngFor="let perm of group.permissions"
+                [style.background]="isPermissionSelected(perm.id) ? '#eef2ff' : '#ffffff'"
+                [style.borderColor]="isPermissionSelected(perm.id) ? '#4f46e5' : '#e5e7eb'"
+                style="display: flex; align-items: center; gap: 12px; min-height: 46px; padding: 10px 12px; border: 1px solid #e5e7eb; border-radius: 8px; margin-top: 8px; cursor: pointer;">
+                <input
+                  type="checkbox"
+                  [checked]="isPermissionSelected(perm.id)"
+                  style="width: 18px; height: 18px; margin: 0; flex-shrink: 0; accent-color: #4f46e5;"
+                  (change)="togglePermissionSelection(perm.id)" />
+                <span style="flex: 1; font-size: 13px; font-weight: 500; color: #1f2937;">{{ perm.name }}</span>
+                <span class="badge" [ngClass]="'badge-action-' + perm.action.toLowerCase()">{{ perm.action }}</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="empty-state" *ngIf="permissionGroups.length === 0">
+          Không có permission nào để gán
         </div>
       </div>
     </div>

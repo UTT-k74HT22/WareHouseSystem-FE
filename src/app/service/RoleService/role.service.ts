@@ -14,6 +14,26 @@ export class RoleService {
 
   constructor(private http: HttpClient) {}
 
+  private buildRolePayload(request: CreateRoleRequest | UpdateRoleRequest): Record<string, unknown> {
+    const payload: Record<string, unknown> = {};
+
+    if (request.name !== undefined) {
+      payload['name'] = request.name;
+    }
+
+    if (request.description !== undefined) {
+      payload['description'] = request.description;
+    }
+
+    const isDefault = request.is_default ?? request.isDefault;
+    if (isDefault !== undefined) {
+      payload['is_default'] = isDefault;
+      payload['isDefault'] = isDefault;
+    }
+
+    return payload;
+  }
+
   getAll(
     page = 0,
     size = 10,
@@ -35,11 +55,11 @@ export class RoleService {
   }
 
   create(request: CreateRoleRequest): Observable<ApiResponse<RoleResponse>> {
-    return this.http.post<ApiResponse<RoleResponse>>(this.apiUrl, request);
+    return this.http.post<ApiResponse<RoleResponse>>(this.apiUrl, this.buildRolePayload(request));
   }
 
   update(id: string, request: UpdateRoleRequest): Observable<ApiResponse<RoleResponse>> {
-    return this.http.put<ApiResponse<RoleResponse>>(`${this.apiUrl}/${id}`, request);
+    return this.http.put<ApiResponse<RoleResponse>>(`${this.apiUrl}/${id}`, this.buildRolePayload(request));
   }
 
   delete(id: string): Observable<ApiResponse<void>> {

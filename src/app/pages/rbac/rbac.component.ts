@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { forkJoin } from 'rxjs';
 import { PermissionService } from '../../service/PermissionService/permission.service';
 import { RoleService } from '../../service/RoleService/role.service';
 import { ToastrService } from '../../service/SystemService/toastr.service';
@@ -6,6 +7,11 @@ import { PermissionResponse } from '../../dto/response/Permission/PermissionResp
 import { RoleResponse } from '../../dto/response/Role/RoleResponse';
 import { CreatePermissionRequest, UpdatePermissionRequest, ActionType } from '../../dto/request/Permission/PermissionRequest';
 import { CreateRoleRequest, UpdateRoleRequest, AssignPermissionsRequest } from '../../dto/request/Role/RoleRequest';
+
+interface PermissionGroup {
+  resource: string;
+  permissions: PermissionResponse[];
+}
 
 @Component({
   selector: 'app-rbac',
@@ -44,6 +50,8 @@ export class RbacComponent implements OnInit {
 
   showAssignPermModal = false;
   allAvailablePermissions: PermissionResponse[] = [];
+  permissionGroups: PermissionGroup[] = [];
+  expandedPermissionGroups: Record<string, boolean> = {};
   selectedPermissionsForRole: string[] = [];
 
   createPermForm: CreatePermissionRequest = this.initCreatePermForm();
@@ -189,7 +197,7 @@ export class RbacComponent implements OnInit {
   }
 
   private initCreateRoleForm(): CreateRoleRequest {
-    return { name: '', description: '' };
+    return { name: '', description: '', is_default: false };
   }
 
   openCreatePermModal(): void {
@@ -312,13 +320,26 @@ export class RbacComponent implements OnInit {
 
   openAssignPermModal(role: RoleResponse): void {
     this.selectedRole = role;
-    this.selectedPermissionsForRole = role.permissions?.map(p => p.id) || [];
-    this.permissionService.getAll(0, 200).subscribe({
+    this.selectedPermissionsForRole = [];
+    forkJoin({
+      allPermissions: this.permissionService.getAll(0, 200),
+      assignedPermissions: this.roleService.getPermissions(role.id, 0, 200)
+    }).subscribe({
       next: (res) => {
-        if (res.success) {
-          this.allAvailablePermissions = res.data.content;
+        if (res.allPermissions.success) {
+          this.allAvailablePermissions = res.allPermissions.data.content;
+          this.selectedPermissionsForRole = res.assignedPermissions.success
+            ? res.assignedPermissions.data.content.map((permission) => permission.id)
+            : [];
+          this.permissionGroups = this.buildPermissionGroups(this.allAvailablePermissions);
+          this.initPermissionGroupExpansion();
           this.showAssignPermModal = true;
         }
+      },
+      error: () => {
+        this.allAvailablePermissions = [];
+        this.permissionGroups = [];
+        this.expandedPermissionGroups = {};
       }
     });
   }
@@ -350,6 +371,94 @@ export class RbacComponent implements OnInit {
     return this.selectedPermissionsForRole.includes(permId);
   }
 
+  togglePermissionGroup(resource: string): void {
+    this.expandedPermissionGroups[resource] = !this.expandedPermissionGroups[resource];
+  }
+
+  isPermissionGroupExpanded(resource: string): boolean {
+    return !!this.expandedPermissionGroups[resource];
+  }
+
+  isPermissionGroupSelected(group: PermissionGroup): boolean {
+    return group.permissions.length > 0 && group.permissions.every((perm) => this.isPermissionSelected(perm.id));
+  }
+
+  isPermissionGroupPartial(group: PermissionGroup): boolean {
+    const selectedCount = this.getSelectedPermissionsCount(group);
+    return selectedCount > 0 && selectedCount < group.permissions.length;
+  }
+
+  getSelectedPermissionsCount(group: PermissionGroup): number {
+    return group.permissions.filter((perm) => this.isPermissionSelected(perm.id)).length;
+  }
+
+  togglePermissionGroupSelection(group: PermissionGroup, checked: boolean): void {
+    const selectedIds = new Set(this.selectedPermissionsForRole);
+
+    group.permissions.forEach((perm) => {
+      if (checked) {
+        selectedIds.add(perm.id);
+      } else {
+        selectedIds.delete(perm.id);
+      }
+    });
+
+    this.selectedPermissionsForRole = Array.from(selectedIds);
+  }
+
+  formatPermissionGroupLabel(resource: string): string {
+    return resource
+      .split('-')
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(' ');
+  }
+
+  private buildPermissionGroups(permissions: PermissionResponse[]): PermissionGroup[] {
+    const groupedPermissions = permissions.reduce((groups, permission) => {
+      const resource = permission.resource;
+      if (!groups[resource]) {
+        groups[resource] = [];
+      }
+      groups[resource].push(permission);
+      return groups;
+    }, {} as Record<string, PermissionResponse[]>);
+
+    return Object.entries(groupedPermissions)
+      .map(([resource, groupPermissions]) => ({
+        resource,
+        permissions: [...groupPermissions].sort((left, right) => {
+          const actionOrder = this.getPermissionActionOrder(left.action) - this.getPermissionActionOrder(right.action);
+          if (actionOrder !== 0) {
+            return actionOrder;
+          }
+          return left.name.localeCompare(right.name);
+        })
+      }))
+      .sort((left, right) => left.resource.localeCompare(right.resource));
+  }
+
+  private initPermissionGroupExpansion(): void {
+    this.expandedPermissionGroups = this.permissionGroups.reduce((state, group) => {
+      state[group.resource] = group.permissions.some((perm) => this.isPermissionSelected(perm.id));
+      return state;
+    }, {} as Record<string, boolean>);
+  }
+
+  private getPermissionActionOrder(action: string): number {
+    switch (action.toUpperCase()) {
+      case 'GET':
+        return 1;
+      case 'POST':
+        return 2;
+      case 'PUT':
+        return 3;
+      case 'DELETE':
+        return 4;
+      default:
+        return 99;
+    }
+  }
+
   closeAllModals(): void {
     this.showCreatePermModal = false;
     this.showEditPermModal = false;
@@ -358,6 +467,8 @@ export class RbacComponent implements OnInit {
     this.showEditRoleModal = false;
     this.showDeleteRoleConfirm = false;
     this.showAssignPermModal = false;
+    this.permissionGroups = [];
+    this.expandedPermissionGroups = {};
     this.selectedPermission = null;
     this.permissionToDelete = null;
     this.selectedRole = null;
