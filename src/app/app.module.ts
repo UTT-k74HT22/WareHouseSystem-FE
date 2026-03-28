@@ -44,6 +44,7 @@ import { VerifyOtpComponent } from './pages/account/verify-otp/verify-otp.compon
 import { ResetPasswordComponent } from './pages/account/reset-password/reset-password.component';
 // ── RBAC ───────────────────────────────────────────────────────
 import { RbacComponent } from './pages/rbac/rbac.component';
+import { JobTrackerComponent } from './pages/job-tracker/job-tracker.component';
 
 @NgModule({
   declarations: [
@@ -82,6 +83,7 @@ import { RbacComponent } from './pages/rbac/rbac.component';
     ResetPasswordComponent,
     // ── RBAC ─────────────────────────────────────────────────────
     RbacComponent,
+    JobTrackerComponent,
   ],
   imports: [
     BrowserModule,
@@ -113,3 +115,4 @@ import { RbacComponent } from './pages/rbac/rbac.component';
   bootstrap: [AppComponent]
 })
 export class AppModule { }
+

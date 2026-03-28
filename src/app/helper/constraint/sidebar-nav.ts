@@ -14,6 +14,7 @@ export const SIDEBAR_NAV_SECTIONS: SidebarNavSection[] = [
     title: 'Tổng quan',
     items: [
       { label: 'Dashboard', route: '/dashboard', iconClass: 'fa-solid fa-chart-pie' },
+      { label: 'Theo dõi tiến trình', route: '/job-tracker', iconClass: 'fa-solid fa-list-check' },
       { label: 'Kho hàng', route: '/warehouse', iconClass: 'fa-solid fa-warehouse' },
       { label: 'Vị trí kho', route: '/location', iconClass: 'fa-solid fa-location-dot' }
     ]

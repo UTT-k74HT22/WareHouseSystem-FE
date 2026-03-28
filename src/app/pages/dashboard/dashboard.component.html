@@ -1,155 +1,439 @@
-﻿<div class="dashboard-container">
+<div class="dashboard-container">
 
-  <!-- â•â•â• HEADER â•â•â• -->
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       HEADER
+  ═══════════════════════════════════════════════════════════════════════════ -->
   <div class="dash-header">
     <div class="dash-header-left">
       <div class="dash-accent"></div>
       <div>
         <h1 class="dash-title">Tổng quan hệ thống</h1>
-        <p class="dash-sub">Warehouse Management System · {{ today }}</p>
+        <p class="dash-sub">
+          Warehouse Management System &nbsp;·&nbsp; {{ today }}
+          <span *ngIf="generatedAt" class="dash-updated">
+            &nbsp;· Cập nhật lúc {{ generatedAt }}
+          </span>
+        </p>
       </div>
     </div>
     <div class="dash-header-right">
-      <span class="dash-date-badge">{{ today }}</span>
-    </div>
-  </div>
-
-  <!-- â•â•â• KPI CARDS â•â•â• -->
-  <div class="kpi-grid">
-    <div class="kpi-card kpi-indigo">
-      <div class="kpi-icon">
-        <i class="fa-regular fa-clipboard" aria-hidden="true"></i>
+      <!-- Warehouse filter -->
+      <div class="filter-wrap">
+        <i class="fa-solid fa-warehouse filter-icon" aria-hidden="true"></i>
+        <select class="filter-select" [(ngModel)]="selectedWarehouseId" (change)="onWarehouseChange()">
+          <option [value]="undefined">Tất cả kho</option>
+          <option *ngFor="let wh of warehouses" [value]="wh.id">{{ wh.name }}</option>
+        </select>
       </div>
-      <div class="kpi-body">
-        <div class="kpi-value">{{ kpi.totalOrders }}</div>
-        <div class="kpi-label">Tổng đơn hàng</div>
-        <div class="kpi-trend kpi-up">+24 tháng này</div>
-      </div>
-    </div>
-    <div class="kpi-card kpi-emerald">
-      <div class="kpi-icon">
-        <i class="fa-solid fa-sack-dollar" aria-hidden="true"></i>
-      </div>
-      <div class="kpi-body">
-        <div class="kpi-value">{{ kpi.revenue }}M</div>
-        <div class="kpi-label">Doanh thu (₫)</div>
-        <div class="kpi-trend kpi-up">+7.5% so với T1</div>
-      </div>
-    </div>
-    <div class="kpi-card kpi-amber">
-      <div class="kpi-icon">
-        <i class="fa-regular fa-clock" aria-hidden="true"></i>
-      </div>
-      <div class="kpi-body">
-        <div class="kpi-value">{{ kpi.pendingOrders }}</div>
-        <div class="kpi-label">Đơn chờ xử lý</div>
-        <div class="kpi-trend kpi-down">-5 so với hôm qua</div>
-      </div>
-    </div>
-    <div class="kpi-card kpi-rose">
-      <div class="kpi-icon">
-        <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
-      </div>
-      <div class="kpi-body">
-        <div class="kpi-value">{{ kpi.completedToday }}</div>
-        <div class="kpi-label">Hoàn thành hôm nay</div>
-        <div class="kpi-trend kpi-up">+8 so với hôm qua</div>
+      <!-- Refresh countdown -->
+      <div class="refresh-badge" [class.refresh-pulse]="refreshCountdown <= 5">
+        <i class="fa-solid fa-rotate" aria-hidden="true"></i>
+        <span>{{ refreshCountdown }}s</span>
       </div>
     </div>
   </div>
 
-  <!-- â•â•â• ROW 1: LINE CHART (lá»›n) + DOUGHNUT â•â•â• -->
-  <div class="charts-row">
-
-    <!-- Line chart: Doanh thu & Ä‘Æ¡n hÃ ng theo thÃ¡ng -->
-    <div class="chart-card">
-      <div class="chart-header">
-        <div class="chart-header-left">
-          <div class="chart-title">Doanh thu &amp; Đơn hàng theo tháng</div>
-          <div class="chart-subtitle">6 tháng gần nhất · Doanh thu (trái) | Số đơn (phải)</div>
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       SKELETON — hiển thị khi đang tải lần đầu
+  ═══════════════════════════════════════════════════════════════════════════ -->
+  <ng-container *ngIf="loading">
+    <!-- KPI skeleton row 1 -->
+    <div class="kpi-grid">
+      <div class="kpi-card skeleton-card" *ngFor="let i of [1,2,3,4]">
+        <div class="skel skel-icon"></div>
+        <div class="skel-body">
+          <div class="skel skel-value"></div>
+          <div class="skel skel-label"></div>
         </div>
-        <span class="chart-badge">T9/2025 – T2/2026</span>
       </div>
-      <div class="chart-canvas-wrap" style="height:260px">
-        <canvas baseChart
-          [data]="lineChartData"
-          [options]="lineChartOptions"
-          [type]="lineChartType">
-        </canvas>
+    </div>
+    <!-- KPI skeleton row 2 -->
+    <div class="kpi-grid kpi-grid-secondary">
+      <div class="kpi-card skeleton-card" *ngFor="let i of [1,2,3,4]">
+        <div class="skel skel-icon"></div>
+        <div class="skel-body">
+          <div class="skel skel-value"></div>
+          <div class="skel skel-label"></div>
+        </div>
+      </div>
+    </div>
+    <!-- Stats bar skeleton -->
+    <div class="stats-bar skeleton-card" style="height:56px;margin-bottom:1rem"></div>
+    <!-- Chart skeletons -->
+    <div class="charts-row">
+      <div class="chart-card skeleton-card" style="height:320px"></div>
+      <div class="chart-card skeleton-card" style="height:320px"></div>
+    </div>
+    <div class="charts-row">
+      <div class="chart-card skeleton-card" style="height:280px"></div>
+      <div class="chart-card skeleton-card" style="height:280px"></div>
+    </div>
+    <div class="charts-row">
+      <div class="chart-card skeleton-card" style="height:260px"></div>
+      <div class="chart-card skeleton-card" style="height:260px"></div>
+    </div>
+  </ng-container>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       CONTENT — hiển thị sau khi tải xong
+  ═══════════════════════════════════════════════════════════════════════════ -->
+  <ng-container *ngIf="!loading">
+
+    <!-- ─── KPI ROW 1 ──────────────────────────────────────────────────── -->
+    <div class="kpi-grid">
+      <!-- Tồn khả dụng -->
+      <div class="kpi-card kpi-indigo kpi-clickable" (click)="navigateTo('/inventory')" role="button" tabindex="0">
+        <div class="kpi-icon">
+          <i class="fa-solid fa-boxes-stacked" aria-hidden="true"></i>
+        </div>
+        <div class="kpi-body">
+          <div class="kpi-value">{{ kpi.availableQuantity | number:'1.0-0' }}</div>
+          <div class="kpi-label">Tồn khả dụng</div>
+          <div class="kpi-hint">On-hand − reserved − quarantine</div>
+        </div>
+        <i class="fa-solid fa-arrow-right kpi-arrow" aria-hidden="true"></i>
+      </div>
+
+      <!-- Phiếu nhập chờ -->
+      <div class="kpi-card kpi-emerald kpi-clickable" (click)="navigateTo('/inbound')" role="button" tabindex="0">
+        <div class="kpi-icon">
+          <i class="fa-solid fa-truck-ramp-box" aria-hidden="true"></i>
+        </div>
+        <div class="kpi-body">
+          <div class="kpi-value">{{ kpi.pendingInbound }}</div>
+          <div class="kpi-label">Phiếu nhập chờ xử lý</div>
+          <div class="kpi-hint">DRAFT + CONFIRMED</div>
+        </div>
+        <i class="fa-solid fa-arrow-right kpi-arrow" aria-hidden="true"></i>
+      </div>
+
+      <!-- Phiếu xuất chờ -->
+      <div class="kpi-card kpi-amber kpi-clickable" (click)="navigateTo('/outbound')" role="button" tabindex="0">
+        <div class="kpi-icon">
+          <i class="fa-solid fa-truck-fast" aria-hidden="true"></i>
+        </div>
+        <div class="kpi-body">
+          <div class="kpi-value">{{ kpi.pendingOutbound }}</div>
+          <div class="kpi-label">Phiếu xuất chờ xử lý</div>
+          <div class="kpi-hint">DRAFT + PICKING + PACKED</div>
+        </div>
+        <i class="fa-solid fa-arrow-right kpi-arrow" aria-hidden="true"></i>
+      </div>
+
+      <!-- Running jobs -->
+      <div class="kpi-card kpi-rose kpi-clickable" (click)="navigateTo('/job-tracker')" role="button" tabindex="0">
+        <div class="kpi-icon">
+          <i class="fa-solid fa-gears" aria-hidden="true"></i>
+        </div>
+        <div class="kpi-body">
+          <div class="kpi-value">{{ kpi.runningJobs }}</div>
+          <div class="kpi-label">Jobs đang chạy</div>
+          <div class="kpi-hint">Export / Import / Report</div>
+        </div>
+        <i class="fa-solid fa-arrow-right kpi-arrow" aria-hidden="true"></i>
       </div>
     </div>
 
-    <!-- Doughnut: Tráº¡ng thÃ¡i Ä‘Æ¡n hÃ ng -->
-    <div class="chart-card">
-      <div class="chart-header">
-        <div class="chart-header-left">
-          <div class="chart-title">Trạng thái đơn hàng</div>
-          <div class="chart-subtitle">Tháng 2/2026</div>
+    <!-- ─── KPI ROW 2 ──────────────────────────────────────────────────── -->
+    <div class="kpi-grid kpi-grid-secondary">
+      <!-- Low stock SKUs -->
+      <div class="kpi-card kpi-secondary kpi-clickable"
+           [class.kpi-warning]="kpi.lowStockSkuCount > 0"
+           (click)="navigateTo('/inventory')" role="button" tabindex="0">
+        <div class="kpi-icon">
+          <i class="fa-solid fa-box-open" aria-hidden="true"></i>
         </div>
-        <span class="chart-badge">286 đơn</span>
+        <div class="kpi-body">
+          <div class="kpi-value">{{ kpi.lowStockSkuCount }}</div>
+          <div class="kpi-label">SKU dưới mức reorder</div>
+          <div class="kpi-hint">Cần bổ sung hàng</div>
+        </div>
+        <i class="fa-solid fa-arrow-right kpi-arrow" aria-hidden="true"></i>
       </div>
-      <div class="chart-canvas-wrap" style="height:260px">
-        <canvas baseChart
-          [data]="doughnutData"
-          [options]="doughnutOptions"
-          [type]="doughnutType">
-        </canvas>
+
+      <!-- Batch sắp hết hạn -->
+      <div class="kpi-card kpi-secondary kpi-clickable"
+           [class.kpi-warning]="kpi.expiringBatchCount > 0"
+           (click)="navigateTo('/batch')" role="button" tabindex="0">
+        <div class="kpi-icon">
+          <i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i>
+        </div>
+        <div class="kpi-body">
+          <div class="kpi-value">{{ kpi.expiringBatchCount }}</div>
+          <div class="kpi-label">Lô sắp hết hạn</div>
+          <div class="kpi-hint">Trong 7 ngày tới</div>
+        </div>
+        <i class="fa-solid fa-arrow-right kpi-arrow" aria-hidden="true"></i>
+      </div>
+
+      <!-- Kho gần đầy -->
+      <div class="kpi-card kpi-secondary kpi-clickable"
+           [class.kpi-warning]="kpi.nearCapacityWarehouseCount > 0"
+           (click)="navigateTo('/warehouse')" role="button" tabindex="0">
+        <div class="kpi-icon">
+          <i class="fa-solid fa-warehouse" aria-hidden="true"></i>
+        </div>
+        <div class="kpi-body">
+          <div class="kpi-value">{{ kpi.nearCapacityWarehouseCount }}</div>
+          <div class="kpi-label">Kho gần đầy</div>
+          <div class="kpi-hint">≥ 80% vị trí sử dụng</div>
+        </div>
+        <i class="fa-solid fa-arrow-right kpi-arrow" aria-hidden="true"></i>
+      </div>
+
+      <!-- Failed jobs today -->
+      <div class="kpi-card kpi-secondary kpi-clickable"
+           [class.kpi-danger]="kpi.failedJobsToday > 0"
+           (click)="navigateTo('/job-tracker')" role="button" tabindex="0">
+        <div class="kpi-icon">
+          <i class="fa-solid fa-circle-xmark" aria-hidden="true"></i>
+        </div>
+        <div class="kpi-body">
+          <div class="kpi-value">{{ kpi.failedJobsToday }}</div>
+          <div class="kpi-label">Jobs lỗi hôm nay</div>
+          <div class="kpi-hint">Cần kiểm tra / retry</div>
+        </div>
+        <i class="fa-solid fa-arrow-right kpi-arrow" aria-hidden="true"></i>
       </div>
     </div>
 
-  </div>
-
-  <!-- â•â•â• ROW 2: BAR CHART + ACTIVITY FEED â•â•â• -->
-  <div class="charts-row">
-
-    <!-- Bar chart: Sá»©c chá»©a kho -->
-    <div class="chart-card">
-      <div class="chart-header">
-        <div class="chart-header-left">
-          <div class="chart-title">Sức chứa kho hàng</div>
-          <div class="chart-subtitle">% công suất đang sử dụng · Đỏ ≥ 80% | Xanh &lt; 50%</div>
-        </div>
-        <span class="chart-badge">5 kho</span>
+    <!-- ─── SECONDARY STATS BAR ──────────────────────────────────────────── -->
+    <div class="stats-bar">
+      <div class="stats-item">
+        <span class="stats-dot stats-dot-blue"></span>
+        <span class="stats-label">On-hand</span>
+        <span class="stats-value">{{ secondaryStats.totalOnHand | number:'1.0-0' }}</span>
       </div>
-      <div class="chart-canvas-wrap" style="height:220px">
-        <canvas baseChart
-          [data]="barChartData"
-          [options]="barChartOptions"
-          [type]="barChartType">
-        </canvas>
+      <div class="stats-divider"></div>
+      <div class="stats-item">
+        <span class="stats-dot stats-dot-amber"></span>
+        <span class="stats-label">Reserved</span>
+        <span class="stats-value">{{ secondaryStats.totalReserved | number:'1.0-0' }}</span>
+      </div>
+      <div class="stats-divider"></div>
+      <div class="stats-item">
+        <span class="stats-dot stats-dot-red"></span>
+        <span class="stats-label">Quarantine</span>
+        <span class="stats-value">{{ secondaryStats.totalQuarantine | number:'1.0-0' }}</span>
+      </div>
+      <div class="stats-divider"></div>
+      <div class="stats-item">
+        <span class="stats-dot stats-dot-green"></span>
+        <span class="stats-label">Kho đang hoạt động</span>
+        <span class="stats-value">{{ secondaryStats.activeWarehouses }}</span>
       </div>
     </div>
 
-    <!-- Activity feed -->
-    <div class="chart-card">
-      <div class="chart-header">
-        <div class="chart-header-left">
-          <div class="chart-title">Hoạt động gần đây</div>
-          <div class="chart-subtitle">Hôm nay</div>
-        </div>
-        <a class="chart-badge" routerLink="/stock-movements" style="cursor:pointer;text-decoration:none;color:#4f46e5">Xem tất cả</a>
-      </div>
-      <div class="activity-list">
-        <div class="activity-item" *ngFor="let a of activities">
-          <div class="activity-icon" [ngClass]="'act-' + a.type">
-            <!-- inbound -->
-            <i *ngIf="a.type === 'in'" class="fa-solid fa-arrow-down" aria-hidden="true"></i>
-            <!-- outbound -->
-            <i *ngIf="a.type === 'out'" class="fa-solid fa-arrow-up" aria-hidden="true"></i>
-            <!-- adjustment -->
-            <i *ngIf="a.type === 'adj'" class="fa-solid fa-sliders" aria-hidden="true"></i>
-            <!-- transfer -->
-            <i *ngIf="a.type === 'tr'" class="fa-solid fa-right-left" aria-hidden="true"></i>
+    <!-- ─── ROW 1: TREND + DOUGHNUT ───────────────────────────────────────── -->
+    <div class="charts-row charts-row-7-3">
+
+      <!-- Trend chart -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <div class="chart-header-left">
+            <div class="chart-title">Nhập / xuất kho theo ngày</div>
+            <div class="chart-subtitle">Dựa trên stock movements thực tế · {{ selectedDays }} ngày gần nhất</div>
           </div>
-          <div class="activity-body">
-            <div class="activity-desc">{{ a.desc }}</div>
-            <div class="activity-time">{{ a.time }}</div>
+          <div class="chart-header-actions">
+            <div class="day-toggle">
+              <button *ngFor="let d of trendRangeOptions"
+                      class="day-btn"
+                      [class.day-btn-active]="selectedDays === d"
+                      (click)="onDaysChange(d)">
+                {{ d }}N
+              </button>
+            </div>
           </div>
-          <div class="activity-qty" [ngClass]="a.up ? 'qty-up' : 'qty-down'">{{ a.qty }}</div>
+        </div>
+        <div class="chart-canvas-wrap" style="height:260px">
+          <canvas baseChart
+                  [data]="lineChartData"
+                  [options]="lineChartOptions"
+                  [type]="lineChartType">
+          </canvas>
+        </div>
+      </div>
+
+      <!-- Doughnut chart -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <div class="chart-header-left">
+            <div class="chart-title">Backlog vận hành</div>
+            <div class="chart-subtitle">Đơn hàng và chứng từ đang mở</div>
+          </div>
+          <span class="chart-badge chart-badge-live">
+            <span class="live-dot"></span> Live
+          </span>
+        </div>
+        <div class="chart-canvas-wrap" style="height:260px; position:relative">
+          <canvas *ngIf="!isDoughnutEmpty()" baseChart
+                  [data]="doughnutData"
+                  [options]="doughnutOptions"
+                  [type]="doughnutType">
+          </canvas>
+          <div *ngIf="isDoughnutEmpty()" class="empty-state">
+            <i class="fa-solid fa-circle-check empty-icon empty-icon-green" aria-hidden="true"></i>
+            <p class="empty-title">Không có backlog</p>
+            <p class="empty-desc">Tất cả đơn hàng đã được xử lý</p>
+          </div>
         </div>
       </div>
     </div>
 
-  </div>
+    <!-- ─── ROW 2: BAR CHART + ACTIVITY ──────────────────────────────────── -->
+    <div class="charts-row">
 
+      <!-- Bar chart capacity -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <div class="chart-header-left">
+            <div class="chart-title">Mức sử dụng vị trí kho</div>
+            <div class="chart-subtitle">% vị trí đang có tồn &nbsp;·&nbsp;
+              <span class="legend-dot legend-green"></span> &lt;50%
+              <span class="legend-dot legend-amber"></span> 50–80%
+              <span class="legend-dot legend-red"></span> ≥80%
+            </div>
+          </div>
+          <span class="chart-badge">{{ overview?.active_warehouse_count || 0 }} kho active</span>
+        </div>
+        <div *ngIf="barChartData.labels && barChartData.labels.length > 0; else emptyCapacity"
+             class="chart-canvas-wrap" style="height:220px">
+          <canvas baseChart
+                  [data]="barChartData"
+                  [options]="barChartOptions"
+                  [type]="barChartType">
+          </canvas>
+        </div>
+        <ng-template #emptyCapacity>
+          <div class="empty-state">
+            <i class="fa-solid fa-warehouse empty-icon" aria-hidden="true"></i>
+            <p class="empty-title">Chưa có dữ liệu kho</p>
+            <p class="empty-desc">Chưa có vị trí nào được ghi nhận</p>
+          </div>
+        </ng-template>
+      </div>
+
+      <!-- Activity list -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <div class="chart-header-left">
+            <div class="chart-title">Hoạt động gần đây</div>
+            <div class="chart-subtitle">Stock movements mới nhất</div>
+          </div>
+          <a class="chart-badge chart-badge-link" routerLink="/stock-movements">Xem tất cả →</a>
+        </div>
+
+        <div *ngIf="activities.length > 0; else emptyActivity" class="activity-list">
+          <div class="activity-item" *ngFor="let activity of activities">
+            <div class="activity-icon" [ngClass]="'act-' + getActivityType(activity)">
+              <i [class]="getActivityIcon(activity)" aria-hidden="true"></i>
+            </div>
+            <div class="activity-body">
+              <div class="activity-desc" [title]="getActivityDescription(activity)">
+                {{ getActivityDescription(activity) }}
+              </div>
+              <div class="activity-time">{{ getActivityTime(activity) }}</div>
+            </div>
+            <div class="activity-qty" [ngClass]="isPositiveActivity(activity) ? 'qty-up' : 'qty-down'">
+              {{ getActivityQuantity(activity) }}
+            </div>
+          </div>
+        </div>
+
+        <ng-template #emptyActivity>
+          <div class="empty-state">
+            <i class="fa-solid fa-inbox empty-icon" aria-hidden="true"></i>
+            <p class="empty-title">Chưa có hoạt động</p>
+            <p class="empty-desc">Chưa có stock movement nào được ghi nhận</p>
+          </div>
+        </ng-template>
+      </div>
+    </div>
+
+    <!-- ─── ROW 3: ALERTS + JOB TRACKER ──────────────────────────────────── -->
+    <div class="charts-row">
+
+      <!-- Alerts -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <div class="chart-header-left">
+            <div class="chart-title">Cảnh báo hệ thống</div>
+            <div class="chart-subtitle">Các điểm cần ưu tiên xử lý</div>
+          </div>
+          <span class="chart-badge"
+                [class.chart-badge-warn]="hasHighSeverityAlerts()">
+            {{ alerts.length }} cảnh báo
+          </span>
+        </div>
+
+        <div *ngIf="alerts.length > 0; else emptyAlerts" class="alert-list">
+          <div class="alert-item"
+               *ngFor="let alert of alerts"
+               [ngClass]="'alert-' + alert.severity.toLowerCase()"
+               [class.alert-clickable]="!!getAlertRoute(alert.code)"
+               (click)="getAlertRoute(alert.code) && navigateTo(getAlertRoute(alert.code)!)"
+               role="button">
+            <div class="alert-icon-wrap">
+              <i [class]="getAlertIcon(alert.code, alert.severity)" aria-hidden="true"></i>
+            </div>
+            <div class="alert-body">
+              <div class="alert-top">
+                <span class="alert-title">{{ alert.title }}</span>
+                <span class="alert-badge">{{ alert.value }}</span>
+              </div>
+              <div class="alert-desc">{{ alert.description }}</div>
+            </div>
+            <i *ngIf="getAlertRoute(alert.code)" class="fa-solid fa-chevron-right alert-chevron" aria-hidden="true"></i>
+          </div>
+        </div>
+
+        <ng-template #emptyAlerts>
+          <div class="empty-state">
+            <i class="fa-solid fa-shield-halved empty-icon empty-icon-green" aria-hidden="true"></i>
+            <p class="empty-title">Hệ thống ổn định</p>
+            <p class="empty-desc">Không có cảnh báo nào cần xử lý</p>
+          </div>
+        </ng-template>
+      </div>
+
+      <!-- Job tracker -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <div class="chart-header-left">
+            <div class="chart-title">Theo dõi export / import</div>
+            <div class="chart-subtitle">Background jobs gần đây của bạn</div>
+          </div>
+          <a class="chart-badge chart-badge-link" routerLink="/job-tracker">Xem tất cả →</a>
+        </div>
+
+        <div *ngIf="recentJobs.length > 0; else emptyJobs" class="job-list">
+          <div class="job-item" *ngFor="let job of recentJobs">
+            <div class="job-head">
+              <div class="job-code" [title]="job.job_code">{{ job.job_code }}</div>
+              <div class="job-status" [ngClass]="getJobStatusClass(job)">
+                {{ getJobStatusLabel(job.status) }}
+              </div>
+            </div>
+            <div class="job-meta">{{ job.business_type }} · {{ job.current_step || 'PENDING' }}</div>
+            <div class="job-progress">
+              <div class="job-progress-bar" [style.width.%]="job.progress_percent || 0"></div>
+            </div>
+            <div class="job-foot">
+              <span>{{ job.progress_percent || 0 }}%</span>
+              <span>{{ job.processed_rows || 0 | number }}/{{ job.total_rows || 0 | number }} dòng</span>
+            </div>
+          </div>
+        </div>
+
+        <ng-template #emptyJobs>
+          <div class="empty-state">
+            <i class="fa-solid fa-gears empty-icon" aria-hidden="true"></i>
+            <p class="empty-title">Chưa có job nào</p>
+            <p class="empty-desc">Các job export/import sẽ hiện ở đây</p>
+          </div>
+        </ng-template>
+      </div>
+    </div>
+
+  </ng-container>
 </div>
