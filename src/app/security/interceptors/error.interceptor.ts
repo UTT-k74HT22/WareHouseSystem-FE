@@ -75,29 +75,45 @@ export class ErrorInterceptor implements HttpInterceptor {
       );
     }
 
-    // TODO: Khi backend có API refresh token, uncomment phần này
-    // this.isRefreshing = true;
-    // this.refreshTokenSubject.next(null);
-    //
-    // return this.authService.refreshToken().pipe(
-    //   switchMap((tokens: any) => {
-    //     this.isRefreshing = false;
-    //     this.refreshTokenSubject.next(tokens.accessToken);
-    //     return next.handle(this.addToken(request, tokens.accessToken));
-    //   }),
-    //   catchError((err) => {
-    //     this.isRefreshing = false;
-    //     this.authService.logout();
-    //     this.router.navigate(['/login']);
-    //     return throwError(() => err);
-    //   })
-    // );
+    this.isRefreshing = true;
+    this.refreshTokenSubject.next(null);
 
-    // Tạm thời: Logout và redirect về login
-    this.toastr.warning('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại', 'Hết phiên');
-    this.authService.logout();
-    this.router.navigate(['/login']);
-    return throwError(() => new Error('Token expired'));
+    const tokens = this.authService.getTokens();
+    if (!tokens?.refreshToken) {
+      this.isRefreshing = false;
+      this.toastr.warning('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại', 'Hết phiên');
+      this.authService.logout();
+      this.router.navigate(['/login']);
+      return throwError(() => new Error('Token expired'));
+    }
+
+    return this.authService.refreshToken({ refresh_token: tokens.refreshToken }).pipe(
+      switchMap((res) => {
+        this.isRefreshing = false;
+        if (res.success && res.data) {
+          this.authService.setSession({
+            accessToken: res.data.access_token,
+            refreshToken: tokens.refreshToken,
+            accessTokenExpiresAt: Number(res.data.expire_access_token),
+            refreshTokenExpiresAt: Number(tokens.refreshTokenExpiresAt)
+          });
+          this.refreshTokenSubject.next(res.data.access_token);
+          return next.handle(this.addToken(request, res.data.access_token));
+        } else {
+          this.toastr.warning('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại', 'Hết phiên');
+          this.authService.logout();
+          this.router.navigate(['/login']);
+          return throwError(() => new Error('Token refresh failed'));
+        }
+      }),
+      catchError((err) => {
+        this.isRefreshing = false;
+        this.toastr.warning('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại', 'Hết phiên');
+        this.authService.logout();
+        this.router.navigate(['/login']);
+        return throwError(() => err);
+      })
+    );
   }
 
   /**

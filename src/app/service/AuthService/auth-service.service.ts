@@ -86,7 +86,7 @@ export class AuthService {
 
   // ==================== SESSION MANAGEMENT ====================
 
-  private setSession(tokens: AuthTokens): void {
+  setSession(tokens: AuthTokens): void {
     this.storage.saveTokens(tokens);
     const newState = this.mapper.mapToState(tokens);
     this.authStateSubject.next(newState);
@@ -106,6 +106,14 @@ export class AuthService {
 
   getAccessToken(): string | null {
     return this.authStateSubject.value.tokens?.accessToken ?? null;
+  }
+
+  getTokens(): AuthTokens | null {
+    return this.authStateSubject.value.tokens;
+  }
+
+  isAuthenticated(): boolean {
+    return this.authStateSubject.value.isAuthenticated;
   }
 
   isLoggedIn(): boolean {

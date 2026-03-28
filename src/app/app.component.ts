@@ -1,6 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { Router, NavigationEnd, ActivatedRoute } from '@angular/router';
 import { filter } from 'rxjs/operators';
+import { AuthService } from './service/AuthService/auth-service.service';
+import { TokenExpiryService } from './service/AuthService/token-expiry.service';
 
 @Component({
   selector: 'app-root',
@@ -24,7 +26,9 @@ export class AppComponent implements OnInit {
 
   constructor(
     private router: Router,
-    private activatedRoute: ActivatedRoute
+    private activatedRoute: ActivatedRoute,
+    private authService: AuthService,
+    private tokenExpiryService: TokenExpiryService
   ) {}
 
   ngOnInit() {
@@ -56,6 +60,7 @@ export class AppComponent implements OnInit {
 
     if (isRouteWithoutLayout) {
       this.showLayout = false;
+      this.tokenExpiryService.stopMonitoring();
       return;
     }
 
@@ -68,6 +73,11 @@ export class AppComponent implements OnInit {
 
     // Show layout for all other valid routes
     this.showLayout = true;
+    
+    // Start token expiry monitoring when logged in
+    if (this.authService.isAuthenticated()) {
+      this.tokenExpiryService.startMonitoring();
+    }
   }
 
   private isNotFoundRoute(): boolean {
