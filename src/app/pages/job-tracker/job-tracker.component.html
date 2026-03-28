@@ -1,0 +1,85 @@
+<div class="job-tracker-page">
+  <div class="job-tracker-header">
+    <div>
+      <h1 class="job-tracker-title">Theo dõi tiến trình</h1>
+      <p class="job-tracker-subtitle">Danh sách export, import và các background jobs gần đây</p>
+    </div>
+    <button type="button" class="refresh-btn" (click)="refresh()">Làm mới</button>
+  </div>
+
+  <div class="job-summary-card">
+    <div class="summary-item">
+      <span class="summary-label">Tổng bản ghi</span>
+      <span class="summary-value">{{ totalElements }}</span>
+    </div>
+    <div class="summary-item">
+      <span class="summary-label">Trang hiện tại</span>
+      <span class="summary-value">{{ page + 1 }}/{{ totalPages || 1 }}</span>
+    </div>
+    <div class="summary-item">
+      <span class="summary-label">Tự động cập nhật</span>
+      <span class="summary-value">15 giây</span>
+    </div>
+  </div>
+
+  <div class="job-table-card">
+    <div class="table-wrap">
+      <table class="job-table">
+        <thead>
+          <tr>
+            <th>STT</th>
+            <th>Action</th>
+            <th>Status</th>
+            <th>Time start</th>
+            <th>Time end</th>
+            <th>File</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngIf="loading">
+            <td colspan="6" class="empty-state">Đang tải dữ liệu...</td>
+          </tr>
+          <tr *ngIf="!loading && jobs.length === 0">
+            <td colspan="6" class="empty-state">Chưa có background job nào.</td>
+          </tr>
+          <tr *ngFor="let job of jobs; let i = index">
+            <td>{{ getRowNumber(i) }}</td>
+            <td>
+              <div class="action-cell">
+                <div class="action-main">{{ getActionLabel(job) }}</div>
+                <div class="action-sub">{{ job.job_code }}</div>
+              </div>
+            </td>
+            <td>
+              <div class="status-cell">
+                <span class="status-badge" [ngClass]="getStatusClass(job)">{{ job.status }}</span>
+                <span class="status-step">{{ job.current_step || '--' }}</span>
+              </div>
+            </td>
+            <td>{{ formatDateTime(job.started_at || job.created_at) }}</td>
+            <td>{{ formatDateTime(job.finished_at) }}</td>
+            <td>
+              <div class="file-cell">
+                <span class="file-name">{{ getFileLabel(job) }}</span>
+                <button
+                  *ngIf="canDownload(job)"
+                  type="button"
+                  class="download-btn"
+                  [disabled]="downloadingJobId === job.id"
+                  (click)="download(job)">
+                  {{ downloadingJobId === job.id ? 'Đang tải...' : 'Tải file' }}
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="pagination" *ngIf="!loading && totalPages > 1">
+      <button type="button" (click)="onPageChange(page - 1)" [disabled]="page === 0">Trước</button>
+      <span>Trang {{ page + 1 }} / {{ totalPages }}</span>
+      <button type="button" (click)="onPageChange(page + 1)" [disabled]="page + 1 >= totalPages">Sau</button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,198 @@
+.job-tracker-page {
+  padding: 1.5rem 2rem 2rem;
+  background: #f1f5f9;
+  min-height: 100%;
+}
+
+.job-tracker-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.job-tracker-title {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.job-tracker-subtitle {
+  margin: 0.25rem 0 0;
+  color: #64748b;
+  font-size: 0.875rem;
+}
+
+.refresh-btn,
+.download-btn,
+.pagination button {
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.refresh-btn {
+  background: #0f766e;
+  color: #fff;
+  padding: 0.7rem 1rem;
+}
+
+.job-summary-card,
+.job-table-card {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+}
+
+.job-summary-card {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.summary-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.summary-label {
+  color: #64748b;
+  font-size: 0.8rem;
+}
+
+.summary-value {
+  color: #0f172a;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+.job-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.job-table th,
+.job-table td {
+  padding: 0.95rem 1rem;
+  border-bottom: 1px solid #e2e8f0;
+  text-align: left;
+  vertical-align: top;
+  font-size: 0.9rem;
+}
+
+.job-table th {
+  color: #475569;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  background: #f8fafc;
+}
+
+.empty-state {
+  text-align: center !important;
+  color: #64748b;
+  padding: 2rem 1rem !important;
+}
+
+.action-main {
+  color: #0f172a;
+  font-weight: 600;
+}
+
+.action-sub,
+.status-step,
+.file-name {
+  color: #64748b;
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+}
+
+.status-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.status-badge {
+  display: inline-flex;
+  width: fit-content;
+  border-radius: 999px;
+  padding: 0.25rem 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.status-running {
+  background: #dbeafe;
+  color: #2563eb;
+}
+
+.status-success {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.status-error {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.file-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.download-btn {
+  width: fit-content;
+  background: #0f172a;
+  color: #fff;
+  padding: 0.45rem 0.8rem;
+  font-size: 0.8rem;
+}
+
+.download-btn:disabled,
+.pagination button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.25rem;
+}
+
+.pagination button {
+  background: #e2e8f0;
+  color: #0f172a;
+  padding: 0.55rem 0.9rem;
+}
+
+@media (max-width: 768px) {
+  .job-tracker-page {
+    padding: 1rem;
+  }
+
+  .job-tracker-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .job-summary-card {
+    grid-template-columns: 1fr;
+  }
+}
