@@ -28,6 +28,7 @@ import { VerifyOtpComponent } from './pages/account/verify-otp/verify-otp.compon
 import { AuthGuard } from './security/guards/auth.guard';
 import { GuestGuard } from './security/guards/guest.guard';
 import { RbacComponent } from './pages/rbac/rbac.component';
+import { JobTrackerComponent } from './pages/job-tracker/job-tracker.component';
 
 const routes: Routes = [
   {
@@ -76,7 +77,15 @@ const routes: Routes = [
       subtitle: 'Tổng quan hoạt động kho hôm nay'
     }
   },
-  {
+    {
+    path: 'job-tracker',
+    component: JobTrackerComponent,
+    canActivate: [AuthGuard],
+    data: {
+      title: 'Theo dõi tiến trình',
+      subtitle: 'Tiến trình export, import và background jobs'
+    }
+  },  {
     path: 'warehouse',
     component: WarehouseComponent,
     canActivate: [AuthGuard],
@@ -277,3 +286,4 @@ const routes: Routes = [
   exports: [RouterModule]
 })
 export class AppRoutingModule {}
+
