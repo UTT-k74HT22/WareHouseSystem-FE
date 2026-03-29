@@ -20,6 +20,12 @@
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+@media (max-width: 768px) {
+  .app-shell {
+    overflow: visible;
+  }
+}
+
 .main {
   flex: 1;
   display: flex;
@@ -45,6 +51,19 @@
   background: var(--bg-body);
 }
 
+/* Mobile sidebar backdrop */
+.mobile-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1050;
+}
+
+.mobile-backdrop.active {
+  display: block;
+}
+
 /* ─── Responsive ──────────────────────────────────────────── */
 @media (max-width: 1024px) {
   .content {
@@ -54,13 +73,18 @@
 }
 
 @media (max-width: 768px) {
-  app-sidebar {
-    display: none;
+  .app-shell {
+    overflow: visible;
+  }
+
+  .main {
+    overflow: visible;
   }
 
   .content {
     padding: 12px 14px 10px;
     gap: 12px;
+    overflow: visible;
   }
 }
 

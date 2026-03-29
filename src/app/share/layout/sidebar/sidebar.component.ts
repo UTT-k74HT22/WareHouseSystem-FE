@@ -1,4 +1,4 @@
-import { Component, Output, EventEmitter, OnDestroy, OnInit } from '@angular/core';
+import { Component, Output, EventEmitter, OnDestroy, OnInit, Input } from '@angular/core';
 import { SIDEBAR_NAV_SECTIONS } from '../../../helper/constraint/sidebar-nav';
 import { NavigationEnd, Router } from '@angular/router';
 import { Subject } from 'rxjs';
@@ -11,6 +11,9 @@ import { filter, takeUntil } from 'rxjs/operators';
 })
 export class SidebarComponent implements OnInit, OnDestroy {
   readonly navSections = SIDEBAR_NAV_SECTIONS;
+
+  @Input() mobileOpen = false;
+  @Output() mobileClose = new EventEmitter<void>();
 
   isCollapsed = true;
   isHovered = false;
@@ -39,7 +42,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
   }
 
   get shouldExpand(): boolean {
-    return this.isPinnedExpanded || this.isHovered;
+    return this.isPinnedExpanded || this.isHovered || this.mobileOpen;
   }
 
   onMouseEnter(): void {
