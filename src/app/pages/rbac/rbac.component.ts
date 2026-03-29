@@ -201,7 +201,7 @@ export class RbacComponent implements OnInit {
     this.permissionService.create(this.createPermForm).subscribe({
       next: (res) => {
         if (res.success) {
-          this.toastr.success('Tạo permission thành công!');
+          this.toastr.success('Phân quyền', 'Tạo permission thành công!');
           this.showCreatePermModal = false;
           this.loadPermissions();
         }
@@ -226,7 +226,7 @@ export class RbacComponent implements OnInit {
     this.permissionService.update(this.selectedPermission.id, this.editPermForm).subscribe({
       next: (res) => {
         if (res.success) {
-          this.toastr.success('Cập nhật permission thành công!');
+          this.toastr.success('Phân quyền', 'Cập nhật permission thành công!');
           this.showEditPermModal = false;
           this.loadPermissions();
         }
@@ -244,7 +244,7 @@ export class RbacComponent implements OnInit {
     this.permissionService.delete(this.permissionToDelete.id).subscribe({
       next: (res) => {
         if (res.success) {
-          this.toastr.success('Xóa permission thành công!');
+          this.toastr.success('Phân quyền', 'Xóa permission thành công!');
           this.showDeletePermConfirm = false;
           this.loadPermissions();
         }
@@ -261,7 +261,7 @@ export class RbacComponent implements OnInit {
     this.roleService.create(this.createRoleForm).subscribe({
       next: (res) => {
         if (res.success) {
-          this.toastr.success('Tạo role thành công!');
+          this.toastr.success('Phân quyền', 'Tạo role thành công!');
           this.showCreateRoleModal = false;
           this.loadRoles();
         }
@@ -284,7 +284,7 @@ export class RbacComponent implements OnInit {
     this.roleService.update(this.selectedRole.id, this.editRoleForm).subscribe({
       next: (res) => {
         if (res.success) {
-          this.toastr.success('Cập nhật role thành công!');
+          this.toastr.success('Phân quyền', 'Cập nhật role thành công!');
           this.showEditRoleModal = false;
           this.loadRoles();
         }
@@ -302,7 +302,7 @@ export class RbacComponent implements OnInit {
     this.roleService.delete(this.roleToDelete.id).subscribe({
       next: (res) => {
         if (res.success) {
-          this.toastr.success('Xóa role thành công!');
+          this.toastr.success('Phân quyền', 'Xóa role thành công!');
           this.showDeleteRoleConfirm = false;
           this.loadRoles();
         }
@@ -329,7 +329,7 @@ export class RbacComponent implements OnInit {
     this.roleService.assignPermissions(this.selectedRole.id, request).subscribe({
       next: (res) => {
         if (res.success) {
-          this.toastr.success('Gán permissions thành công!');
+          this.toastr.success('Phân quyền', 'Gán permissions thành công!');
           this.showAssignPermModal = false;
           this.loadRoles();
         }
