@@ -16,7 +16,8 @@ export const SIDEBAR_NAV_SECTIONS: SidebarNavSection[] = [
       { label: 'Dashboard', route: '/dashboard', iconClass: 'fa-solid fa-chart-pie' },
       { label: 'Theo dõi tiến trình', route: '/job-tracker', iconClass: 'fa-solid fa-list-check' },
       { label: 'Kho hàng', route: '/warehouse', iconClass: 'fa-solid fa-warehouse' },
-      { label: 'Vị trí kho', route: '/location', iconClass: 'fa-solid fa-location-dot' }
+      { label: 'Vị trí kho', route: '/location', iconClass: 'fa-solid fa-location-dot' },
+      { label: 'Trợ lý AI', route: '/chatbot', iconClass: 'fa-solid fa-robot' }
     ]
   },
   {

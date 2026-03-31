@@ -29,6 +29,7 @@ import { AuthGuard } from './security/guards/auth.guard';
 import { GuestGuard } from './security/guards/guest.guard';
 import { RbacComponent } from './pages/rbac/rbac.component';
 import { JobTrackerComponent } from './pages/job-tracker/job-tracker.component';
+import { ChatBotComponent } from './pages/chatbot/chatbot.component';
 
 const routes: Routes = [
   {
@@ -84,6 +85,15 @@ const routes: Routes = [
     data: {
       title: 'Theo dõi tiến trình',
       subtitle: 'Tiến trình export, import và background jobs'
+    }
+  },
+  {
+    path: 'chatbot',
+    component: ChatBotComponent,
+    canActivate: [AuthGuard],
+    data: {
+      title: 'Trợ lý AI',
+      subtitle: 'Trợ lý ảo hỗ trợ vận hành kho hàng'
     }
   },  {
     path: 'warehouse',

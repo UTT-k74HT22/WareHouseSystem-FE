@@ -45,6 +45,8 @@ import { ResetPasswordComponent } from './pages/account/reset-password/reset-pas
 // ── RBAC ───────────────────────────────────────────────────────
 import { RbacComponent } from './pages/rbac/rbac.component';
 import { JobTrackerComponent } from './pages/job-tracker/job-tracker.component';
+import { ChatBotComponent } from './pages/chatbot/chatbot.component';
+import { ChatBubbleComponent } from './share/chat-bubble/chat-bubble.component';
 
 @NgModule({
   declarations: [
@@ -84,6 +86,8 @@ import { JobTrackerComponent } from './pages/job-tracker/job-tracker.component';
     // ── RBAC ─────────────────────────────────────────────────────
     RbacComponent,
     JobTrackerComponent,
+    ChatBotComponent,
+    ChatBubbleComponent,
   ],
   imports: [
     BrowserModule,
