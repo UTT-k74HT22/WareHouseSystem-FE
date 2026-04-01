@@ -22,7 +22,12 @@
             "tsConfig": "tsconfig.app.json",
             "assets": [
               "src/favicon.ico",
-              "src/assets"
+              "src/assets",
+              {
+                "glob": "runtime-config.template.js",
+                "input": "src",
+                "output": "assets/runtime-config.js"
+              }
             ],
             "styles": [
               "src/styles.css",
