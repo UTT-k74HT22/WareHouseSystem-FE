@@ -9,7 +9,8 @@ RUN npm run build -- --configuration production
 
 FROM nginx:1.27-alpine
 
-RUN apk add --no-cache gettext
+RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories \
+    && apk add --no-cache gettext
 
 COPY deploy/nginx/nginx.conf /etc/nginx/nginx.conf
 COPY deploy/nginx/templates/default.conf.template /etc/nginx/templates/default.conf.template
