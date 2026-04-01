@@ -264,6 +264,64 @@
 .message-text {
   white-space: pre-wrap;
   word-break: break-word;
+  line-height: 1.5;
+  font-size: 13px;
+}
+
+/* Markdown Content Styling */
+.message-text table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 8px 0;
+  font-size: 11px;
+  background: #f8fafc;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.message-text th,
+.message-text td {
+  padding: 6px 8px;
+  border: 1px solid #e2e8f0;
+  text-align: left;
+}
+
+.message-text th {
+  background: #047857;
+  color: white;
+  font-weight: 600;
+}
+
+.message-text td {
+  background: white;
+}
+
+.message-text code {
+  background: #f1f5f9;
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-family: monospace;
+  font-size: 12px;
+  color: #047857;
+}
+
+.message-text strong {
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.message-text ul,
+.message-text ol {
+  margin: 6px 0;
+  padding-left: 18px;
+}
+
+.message-text li {
+  margin: 2px 0;
+}
+
+.message-text p {
+  margin: 4px 0;
 }
 
 .message-time {
