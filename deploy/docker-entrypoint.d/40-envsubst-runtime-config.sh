@@ -1,6 +1,1 @@
-#!/bin/sh
-set -eu
-
-envsubst '${WHS_API_URL}' \
-  < /usr/share/nginx/html/assets/runtime-config.template.js \
-  > /usr/share/nginx/html/assets/runtime-config.js
+#!/bin/shset -euenvsubst '${WHS_API_URL}' \  < /usr/share/nginx/html/assets/runtime-config.template.js \  > /usr/share/nginx/html/assets/runtime-config.js

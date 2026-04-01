@@ -17,7 +17,8 @@ COPY deploy/docker-entrypoint.d/40-envsubst-runtime-config.sh /docker-entrypoint
 COPY --from=build /app/dist/whs-fe /usr/share/nginx/html
 COPY src/runtime-config.template.js /usr/share/nginx/html/assets/runtime-config.template.js
 
-RUN chmod +x /docker-entrypoint.d/40-envsubst-runtime-config.sh
+RUN sed -i 's/\r$//' /docker-entrypoint.d/40-envsubst-runtime-config.sh
+    && chmod +x /docker-entrypoint.d/40-envsubst-runtime-config.sh
 
 EXPOSE 80
 
