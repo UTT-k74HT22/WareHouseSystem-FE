@@ -34,6 +34,16 @@ export class AuthStorageService {
     };
   }
 
+  getAccessTokenExpiresAt(): number | null {
+    const accessExpires = localStorage.getItem(ACCESS_EXPIRES_KEY);
+    return accessExpires ? Number(accessExpires) : null;
+  }
+
+  getRefreshTokenExpiresAt(): number | null {
+    const refreshExpires = localStorage.getItem(REFRESH_EXPIRES_KEY);
+    return refreshExpires ? Number(refreshExpires) : null;
+  }
+
   clear(): void {
     localStorage.removeItem(ACCESS_TOKEN_KEY);
     localStorage.removeItem(REFRESH_TOKEN_KEY);
