@@ -44,15 +44,16 @@
       </div>
     </div>
 
-    <div class="quick-replies" *ngIf="messages.length === 1 && messages[0].sender === 'bot'">
-      <span class="quick-reply-label">Câu hỏi gợi ý</span>
+    <div class="quick-replies" *ngIf="showSuggestions">
+      <span class="quick-reply-label">{{ isWelcomeState ? 'Gợi ý' : 'Tiếp theo' }}</span>
       <div class="quick-reply-buttons">
         <button
-          *ngFor="let suggestion of suggestions"
+          *ngFor="let suggestion of currentSuggestions"
           class="quick-reply-btn"
           (click)="sendSuggestion(suggestion)"
+          [title]="suggestion.query || suggestion.label"
         >
-          {{ suggestion }}
+          {{ suggestion.label }}
         </button>
       </div>
     </div>
