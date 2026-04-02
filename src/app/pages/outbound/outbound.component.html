@@ -247,10 +247,10 @@
       <button class="btn btn-primary" *ngIf="selectedShipment?.status === 'PICKING'" (click)="markAsPacked(selectedShipment.id)">
         <i class="fa-solid fa-box-archive"></i> Hoàn tất đóng gói
       </button>
-      <button class="btn btn-success" *ngIf="selectedShipment?.status === 'PACKED'" (click)="ship(selectedShipment.id)">
+      <button class="btn btn-primary" *ngIf="selectedShipment?.status === 'PACKED'" (click)="ship(selectedShipment.id)">
         <i class="fa-solid fa-truck-arrow-right"></i> Xác nhận xuất kho
       </button>
-      <button class="btn btn-success" *ngIf="selectedShipment?.status === 'STAGING'" (click)="confirmDispatch(selectedShipment.id)">
+      <button class="btn btn-primary" *ngIf="selectedShipment?.status === 'STAGING'" (click)="confirmDispatch(selectedShipment.id)">
         <i class="fa-solid fa-check-double"></i> Xác nhận giao hàng
       </button>
       <button class="btn btn-danger-outline" *ngIf="selectedShipment?.status !== 'SHIPPED' && selectedShipment?.status !== 'CANCELLED'" 
