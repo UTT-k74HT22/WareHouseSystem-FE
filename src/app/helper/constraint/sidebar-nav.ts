@@ -43,6 +43,7 @@ export const SIDEBAR_NAV_SECTIONS: SidebarNavSection[] = [
     title: 'Nhân sự',
     items: [
       { label: 'Nhân viên', route: '/employee', iconClass: 'fa-solid fa-user-tie' },
+      { label: 'Người dùng', route: '/users', iconClass: 'fa-solid fa-users' },
       { label: 'Phân quyền', route: '/rbac', iconClass: 'fa-solid fa-shield-halved' }
     ]
   },

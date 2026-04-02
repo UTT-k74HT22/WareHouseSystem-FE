@@ -10,3 +10,11 @@ export interface PermissionResponse {
   updated_by: string | null;
   updated_at: string;
 }
+
+export interface CheckPermissionResponse {
+  allowed: boolean;
+}
+
+export interface MyPermissionsResponse {
+  permissions: string[];
+}

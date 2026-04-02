@@ -44,6 +44,7 @@ import { VerifyOtpComponent } from './pages/account/verify-otp/verify-otp.compon
 import { ResetPasswordComponent } from './pages/account/reset-password/reset-password.component';
 // ── RBAC ───────────────────────────────────────────────────────
 import { RbacComponent } from './pages/rbac/rbac.component';
+import { UserManagementComponent } from './pages/user-management/user-management.component';
 import { JobTrackerComponent } from './pages/job-tracker/job-tracker.component';
 import { ChatBotComponent } from './pages/chatbot/chatbot.component';
 import { ChatBubbleComponent } from './share/chat-bubble/chat-bubble.component';
@@ -85,6 +86,7 @@ import { ChatBubbleComponent } from './share/chat-bubble/chat-bubble.component';
     ResetPasswordComponent,
     // ── RBAC ─────────────────────────────────────────────────────
     RbacComponent,
+    UserManagementComponent,
     JobTrackerComponent,
     ChatBotComponent,
     ChatBubbleComponent,

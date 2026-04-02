@@ -1,0 +1,13 @@
+/* User Management Component - Reuse RBAC styles */
+.user-management-container {
+  padding: 2rem;
+  background: #f8f9fa;
+  min-height: 100vh;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Badge locked */
+.badge-locked {
+  background: #fee2e2;
+  color: #991b1b;
+}

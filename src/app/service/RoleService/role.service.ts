@@ -7,6 +7,7 @@ import { PageResponse } from '../../dto/response/PageResponse';
 import { RoleResponse } from '../../dto/response/Role/RoleResponse';
 import { CreateRoleRequest, UpdateRoleRequest, AssignPermissionsRequest } from '../../dto/request/Role/RoleRequest';
 import { PermissionResponse } from '../../dto/response/Permission/PermissionResponse';
+import { AccountResponse } from '../../dto/response/Account/AccountResponse';
 
 @Injectable({ providedIn: 'root' })
 export class RoleService {
@@ -85,5 +86,16 @@ export class RoleService {
 
   removePermission(roleId: string, permissionId: string): Observable<ApiResponse<void>> {
     return this.http.delete<ApiResponse<void>>(`${this.apiUrl}/${roleId}/permissions/${permissionId}`);
+  }
+
+  getUsers(
+    roleId: string,
+    page = 0,
+    size = 10
+  ): Observable<ApiResponse<PageResponse<AccountResponse>>> {
+    const params = new HttpParams()
+      .set('page', page)
+      .set('size', size);
+    return this.http.get<ApiResponse<PageResponse<AccountResponse>>>(`${this.apiUrl}/${roleId}/users`, { params });
   }
 }

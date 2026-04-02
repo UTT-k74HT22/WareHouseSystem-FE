@@ -28,6 +28,7 @@ import { VerifyOtpComponent } from './pages/account/verify-otp/verify-otp.compon
 import { AuthGuard } from './security/guards/auth.guard';
 import { GuestGuard } from './security/guards/guest.guard';
 import { RbacComponent } from './pages/rbac/rbac.component';
+import { UserManagementComponent } from './pages/user-management/user-management.component';
 import { JobTrackerComponent } from './pages/job-tracker/job-tracker.component';
 import { ChatBotComponent } from './pages/chatbot/chatbot.component';
 
@@ -255,6 +256,15 @@ const routes: Routes = [
     data: {
       title: 'Phân quyền',
       subtitle: 'Quản lý quyền và vai trò'
+    }
+  },
+  {
+    path: 'users',
+    component: UserManagementComponent,
+    canActivate: [AuthGuard],
+    data: {
+      title: 'Quản lý người dùng',
+      subtitle: 'Quản lý tài khoản và phân quyền'
     }
   },
 

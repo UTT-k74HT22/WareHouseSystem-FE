@@ -9,6 +9,7 @@ import { ForgotPasswordRequest } from "../../dto/request/Auth/ForgotPasswordRequ
 import { VerifyForgotPasswordRequest } from "../../dto/request/Auth/VerifyForgotPasswordRequest";
 import { ResetPasswordRequest } from "../../dto/request/Auth/ResetPasswordRequest";
 import { ChangePasswordRequest } from "../../dto/request/Auth/ChangePasswordRequest";
+import { CheckPermissionRequest } from "../../dto/request/Permission/PermissionRequest";
 import { AuthResponse } from "../../dto/response/Auth/AuthResponse";
 import { RefreshTokenResponse } from "../../dto/response/Auth/RefreshTokenResponse";
 import { ForgotPasswordResponse } from "../../dto/response/Auth/ForgotPasswordResponse";
@@ -122,5 +123,17 @@ export class AuthService {
 
   getRoles(): string[] {
     return this.authStateSubject.value.roles;
+  }
+
+  // ==================== CHECK PERMISSION ====================
+
+  checkPermission(request: CheckPermissionRequest): Observable<ApiResponse<boolean>> {
+    return this.http.post<ApiResponse<boolean>>(`${this.apiUrl}/check-permission`, request);
+  }
+
+  // ==================== MY PERMISSIONS ====================
+
+  getMyPermissions(): Observable<ApiResponse<{ permissions: string[] }>> {
+    return this.http.get<ApiResponse<{ permissions: string[] }>>(`${this.apiUrl}/my-permissions`);
   }
 }

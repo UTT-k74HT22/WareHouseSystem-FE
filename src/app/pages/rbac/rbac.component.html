@@ -127,6 +127,9 @@
           <td>{{ role.permission_count ?? 0 }}</td>
           <td>{{ role.user_count ?? 0 }}</td>
           <td class="actions">
+            <button class="btn-icon btn-view" (click)="openViewUsersModal(role)" title="Xem users">
+              <i class="fa-solid fa-users" aria-hidden="true"></i>
+            </button>
             <button class="btn-icon btn-view" (click)="openAssignPermModal(role)" title="Gán permissions">
               <i class="fa-solid fa-key" aria-hidden="true"></i>
             </button>
@@ -412,6 +415,93 @@
     <div class="modal-footer">
       <button class="btn btn-ghost" (click)="closeAllModals()">Huỷ</button>
       <button class="btn btn-primary" (click)="onAssignPermSubmit()">Lưu</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: VIEW USERS OF ROLE -->
+<div class="modal-overlay" *ngIf="showViewUsersModal" (click)="closeAllModals()">
+  <div class="modal-box modal-lg" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Danh sách user của role: {{ selectedRole?.name }}</h3>
+      <button class="modal-close" (click)="closeAllModals()">✕</button>
+    </div>
+    <div class="modal-body">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Username</th>
+            <th>Email</th>
+            <th>Full name</th>
+            <th>Trạng thái</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let user of usersOfRole; let i = index">
+            <td>{{ roleUsersCurrentPage * 10 + i + 1 }}</td>
+            <td>{{ user.username }}</td>
+            <td>{{ user.email }}</td>
+            <td>{{ user.fullName ?? '—' }}</td>
+            <td>
+              <span class="badge" [ngClass]="user.status === 'ACTIVE' ? 'badge-active' : 'badge-inactive'">
+                {{ user.status }}
+              </span>
+            </td>
+          </tr>
+          <tr *ngIf="usersOfRole.length === 0">
+            <td colspan="5" class="empty-state">Không có user nào</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="pagination" *ngIf="roleUsersTotalPages > 1">
+        <button (click)="onRoleUsersPageChange(roleUsersCurrentPage - 1)" [disabled]="roleUsersCurrentPage === 0">« Trước</button>
+        <span class="page-info">Trang {{ roleUsersCurrentPage + 1 }} / {{ roleUsersTotalPages }}</span>
+        <button (click)="onRoleUsersPageChange(roleUsersCurrentPage + 1)" [disabled]="roleUsersCurrentPage >= roleUsersTotalPages - 1">Sau »</button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" (click)="closeAllModals()">Đóng</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: ASSIGN ROLES TO USER -->
+<div class="modal-overlay" *ngIf="showAssignRoleModal" (click)="closeAllModals()">
+  <div class="modal-box modal-lg" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Gán roles cho user: {{ selectedUser?.username }}</h3>
+      <button class="modal-close" (click)="closeAllModals()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="role-list">
+        <label
+          class="role-item"
+          *ngFor="let role of allRolesList"
+          [style.background]="isRoleSelected(role.id) ? '#eef2ff' : '#ffffff'"
+          [style.borderColor]="isRoleSelected(role.id) ? '#4f46e5' : '#e5e7eb'"
+          style="display: flex; align-items: center; gap: 12px; min-height: 46px; padding: 10px 12px; border: 1px solid #e5e7eb; border-radius: 8px; margin-bottom: 8px; cursor: pointer;">
+          <input
+            type="checkbox"
+            [checked]="isRoleSelected(role.id)"
+            style="width: 18px; height: 18px; margin: 0; flex-shrink: 0; accent-color: #4f46e5;"
+            (change)="toggleRoleSelection(role.id)" />
+          <div style="flex: 1;">
+            <div style="font-size: 14px; font-weight: 600; color: #1f2937;">{{ role.name }}</div>
+            <div style="font-size: 12px; color: #64748b;">{{ role.description ?? '—' }}</div>
+          </div>
+          <span class="badge" [ngClass]="role.is_default ? 'badge-active' : 'badge-inactive'">
+            {{ role.is_default ? 'Mặc định' : '' }}
+          </span>
+        </label>
+        <div class="empty-state" *ngIf="allRolesList.length === 0">
+          Không có role nào để gán
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" (click)="closeAllModals()">Huỷ</button>
+      <button class="btn btn-primary" (click)="onAssignRoleSubmit()">Lưu</button>
     </div>
   </div>
 </div>
