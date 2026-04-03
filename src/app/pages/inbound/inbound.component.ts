@@ -41,6 +41,13 @@ import { AccountResponse } from '../../dto/response/Account/AccountResponse';
   styleUrls: ['./inbound.component.css']
 })
 export class InboundComponent implements OnInit {
+  createPermissions = ['PERM_INBOUND_RECEIPT_CREATE'];
+  updatePermissions = ['PERM_INBOUND_RECEIPT_UPDATE'];
+  deletePermissions = ['PERM_INBOUND_RECEIPT_DELETE'];
+  lineCreatePermissions = ['PERM_INBOUND_RECEIPT_LINE_CREATE'];
+  lineUpdatePermissions = ['PERM_INBOUND_RECEIPT_LINE_UPDATE'];
+  lineDeletePermissions = ['PERM_INBOUND_RECEIPT_LINE_DELETE'];
+
   receipts: InboundReceiptResponse[] = [];
   warehouses: WareHouseResponse[] = [];
   suppliers: BusinessPartnerResponse[] = [];

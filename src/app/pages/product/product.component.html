@@ -10,8 +10,8 @@
       </div>
     </div>
     <div class="hero-actions">
-      <button class="btn btn-ghost" type="button">Xuất Excel</button>
-      <button class="btn btn-primary" type="button" (click)="openCreateModal()">+ Thêm Sản phẩm</button>
+      <button *appHasAnyPermission="exportPermissions" class="btn btn-ghost" type="button">Xuất Excel</button>
+      <button *appHasAnyPermission="createPermissions" class="btn btn-primary" type="button" (click)="openCreateModal()">+ Thêm Sản phẩm</button>
     </div>
   </div>
 
@@ -118,8 +118,8 @@
             </span>
           </td>
           <td class="actions">
-            <button class="btn-icon btn-edit" title="Chỉnh sửa" (click)="openEditModal(product)"><i class="fa-regular fa-pen-to-square" aria-hidden="true"></i></button>
-            <button class="btn-icon btn-delete" title="Xoá" (click)="openDeleteConfirm(product)"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></button>
+            <button *appHasAnyPermission="updatePermissions" class="btn-icon btn-edit" title="Chỉnh sửa" (click)="openEditModal(product)"><i class="fa-regular fa-pen-to-square" aria-hidden="true"></i></button>
+            <button *appHasAnyPermission="deletePermissions" class="btn-icon btn-delete" title="Xoá" (click)="openDeleteConfirm(product)"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></button>
           </td>
         </tr>
         <tr *ngIf="products.length === 0">
@@ -148,8 +148,8 @@
         </div>
       </div>
       <div class="entity-card__actions">
-        <button class="btn-icon btn-edit" title="Chỉnh sửa" (click)="openEditModal(product)"><i class="fa-regular fa-pen-to-square" aria-hidden="true"></i></button>
-        <button class="btn-icon btn-delete" title="Xoá" (click)="openDeleteConfirm(product)"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></button>
+        <button *appHasAnyPermission="updatePermissions" class="btn-icon btn-edit" title="Chỉnh sửa" (click)="openEditModal(product)"><i class="fa-regular fa-pen-to-square" aria-hidden="true"></i></button>
+        <button *appHasAnyPermission="deletePermissions" class="btn-icon btn-delete" title="Xoá" (click)="openDeleteConfirm(product)"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></button>
       </div>
     </div>
   </div>
@@ -239,7 +239,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" (click)="closeAllModals()">Huỷ</button>
-      <button class="btn btn-primary" (click)="onCreateSubmit()">Tạo sản phẩm</button>
+      <button *appHasAnyPermission="createPermissions" class="btn btn-primary" (click)="onCreateSubmit()">Tạo sản phẩm</button>
     </div>
   </div>
 </div>
@@ -321,7 +321,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" (click)="closeAllModals()">Huỷ</button>
-      <button class="btn btn-primary" (click)="onEditSubmit()">Lưu thay đổi</button>
+      <button *appHasAnyPermission="updatePermissions" class="btn btn-primary" (click)="onEditSubmit()">Lưu thay đổi</button>
     </div>
   </div>
 </div>
@@ -341,7 +341,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" (click)="closeAllModals()">Huỷ</button>
-      <button class="btn btn-danger" (click)="onDeleteConfirm()">Xoá</button>
+      <button *appHasAnyPermission="deletePermissions" class="btn btn-danger" (click)="onDeleteConfirm()">Xoá</button>
     </div>
   </div>
 </div>

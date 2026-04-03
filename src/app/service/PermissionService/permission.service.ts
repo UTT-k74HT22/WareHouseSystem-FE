@@ -33,6 +33,10 @@ export class PermissionService {
     return this.http.get<ApiResponse<PermissionResponse>>(`${this.apiUrl}/${id}`);
   }
 
+  getResources(): Observable<ApiResponse<string[]>> {
+    return this.http.get<ApiResponse<string[]>>(`${this.apiUrl}/resources`);
+  }
+
   create(request: CreatePermissionRequest): Observable<ApiResponse<PermissionResponse>> {
     return this.http.post<ApiResponse<PermissionResponse>>(this.apiUrl, request);
   }

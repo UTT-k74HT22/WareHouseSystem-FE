@@ -11,7 +11,7 @@
     </div>
     <div class="hero-actions">
       <button class="btn btn-ghost">Xuất Excel</button>
-      <button class="btn btn-primary" (click)="openCreateModal()">+ Tạo đơn hàng</button>
+      <button class="btn btn-primary" (click)="openCreateModal()" *appHasAnyPermission="createPermissions">+ Tạo đơn hàng</button>
     </div>
   </div>
 
@@ -89,10 +89,10 @@
           <td><span class="badge" [ngClass]="getStatusClass(order.status)">{{ getStatusLabel(order.status) }}</span></td>
           <td class="actions">
             <button class="btn-icon" title="Xem chi tiết" (click)="openDetailModal(order)"><i class="fa-regular fa-eye" aria-hidden="true"></i></button>
-            <button class="btn-icon" title="Xác nhận" (click)="openConfirmConfirm(order)" [disabled]="!isDraft(order)">
+            <button class="btn-icon" title="Xác nhận" (click)="openConfirmConfirm(order)" *appHasAnyPermission="updatePermissions" [disabled]="!isDraft(order)">
               <i class="fa-solid fa-check" aria-hidden="true"></i>
             </button>
-            <button class="btn-icon btn-delete" title="Xoá" (click)="openDeleteConfirm(order)"
+            <button class="btn-icon btn-delete" title="Xoá" (click)="openDeleteConfirm(order)" *appHasAnyPermission="deletePermissions"
                     [disabled]="!isDraft(order)"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></button>
           </td>
         </tr>
@@ -116,8 +116,8 @@
       </div>
       <div class="entity-card__actions">
         <button class="btn-icon" title="Xem chi tiết" (click)="openDetailModal(order)"><i class="fa-regular fa-eye" aria-hidden="true"></i></button>
-        <button class="btn-icon" title="Xác nhận" (click)="openConfirmConfirm(order)" [disabled]="!isDraft(order)"><i class="fa-solid fa-check" aria-hidden="true"></i></button>
-        <button class="btn-icon btn-delete" title="Xoá" (click)="openDeleteConfirm(order)" [disabled]="!isDraft(order)"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></button>
+        <button class="btn-icon" title="Xác nhận" (click)="openConfirmConfirm(order)" *appHasAnyPermission="updatePermissions" [disabled]="!isDraft(order)"><i class="fa-solid fa-check" aria-hidden="true"></i></button>
+        <button class="btn-icon btn-delete" title="Xoá" (click)="openDeleteConfirm(order)" *appHasAnyPermission="deletePermissions" [disabled]="!isDraft(order)"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></button>
       </div>
     </div>
   </div>
@@ -185,7 +185,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" (click)="showCreateModal = false">Huỷ</button>
-      <button class="btn btn-primary" (click)="onCreateSubmit()">Tạo đơn hàng</button>
+      <button class="btn btn-primary" (click)="onCreateSubmit()" *appHasAnyPermission="createPermissions">Tạo đơn hàng</button>
     </div>
   </div>
 </div>
@@ -206,16 +206,22 @@
 
     <!-- Detail Action Bar -->
     <div class="detail-action-bar" *ngIf="selectedOrder">
-      <button class="btn btn-ghost" (click)="openEditModal()" *ngIf="isDraft(selectedOrder)" title="Sửa thông tin đơn hàng">
-        <i class="fa-regular fa-pen-to-square" aria-hidden="true"></i> Sửa header
-      </button>
-      <button class="btn btn-primary" (click)="openConfirmConfirm(selectedOrder)" *ngIf="isDraft(selectedOrder)" [disabled]="orderLines.length === 0"
-              [title]="orderLines.length === 0 ? 'Cần ít nhất 1 dòng sản phẩm để xác nhận' : 'Xác nhận đơn hàng'">
-        <i class="fa-solid fa-check-double" aria-hidden="true"></i> Xác nhận đơn
-      </button>
-      <button class="btn btn-danger-outline" (click)="openDeleteConfirm(selectedOrder)" *ngIf="isDraft(selectedOrder)">
-        <i class="fa-regular fa-trash-can" aria-hidden="true"></i> Xoá đơn
-      </button>
+      <ng-container *appHasAnyPermission="updatePermissions">
+        <button class="btn btn-ghost" (click)="openEditModal()" *ngIf="isDraft(selectedOrder)" title="Sửa thông tin đơn hàng">
+          <i class="fa-regular fa-pen-to-square" aria-hidden="true"></i> Sửa header
+        </button>
+      </ng-container>
+      <ng-container *appHasAnyPermission="updatePermissions">
+        <button class="btn btn-primary" (click)="openConfirmConfirm(selectedOrder)" *ngIf="isDraft(selectedOrder)" [disabled]="orderLines.length === 0"
+                [title]="orderLines.length === 0 ? 'Cần ít nhất 1 dòng sản phẩm để xác nhận' : 'Xác nhận đơn hàng'">
+          <i class="fa-solid fa-check-double" aria-hidden="true"></i> Xác nhận đơn
+        </button>
+      </ng-container>
+      <ng-container *appHasAnyPermission="deletePermissions">
+        <button class="btn btn-danger-outline" (click)="openDeleteConfirm(selectedOrder)" *ngIf="isDraft(selectedOrder)">
+          <i class="fa-regular fa-trash-can" aria-hidden="true"></i> Xoá đơn
+        </button>
+      </ng-container>
     </div>
 
     <!-- Tabs -->
@@ -269,9 +275,11 @@
       <div *ngIf="detailTab === 'lines'">
         <div class="lines-header">
           <h4><i class="fa-solid fa-list-ol" aria-hidden="true"></i> Dòng đơn hàng ({{ orderLines.length }})</h4>
-          <button class="btn btn-primary btn-sm" (click)="openAddLineModal()" *ngIf="isDraft(selectedOrder)">
-            <i class="fa-solid fa-plus" aria-hidden="true"></i> Thêm dòng
-          </button>
+          <ng-container *appHasAnyPermission="lineCreatePermissions">
+            <button class="btn btn-primary btn-sm" (click)="openAddLineModal()" *ngIf="isDraft(selectedOrder)">
+              <i class="fa-solid fa-plus" aria-hidden="true"></i> Thêm dòng
+            </button>
+          </ng-container>
         </div>
 
         <div class="loading-state" *ngIf="linesLoading"><span>Đang tải dòng đơn hàng...</span></div>
@@ -309,8 +317,8 @@
                 <td class="text-right"><strong>{{ line.line_total | number:'1.0-0' }}</strong></td>
                 <td>{{ line.notes ?? '—' }}</td>
                 <td class="actions" *ngIf="isDraft(selectedOrder)">
-                  <button class="btn-icon btn-edit" title="Sửa" (click)="openEditLineModal(line)"><i class="fa-regular fa-pen-to-square" aria-hidden="true"></i></button>
-                  <button class="btn-icon btn-delete" title="Xoá" (click)="openDeleteLineConfirm(line)"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></button>
+                  <button class="btn-icon btn-edit" title="Sửa" (click)="openEditLineModal(line)" *appHasAnyPermission="lineUpdatePermissions"><i class="fa-regular fa-pen-to-square" aria-hidden="true"></i></button>
+                  <button class="btn-icon btn-delete" title="Xoá" (click)="openDeleteLineConfirm(line)" *appHasAnyPermission="lineDeletePermissions"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></button>
                 </td>
               </tr>
               <tr *ngIf="orderLines.length === 0 && !linesLoading">
@@ -318,9 +326,11 @@
                   <div class="empty-lines-message">
                     <i class="fa-regular fa-clipboard" aria-hidden="true"></i>
                     <p>Chưa có dòng đơn hàng nào</p>
-                    <button class="btn btn-primary btn-sm" (click)="openAddLineModal()" *ngIf="isDraft(selectedOrder)">
-                      <i class="fa-solid fa-plus" aria-hidden="true"></i> Thêm dòng đầu tiên
-                    </button>
+                    <ng-container *appHasAnyPermission="lineCreatePermissions">
+                      <button class="btn btn-primary btn-sm" (click)="openAddLineModal()" *ngIf="isDraft(selectedOrder)">
+                        <i class="fa-solid fa-plus" aria-hidden="true"></i> Thêm dòng đầu tiên
+                      </button>
+                    </ng-container>
                   </div>
                 </td>
               </tr>
@@ -407,7 +417,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" (click)="closeSubModal('edit')">Huỷ</button>
-      <button class="btn btn-primary" (click)="onEditSubmit()">Lưu thay đổi</button>
+      <button class="btn btn-primary" (click)="onEditSubmit()" *appHasAnyPermission="updatePermissions">Lưu thay đổi</button>
     </div>
   </div>
 </div>
@@ -447,7 +457,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" (click)="closeSubModal('addLine')">Huỷ</button>
-      <button class="btn btn-primary" (click)="onAddLineSubmit()">Thêm dòng</button>
+      <button class="btn btn-primary" (click)="onAddLineSubmit()" *appHasAnyPermission="lineCreatePermissions">Thêm dòng</button>
     </div>
   </div>
 </div>
@@ -486,7 +496,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" (click)="closeSubModal('editLine')">Huỷ</button>
-      <button class="btn btn-primary" (click)="onEditLineSubmit()">Lưu thay đổi</button>
+      <button class="btn btn-primary" (click)="onEditLineSubmit()" *appHasAnyPermission="lineUpdatePermissions">Lưu thay đổi</button>
     </div>
   </div>
 </div>
@@ -503,7 +513,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" (click)="closeSubModal('confirm')">Huỷ</button>
-      <button class="btn btn-primary" (click)="onConfirmOrder()">Xác nhận</button>
+      <button class="btn btn-primary" (click)="onConfirmOrder()" *appHasAnyPermission="updatePermissions">Xác nhận</button>
     </div>
   </div>
 </div>
@@ -517,7 +527,7 @@
     <div class="modal-body"><p>Xoá đơn hàng <strong>{{ orderToDelete?.purchase_order_number }}</strong>?</p><p class="text-muted">Thao tác này sẽ huỷ đơn hàng.</p></div>
     <div class="modal-footer">
       <button class="btn btn-ghost" (click)="closeSubModal('delete')">Huỷ</button>
-      <button class="btn btn-danger" (click)="onDeleteConfirm()">Xoá</button>
+      <button class="btn btn-danger" (click)="onDeleteConfirm()" *appHasAnyPermission="deletePermissions">Xoá</button>
     </div>
   </div>
 </div>
@@ -533,7 +543,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" (click)="closeSubModal('deleteLine')">Huỷ</button>
-      <button class="btn btn-danger" (click)="onDeleteLineConfirm()">Xoá</button>
+      <button class="btn btn-danger" (click)="onDeleteLineConfirm()" *appHasAnyPermission="lineDeletePermissions">Xoá</button>
     </div>
   </div>
 </div>

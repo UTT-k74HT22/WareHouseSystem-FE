@@ -8,7 +8,7 @@
       </div>
     </div>
     <div class="hero-actions">
-      <button class="btn btn-primary" (click)="openCreateModal()">+ Tạo điều chỉnh kho</button>
+      <button class="btn btn-primary" (click)="openCreateModal()" *appHasAnyPermission="createPermissions">+ Tạo điều chỉnh kho</button>
       <div class="view-toggle">
         <button class="btn-view-toggle" [class.active]="viewMode === 'grid'" (click)="viewMode = 'grid'" title="Chế độ lưới">
           <i class="fa-solid fa-grip" aria-hidden="true"></i>
@@ -126,20 +126,24 @@
             <button class="btn-icon" title="Chi tiết" (click)="openDetailModal(adjustment)">
               <i class="fa-regular fa-eye" aria-hidden="true"></i>
             </button>
-            <button
-              *ngIf="isAdminReviewer && adjustment.status === StockAdjustmentsStatus.PENDING_APPROVAL"
-              class="btn-icon btn-approve"
-              title="Phê duyệt"
-              (click)="openApproveModal(adjustment)">
-              <i class="fa-solid fa-check" aria-hidden="true"></i>
-            </button>
-            <button
-              *ngIf="isAdminReviewer && adjustment.status === StockAdjustmentsStatus.PENDING_APPROVAL"
-              class="btn-icon btn-delete"
-              title="Từ chối"
-              (click)="openRejectModal(adjustment)">
-              <i class="fa-solid fa-xmark" aria-hidden="true"></i>
-            </button>
+            <ng-container *appHasAnyPermission="approvalPermissions">
+              <button
+                *ngIf="isAdminReviewer && adjustment.status === StockAdjustmentsStatus.PENDING_APPROVAL"
+                class="btn-icon btn-approve"
+                title="Phê duyệt"
+                (click)="openApproveModal(adjustment)">
+                <i class="fa-solid fa-check" aria-hidden="true"></i>
+              </button>
+            </ng-container>
+            <ng-container *appHasAnyPermission="approvalPermissions">
+              <button
+                *ngIf="isAdminReviewer && adjustment.status === StockAdjustmentsStatus.PENDING_APPROVAL"
+                class="btn-icon btn-delete"
+                title="Từ chối"
+                (click)="openRejectModal(adjustment)">
+                <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+              </button>
+            </ng-container>
           </td>
         </tr>
         <tr *ngIf="adjustments.length === 0">
@@ -167,20 +171,24 @@
       </div>
       <div class="entity-card__actions">
         <button class="btn btn-ghost btn-card" (click)="openDetailModal(adjustment)">Chi tiết</button>
-        <button
-          *ngIf="isAdminReviewer && adjustment.status === StockAdjustmentsStatus.PENDING_APPROVAL"
-          class="btn btn-primary btn-card"
-          (click)="openApproveModal(adjustment)"
-        >
-          Phê duyệt
-        </button>
-        <button
-          *ngIf="isAdminReviewer && adjustment.status === StockAdjustmentsStatus.PENDING_APPROVAL"
-          class="btn btn-danger btn-card"
-          (click)="openRejectModal(adjustment)"
-        >
-          Từ chối
-        </button>
+        <ng-container *appHasAnyPermission="approvalPermissions">
+          <button
+            *ngIf="isAdminReviewer && adjustment.status === StockAdjustmentsStatus.PENDING_APPROVAL"
+            class="btn btn-primary btn-card"
+            (click)="openApproveModal(adjustment)"
+          >
+            Phê duyệt
+          </button>
+        </ng-container>
+        <ng-container *appHasAnyPermission="approvalPermissions">
+          <button
+            *ngIf="isAdminReviewer && adjustment.status === StockAdjustmentsStatus.PENDING_APPROVAL"
+            class="btn btn-danger btn-card"
+            (click)="openRejectModal(adjustment)"
+          >
+            Từ chối
+          </button>
+        </ng-container>
       </div>
     </div>
   </div>
@@ -295,7 +303,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" (click)="closeAllModals()" [disabled]="actionLoading">Huỷ</button>
-      <button class="btn btn-primary" (click)="onCreateSubmit()" [disabled]="actionLoading">
+      <button class="btn btn-primary" (click)="onCreateSubmit()" *appHasAnyPermission="createPermissions" [disabled]="actionLoading">
         {{ actionLoading ? 'Đang xử lý...' : 'Tạo phiếu' }}
       </button>
     </div>
@@ -382,20 +390,24 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" (click)="closeAllModals()">Đóng</button>
-      <button
-        *ngIf="isAdminReviewer && selectedAdjustment.status === StockAdjustmentsStatus.PENDING_APPROVAL"
-        class="btn btn-primary"
-        (click)="openApproveModal(selectedAdjustment)"
-      >
-        Phê duyệt
-      </button>
-      <button
-        *ngIf="isAdminReviewer && selectedAdjustment.status === StockAdjustmentsStatus.PENDING_APPROVAL"
-        class="btn btn-danger"
-        (click)="openRejectModal(selectedAdjustment)"
-      >
-        Từ chối
-      </button>
+      <ng-container *appHasAnyPermission="approvalPermissions">
+        <button
+          *ngIf="isAdminReviewer && selectedAdjustment.status === StockAdjustmentsStatus.PENDING_APPROVAL"
+          class="btn btn-primary"
+          (click)="openApproveModal(selectedAdjustment)"
+        >
+          Phê duyệt
+        </button>
+      </ng-container>
+      <ng-container *appHasAnyPermission="approvalPermissions">
+        <button
+          *ngIf="isAdminReviewer && selectedAdjustment.status === StockAdjustmentsStatus.PENDING_APPROVAL"
+          class="btn btn-danger"
+          (click)="openRejectModal(selectedAdjustment)"
+        >
+          Từ chối
+        </button>
+      </ng-container>
     </div>
   </div>
 </div>
@@ -418,7 +430,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" (click)="closeAllModals()" [disabled]="actionLoading">Huỷ</button>
-      <button class="btn btn-primary" (click)="onApproveSubmit()" [disabled]="actionLoading">
+      <button class="btn btn-primary" (click)="onApproveSubmit()" *appHasAnyPermission="approvalPermissions" [disabled]="actionLoading">
         {{ actionLoading ? 'Đang xử lý...' : 'Xác nhận phê duyệt' }}
       </button>
     </div>
@@ -443,7 +455,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" (click)="closeAllModals()" [disabled]="actionLoading">Huỷ</button>
-      <button class="btn btn-reject" (click)="onRejectSubmit()" [disabled]="actionLoading">
+      <button class="btn btn-reject" (click)="onRejectSubmit()" *appHasAnyPermission="approvalPermissions" [disabled]="actionLoading">
         {{ actionLoading ? 'Đang xử lý...' : 'Xác nhận từ chối' }}
       </button>
     </div>

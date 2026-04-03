@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { ActivatedRouteSnapshot, CanActivate, Router, RouterStateSnapshot, UrlTree } from '@angular/router';
-import { map, Observable, of, switchMap, take } from 'rxjs';
+import { catchError, map, Observable, of, switchMap, take } from 'rxjs';
 import { AuthService } from '../../service/AuthService/auth-service.service';
 import { ToastrService } from '../../service/SystemService/toastr.service';
 
@@ -43,6 +43,10 @@ export class AuthGuard implements CanActivate {
               }
 
               return this.hasRequiredRole(route, authState.roles);
+            }),
+            catchError(() => {
+              this.router.navigate(['/dashboard']);
+              return of(false);
             })
           );
         }

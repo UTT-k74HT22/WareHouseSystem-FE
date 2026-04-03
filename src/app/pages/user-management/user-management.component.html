@@ -3,8 +3,8 @@
     <div class="hero-left">
       <div class="hero-accent"></div>
       <div class="hero-text">
-        <h1 class="hero-title"><i class="fa-solid fa-users" aria-hidden="true"></i> Quản lý người dùng</h1>
-        <p class="hero-subtitle">Quản lý tài khoản và phân quyền người dùng</p>
+        <h1 class="hero-title"><i class="fa-solid fa-users" aria-hidden="true"></i> Quan ly nguoi dung</h1>
+        <p class="hero-subtitle">Quan ly tai khoan va phan quyen nguoi dung</p>
       </div>
     </div>
   </div>
@@ -30,7 +30,8 @@
       <option value="">-- Tất cả trạng thái --</option>
       <option value="ACTIVE">Hoạt động</option>
       <option value="INACTIVE">Không hoạt động</option>
-      <option value="LOCKED">Bị khóa</option>
+      <option value="SUSPENDED">Đã tạm ngưng</option>
+      <option value="DELETED">Đã xóa</option>
     </select>
     <button class="btn btn-primary" (click)="onSearch()">
       <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i> Tìm kiếm
@@ -60,15 +61,15 @@
           <td>{{ currentPage * pageSize + i + 1 }}</td>
           <td><strong>{{ user.username }}</strong></td>
           <td>{{ user.email }}</td>
-          <td>{{ user.full_name || user.first_name + ' ' + user.last_name || '—' }}</td>
+          <td>{{ user.full_name || user.first_name + ' ' + user.last_name || '-' }}</td>
           <td>
             <span class="badge" [ngClass]="getStatusClass(user.status)">
               {{ getStatusLabel(user.status) }}
             </span>
           </td>
-          <td>{{ user.created_at ? (user.created_at | date:'dd/MM/yyyy') : '—' }}</td>
+          <td>{{ user.created_at ? (user.created_at | date:'dd/MM/yyyy') : '-' }}</td>
           <td class="actions">
-            <button class="btn-icon btn-view" (click)="openAssignRoleModal(user)" title="Quản lý roles">
+            <button *appHasAnyPermission="userRoleReadPermissions" class="btn-icon btn-view" (click)="openAssignRoleModal(user)" title="Quản lý roles">
               <i class="fa-solid fa-user-shield" aria-hidden="true"></i>
             </button>
           </td>
@@ -124,7 +125,7 @@
             (change)="toggleRoleSelection(role.id)" />
           <div style="flex: 1;">
             <div style="font-size: 14px; font-weight: 600; color: #1f2937;">{{ role.name }}</div>
-            <div style="font-size: 12px; color: #64748b;">{{ role.description ?? '—' }}</div>
+            <div style="font-size: 12px; color: #64748b;">{{ role.description ?? '-' }}</div>
           </div>
           <span class="badge" [ngClass]="role.is_default ? 'badge-active' : 'badge-inactive'">
             {{ role.is_default ? 'Mặc định' : '' }}
@@ -139,7 +140,7 @@
 
     <div class="modal-footer">
       <button class="btn btn-ghost" (click)="closeModal()" [disabled]="savingRoles">Hủy</button>
-      <button class="btn btn-primary" (click)="onAssignRoleSubmit()" [disabled]="savingRoles">
+      <button *appHasAnyPermission="userRoleManagePermissions" class="btn btn-primary" (click)="onAssignRoleSubmit()" [disabled]="savingRoles">
         <span *ngIf="savingRoles"><i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i> Đang lưu...</span>
         <span *ngIf="!savingRoles">Lưu</span>
       </button>

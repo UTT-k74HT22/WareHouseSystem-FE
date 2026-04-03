@@ -3,6 +3,7 @@ import { Observable, forkJoin } from 'rxjs';
 import { PermissionService } from '../../service/PermissionService/permission.service';
 import { RoleService } from '../../service/RoleService/role.service';
 import { ToastrService } from '../../service/SystemService/toastr.service';
+import { AuthService } from '../../service/AuthService/auth-service.service';
 import { PermissionResponse } from '../../dto/response/Permission/PermissionResponse';
 import { RoleResponse } from '../../dto/response/Role/RoleResponse';
 import { AccountResponse } from '../../dto/response/Account/AccountResponse';
@@ -82,44 +83,33 @@ export class RbacComponent implements OnInit {
 
   ActionType = ActionType;
   actionOptions = Object.values(ActionType);
-  resourceOptions: ResourceOption[] = [
-    { value: 'PERMISSION', label: 'Permission' },
-    { value: 'ROLE', label: 'Role' },
-    { value: 'ROLE_PERMISSION', label: 'Role Permission' },
-    { value: 'USER_ROLE', label: 'User Role' },
-    { value: 'SYSTEM_DIAGNOSTIC', label: 'System Diagnostic' },
-    { value: 'EMAIL', label: 'Email' },
-    { value: 'USER', label: 'User' },
-    { value: 'EMPLOYEE', label: 'Employee' },
-    { value: 'WAREHOUSE', label: 'Warehouse' },
-    { value: 'LOCATION', label: 'Location' },
-    { value: 'PRODUCT', label: 'Product' },
-    { value: 'CATEGORY', label: 'Category' },
-    { value: 'BUSINESS_PARTNER', label: 'Business Partner' },
-    { value: 'UNIT_OF_MEASURE', label: 'Unit Of Measure' },
-    { value: 'BATCH', label: 'Batch' },
-    { value: 'PURCHASE_ORDER', label: 'Purchase Order' },
-    { value: 'SALES_ORDER', label: 'Sales Order' },
-    { value: 'INBOUND_RECEIPT', label: 'Inbound Receipt' },
-    { value: 'OUTBOUND_SHIPMENT', label: 'Outbound Shipment' },
-    { value: 'INVENTORY', label: 'Inventory' },
-    { value: 'STOCK_MOVEMENT', label: 'Stock Movement' },
-    { value: 'STOCK_ADJUSTMENT', label: 'Stock Adjustment' },
-    { value: 'STOCK_TRANSFER', label: 'Stock Transfer' },
-    { value: 'STORAGE', label: 'Storage' }
-  ];
+  resourceOptions: ResourceOption[] = [];
+  readonly permissionReadPermissions = ['PERM_PERMISSION_READ'];
+  readonly permissionCreatePermissions = ['PERM_PERMISSION_CREATE'];
+  readonly permissionUpdatePermissions = ['PERM_PERMISSION_UPDATE'];
+  readonly permissionDeletePermissions = ['PERM_PERMISSION_DELETE'];
+  readonly roleReadPermissions = ['PERM_ROLE_READ'];
+  readonly roleCreatePermissions = ['PERM_ROLE_CREATE'];
+  readonly roleUpdatePermissions = ['PERM_ROLE_UPDATE'];
+  readonly roleDeletePermissions = ['PERM_ROLE_DELETE'];
+  readonly rolePermissionReadPermissions = ['PERM_ROLE_PERMISSION_READ'];
+  readonly rolePermissionManagePermissions = ['PERM_ROLE_PERMISSION_CREATE', 'PERM_ROLE_PERMISSION_DELETE'];
 
   constructor(
+    private authService: AuthService,
     private permissionService: PermissionService,
     private roleService: RoleService,
     private toastr: ToastrService
   ) {}
 
   ngOnInit(): void {
+    this.syncAccessibleTab();
+    this.loadPermissionResources();
     this.loadData();
   }
 
   loadData(): void {
+    this.syncAccessibleTab();
     this.loading = true;
 
     if (this.activeTab === 'permissions') {
@@ -131,6 +121,15 @@ export class RbacComponent implements OnInit {
   }
 
   loadPermissions(): void {
+    if (!this.canReadPermissions()) {
+      this.loading = false;
+      if (this.canReadRoles()) {
+        this.activeTab = 'roles';
+        this.loadRoles();
+      }
+      return;
+    }
+
     this.permissionService.getAll(
       0,
       200,
@@ -141,21 +140,40 @@ export class RbacComponent implements OnInit {
       next: (res) => {
         if (res.success) {
           this.allPermissions = res.data.content;
+          this.syncResourceOptionsFromPermissions(this.allPermissions);
           this.applyPermFilter();
         }
         this.loading = false;
       },
-      error: () => {
+      error: (error) => {
         this.allPermissions = [];
         this.permissions = [];
         this.totalElements = 0;
         this.totalPages = 0;
         this.loading = false;
+
+        if (error?.status === 403 && this.canReadRoles()) {
+          this.toastr.warning('Phân quyền', 'Tài khoản hiện không có quyền đọc danh sách permission. Đã chuyển sang tab vai trò.');
+          this.activeTab = 'roles';
+          this.loadRoles();
+          return;
+        }
+
+        this.toastr.error('Phân quyền', error?.error?.message || 'Không tải được danh sách permission.');
       }
     });
   }
 
   loadRoles(): void {
+    if (!this.canReadRoles()) {
+      this.loading = false;
+      if (this.canReadPermissions()) {
+        this.activeTab = 'permissions';
+        this.loadPermissions();
+      }
+      return;
+    }
+
     this.roleService.getAll(0, 200, undefined, this.searchKeyword || undefined).subscribe({
       next: (res) => {
         if (res.success) {
@@ -164,12 +182,13 @@ export class RbacComponent implements OnInit {
         }
         this.loading = false;
       },
-      error: () => {
+      error: (error) => {
         this.allRoles = [];
         this.roles = [];
         this.totalElements = 0;
         this.totalPages = 0;
         this.loading = false;
+        this.toastr.error('Phân quyền', error?.error?.message || 'Không tải được danh sách role.');
       }
     });
   }
@@ -201,6 +220,11 @@ export class RbacComponent implements OnInit {
   }
 
   switchTab(tab: 'permissions' | 'roles'): void {
+    if (!this.canAccessTab(tab)) {
+      this.showPermissionDeniedToast();
+      return;
+    }
+
     this.activeTab = tab;
     this.currentPage = 0;
     this.searchKeyword = '';
@@ -210,6 +234,12 @@ export class RbacComponent implements OnInit {
   }
 
   openCreatePermModal(): void {
+    if (!this.canCreatePermission()) {
+      this.showPermissionDeniedToast();
+      return;
+    }
+
+    this.loadPermissionResources();
     this.createPermForm = this.initCreatePermForm();
     this.showCreatePermModal = true;
   }
@@ -221,12 +251,18 @@ export class RbacComponent implements OnInit {
 
         this.toastr.success('Phân quyền', 'Tạo permission thành công!');
         this.showCreatePermModal = false;
+        this.loadPermissionResources(true);
         this.loadPermissions();
       }
     });
   }
 
   openEditPermModal(perm: PermissionResponse): void {
+    if (!this.canUpdatePermission()) {
+      this.showPermissionDeniedToast();
+      return;
+    }
+
     this.setEditPermissionState(perm);
 
     this.permissionService.getById(perm.id).subscribe({
@@ -255,6 +291,11 @@ export class RbacComponent implements OnInit {
   }
 
   openDeletePermConfirm(perm: PermissionResponse): void {
+    if (!this.canDeletePermission()) {
+      this.showPermissionDeniedToast();
+      return;
+    }
+
     this.permissionToDelete = perm;
     this.showDeletePermConfirm = true;
   }
@@ -268,12 +309,18 @@ export class RbacComponent implements OnInit {
 
         this.toastr.success('Phân quyền', 'Xóa permission thành công!');
         this.showDeletePermConfirm = false;
+        this.loadPermissionResources(true);
         this.loadPermissions();
       }
     });
   }
 
   openCreateRoleModal(): void {
+    if (!this.canCreateRole()) {
+      this.showPermissionDeniedToast();
+      return;
+    }
+
     this.createRoleForm = this.initCreateRoleForm();
     this.showCreateRoleModal = true;
   }
@@ -291,6 +338,11 @@ export class RbacComponent implements OnInit {
   }
 
   openEditRoleModal(role: RoleResponse): void {
+    if (!this.canUpdateRole()) {
+      this.showPermissionDeniedToast();
+      return;
+    }
+
     this.setEditRoleState(role);
 
     this.roleService.getById(role.id).subscribe({
@@ -319,6 +371,11 @@ export class RbacComponent implements OnInit {
   }
 
   openDeleteRoleConfirm(role: RoleResponse): void {
+    if (!this.canDeleteRole()) {
+      this.showPermissionDeniedToast();
+      return;
+    }
+
     this.roleToDelete = role;
     this.showDeleteRoleConfirm = true;
   }
@@ -338,6 +395,11 @@ export class RbacComponent implements OnInit {
   }
 
   openAssignPermModal(role: RoleResponse): void {
+    if (!this.canManageRolePermissions()) {
+      this.showPermissionDeniedToast();
+      return;
+    }
+
     this.selectedRole = role;
     this.selectedPermissionsForRole = [];
     this.initialPermissionsForRole = [];
@@ -450,20 +512,63 @@ export class RbacComponent implements OnInit {
     this.selectedPermissionsForRole = Array.from(selectedIds);
   }
 
-  formatPermissionGroupLabel(resource: string): string {
-    return resource
+  formatPermissionGroupLabel(resource: string | null | undefined): string {
+    const normalizedResource = this.normalizeResourceValue(resource);
+    if (!normalizedResource) {
+      return 'Unknown Resource';
+    }
+
+    return normalizedResource
       .split(/[_-]/)
       .filter((part) => part.length > 0)
       .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
       .join(' ');
   }
 
-  getResourceLabel(resource: string): string {
-    const matchingOption = this.resourceOptions.find((option) => option.value === resource);
+  getResourceLabel(resource: string | null | undefined): string {
+    const normalizedResource = this.normalizeResourceValue(resource);
+    if (!normalizedResource) {
+      return 'Unknown Resource';
+    }
+
+    const matchingOption = this.resourceOptions.find((option) => option.value === normalizedResource);
     return matchingOption?.label ?? this.formatPermissionGroupLabel(resource);
   }
 
+  getPermissionActionLabel(action: string | null | undefined): string {
+    const normalizedAction = action?.trim();
+    return normalizedAction || 'UNKNOWN';
+  }
+
+  getPermissionActionBadgeClass(action: string | null | undefined): string {
+    return `badge-action-${this.getPermissionActionLabel(action).toLowerCase()}`;
+  }
+
+  private loadPermissionResources(force = false): void {
+    if (!force && this.resourceOptions.length > 0) {
+      return;
+    }
+
+    this.permissionService.getResources().subscribe({
+      next: (res) => {
+        if (!res.success) {
+          return;
+        }
+
+        this.resourceOptions = this.toResourceOptions(res.data ?? []);
+      },
+      error: () => {
+        this.syncResourceOptionsFromPermissions(this.allPermissions);
+      }
+    });
+  }
+
   openViewUsersModal(role: RoleResponse): void {
+    if (!this.canReadRoles()) {
+      this.showPermissionDeniedToast();
+      return;
+    }
+
     this.selectedRole = role;
     this.roleUsersCurrentPage = 0;
     this.loadRoleUsers();
@@ -521,9 +626,9 @@ export class RbacComponent implements OnInit {
 
     if (keyword) {
       filtered = filtered.filter((permission) =>
-        permission.name.toLowerCase().includes(keyword) ||
-        permission.resource.toLowerCase().includes(keyword) ||
-        permission.code.toLowerCase().includes(keyword)
+        (permission.name || '').toLowerCase().includes(keyword) ||
+        (permission.resource || '').toLowerCase().includes(keyword) ||
+        (permission.code || '').toLowerCase().includes(keyword)
       );
     }
 
@@ -590,11 +695,12 @@ export class RbacComponent implements OnInit {
 
   private buildPermissionGroups(permissions: PermissionResponse[]): PermissionGroup[] {
     const groupedPermissions = permissions.reduce((groups, permission) => {
-      if (!groups[permission.resource]) {
-        groups[permission.resource] = [];
+      const resource = this.normalizeResourceValue(permission.resource) || 'UNKNOWN_RESOURCE';
+      if (!groups[resource]) {
+        groups[resource] = [];
       }
 
-      groups[permission.resource].push(permission);
+      groups[resource].push(permission);
       return groups;
     }, {} as Record<string, PermissionResponse[]>);
 
@@ -607,7 +713,7 @@ export class RbacComponent implements OnInit {
             return actionOrder;
           }
 
-          return left.name.localeCompare(right.name);
+          return (left.name || '').localeCompare(right.name || '');
         })
       }))
       .sort((left, right) => left.resource.localeCompare(right.resource));
@@ -620,8 +726,8 @@ export class RbacComponent implements OnInit {
     }, {} as Record<string, boolean>);
   }
 
-  private getPermissionActionOrder(action: string): number {
-    switch (action.toUpperCase()) {
+  private getPermissionActionOrder(action: string | null | undefined): number {
+    switch ((action || '').toUpperCase()) {
       case 'CREATE':
         return 1;
       case 'READ':
@@ -637,5 +743,102 @@ export class RbacComponent implements OnInit {
       default:
         return 99;
     }
+  }
+
+  private syncResourceOptionsFromPermissions(permissions: PermissionResponse[]): void {
+    if (this.resourceOptions.length > 0 || permissions.length === 0) {
+      return;
+    }
+
+    const distinctResources = Array.from(
+      new Set(
+        permissions
+          .map((permission) => this.normalizeResourceValue(permission.resource))
+          .filter((resource): resource is string => !!resource)
+      )
+    );
+    this.resourceOptions = this.toResourceOptions(distinctResources);
+  }
+
+  private toResourceOptions(resources: Array<string | null | undefined>): ResourceOption[] {
+    const normalizedResources = Array.from(
+      new Set(
+        resources
+          .map((resource) => this.normalizeResourceValue(resource))
+          .filter((resource): resource is string => !!resource)
+      )
+    );
+
+    return normalizedResources
+      .sort((left, right) => left.localeCompare(right))
+      .map((resource) => ({
+        value: resource,
+        label: this.formatPermissionGroupLabel(resource)
+      }));
+  }
+
+  private normalizeResourceValue(resource: string | null | undefined): string | null {
+    const normalizedResource = resource?.trim();
+    return normalizedResource ? normalizedResource : null;
+  }
+
+  private canAccessTab(tab: 'permissions' | 'roles'): boolean {
+    return tab === 'permissions' ? this.canReadPermissions() : this.canReadRoles();
+  }
+
+  private canReadPermissions(): boolean {
+    return this.authService.hasAnyPermission(this.permissionReadPermissions);
+  }
+
+  private canCreatePermission(): boolean {
+    return this.authService.hasAnyPermission(this.permissionCreatePermissions);
+  }
+
+  private canUpdatePermission(): boolean {
+    return this.authService.hasAnyPermission(this.permissionUpdatePermissions);
+  }
+
+  private canDeletePermission(): boolean {
+    return this.authService.hasAnyPermission(this.permissionDeletePermissions);
+  }
+
+  private canReadRoles(): boolean {
+    return this.authService.hasAnyPermission(this.roleReadPermissions);
+  }
+
+  private canCreateRole(): boolean {
+    return this.authService.hasAnyPermission(this.roleCreatePermissions);
+  }
+
+  private canUpdateRole(): boolean {
+    return this.authService.hasAnyPermission(this.roleUpdatePermissions);
+  }
+
+  private canDeleteRole(): boolean {
+    return this.authService.hasAnyPermission(this.roleDeletePermissions);
+  }
+
+  private canManageRolePermissions(): boolean {
+    return this.authService.hasAnyPermission(this.rolePermissionReadPermissions)
+      && this.authService.hasAnyPermission(this.rolePermissionManagePermissions);
+  }
+
+  private syncAccessibleTab(): void {
+    if (this.canAccessTab(this.activeTab)) {
+      return;
+    }
+
+    if (this.canReadPermissions()) {
+      this.activeTab = 'permissions';
+      return;
+    }
+
+    if (this.canReadRoles()) {
+      this.activeTab = 'roles';
+    }
+  }
+
+  private showPermissionDeniedToast(): void {
+    this.toastr.error('Phân quyền', 'Bạn không có quyền thực hiện thao tác này.');
   }
 }

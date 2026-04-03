@@ -9,17 +9,24 @@
       </div>
     </div>
     <div class="hero-actions">
-      <button class="btn btn-primary" (click)="activeTab === 'permissions' ? openCreatePermModal() : openCreateRoleModal()">
-        + Thêm {{ activeTab === 'permissions' ? 'Quyền' : 'Vai trò' }}
-      </button>
+      <ng-container *ngIf="activeTab === 'permissions'">
+        <button *appHasAnyPermission="permissionCreatePermissions" class="btn btn-primary" (click)="openCreatePermModal()">
+          + Thêm Quyền
+        </button>
+      </ng-container>
+      <ng-container *ngIf="activeTab === 'roles'">
+        <button *appHasAnyPermission="roleCreatePermissions" class="btn btn-primary" (click)="openCreateRoleModal()">
+          + Thêm Vai trò
+        </button>
+      </ng-container>
     </div>
   </div>
 
   <div class="tabs-container">
-    <button class="tab-btn" [class.active]="activeTab === 'permissions'" (click)="switchTab('permissions')">
+    <button *appHasAnyPermission="permissionReadPermissions" class="tab-btn" [class.active]="activeTab === 'permissions'" (click)="switchTab('permissions')">
       <i class="fa-solid fa-key" aria-hidden="true"></i> Quyền
     </button>
-    <button class="tab-btn" [class.active]="activeTab === 'roles'" (click)="switchTab('roles')">
+    <button *appHasAnyPermission="roleReadPermissions" class="tab-btn" [class.active]="activeTab === 'roles'" (click)="switchTab('roles')">
       <i class="fa-solid fa-user-shield" aria-hidden="true"></i> Vai trò
     </button>
   </div>
@@ -80,12 +87,12 @@
           <td>{{ currentPage * pageSize + i + 1 }}</td>
           <td><code>{{ perm.code }}</code></td>
           <td>{{ perm.name }}</td>
-          <td><span class="badge badge-resource" [title]="perm.resource">{{ getResourceLabel(perm.resource) }}</span></td>
-          <td><span class="badge" [ngClass]="'badge-action-' + perm.action.toLowerCase()">{{ perm.action }}</span></td>
+          <td><span class="badge badge-resource" [title]="perm.resource || 'Unknown Resource'">{{ getResourceLabel(perm.resource) }}</span></td>
+          <td><span class="badge" [ngClass]="getPermissionActionBadgeClass(perm.action)">{{ getPermissionActionLabel(perm.action) }}</span></td>
           <td>{{ perm.description ?? '—' }}</td>
           <td class="actions">
-            <button class="btn-icon btn-edit" (click)="openEditPermModal(perm)"><i class="fa-regular fa-pen-to-square" aria-hidden="true"></i></button>
-            <button class="btn-icon btn-delete" (click)="openDeletePermConfirm(perm)"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></button>
+            <button *appHasAnyPermission="permissionUpdatePermissions" class="btn-icon btn-edit" (click)="openEditPermModal(perm)"><i class="fa-regular fa-pen-to-square" aria-hidden="true"></i></button>
+            <button *appHasAnyPermission="permissionDeletePermissions" class="btn-icon btn-delete" (click)="openDeletePermConfirm(perm)"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></button>
           </td>
         </tr>
         <tr *ngIf="permissions.length === 0">
@@ -124,14 +131,14 @@
           <td>{{ role.permission_count ?? 0 }}</td>
           <td>{{ role.user_count ?? 0 }}</td>
           <td class="actions">
-            <button class="btn-icon btn-view" (click)="openViewUsersModal(role)" title="Xem users">
+            <button *appHasAnyPermission="roleReadPermissions" class="btn-icon btn-view" (click)="openViewUsersModal(role)" title="Xem users">
               <i class="fa-solid fa-users" aria-hidden="true"></i>
             </button>
-            <button class="btn-icon btn-view" (click)="openAssignPermModal(role)" title="Gán permissions">
+            <button *appHasAnyPermission="rolePermissionManagePermissions" class="btn-icon btn-view" (click)="openAssignPermModal(role)" title="Gán permissions">
               <i class="fa-solid fa-key" aria-hidden="true"></i>
             </button>
-            <button class="btn-icon btn-edit" (click)="openEditRoleModal(role)"><i class="fa-regular fa-pen-to-square" aria-hidden="true"></i></button>
-            <button class="btn-icon btn-delete" (click)="openDeleteRoleConfirm(role)"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></button>
+            <button *appHasAnyPermission="roleUpdatePermissions" class="btn-icon btn-edit" (click)="openEditRoleModal(role)"><i class="fa-regular fa-pen-to-square" aria-hidden="true"></i></button>
+            <button *appHasAnyPermission="roleDeletePermissions" class="btn-icon btn-delete" (click)="openDeleteRoleConfirm(role)"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></button>
           </td>
         </tr>
         <tr *ngIf="roles.length === 0">
@@ -185,7 +192,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" (click)="closeAllModals()">Huỷ</button>
-      <button class="btn btn-primary" (click)="onCreatePermSubmit()">Tạo permission</button>
+      <button *appHasAnyPermission="permissionCreatePermissions" class="btn btn-primary" (click)="onCreatePermSubmit()">Tạo permission</button>
     </div>
   </div>
 </div>
@@ -221,7 +228,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" (click)="closeAllModals()">Huỷ</button>
-      <button class="btn btn-primary" (click)="onEditPermSubmit()">Lưu thay đổi</button>
+      <button *appHasAnyPermission="permissionUpdatePermissions" class="btn btn-primary" (click)="onEditPermSubmit()">Lưu thay đổi</button>
     </div>
   </div>
 </div>
@@ -238,7 +245,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" (click)="closeAllModals()">Huỷ</button>
-      <button class="btn btn-danger" (click)="onDeletePermConfirm()">Xóa</button>
+      <button *appHasAnyPermission="permissionDeletePermissions" class="btn btn-danger" (click)="onDeletePermConfirm()">Xóa</button>
     </div>
   </div>
 </div>
@@ -269,7 +276,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" (click)="closeAllModals()">Huỷ</button>
-      <button class="btn btn-primary" (click)="onCreateRoleSubmit()">Tạo role</button>
+      <button *appHasAnyPermission="roleCreatePermissions" class="btn btn-primary" (click)="onCreateRoleSubmit()">Tạo role</button>
     </div>
   </div>
 </div>
@@ -300,7 +307,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" (click)="closeAllModals()">Huỷ</button>
-      <button class="btn btn-primary" (click)="onEditRoleSubmit()">Lưu thay đổi</button>
+      <button *appHasAnyPermission="roleUpdatePermissions" class="btn btn-primary" (click)="onEditRoleSubmit()">Lưu thay đổi</button>
     </div>
   </div>
 </div>
@@ -317,7 +324,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" (click)="closeAllModals()">Huỷ</button>
-      <button class="btn btn-danger" (click)="onDeleteRoleConfirm()">Xóa</button>
+      <button *appHasAnyPermission="roleDeletePermissions" class="btn btn-danger" (click)="onDeleteRoleConfirm()">Xóa</button>
     </div>
   </div>
 </div>
@@ -388,7 +395,7 @@
                   style="width: 18px; height: 18px; margin: 0; flex-shrink: 0; accent-color: #4f46e5;"
                   (change)="togglePermissionSelection(perm.id)" />
                 <span style="flex: 1; font-size: 13px; font-weight: 500; color: #1f2937;">{{ perm.name }}</span>
-                <span class="badge" [ngClass]="'badge-action-' + perm.action.toLowerCase()">{{ perm.action }}</span>
+                <span class="badge" [ngClass]="getPermissionActionBadgeClass(perm.action)">{{ getPermissionActionLabel(perm.action) }}</span>
               </label>
             </div>
           </div>
@@ -401,7 +408,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" (click)="closeAllModals()">Huỷ</button>
-      <button class="btn btn-primary" (click)="onAssignPermSubmit()">Lưu</button>
+      <button *appHasAnyPermission="rolePermissionManagePermissions" class="btn btn-primary" (click)="onAssignPermSubmit()">Lưu</button>
     </div>
   </div>
 </div>

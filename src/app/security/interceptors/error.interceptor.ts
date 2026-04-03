@@ -44,6 +44,17 @@ export class ErrorInterceptor implements HttpInterceptor {
           this.toastr.error('Da xay ra loi tu phia server. Vui long thu lai sau', 'Loi server');
         }
 
+        if (error.status === 503) {
+          const isPermissionSourceError = request.url.includes('/auth/my-permissions')
+            || request.url.includes('/auth/check-permission');
+
+          if (isPermissionSourceError) {
+            this.toastr.error('Khong the tai du lieu phan quyen hien tai. Vui long thu lai sau', 'Dich vu phan quyen tam thoi gian doan');
+          } else {
+            this.toastr.error('Dich vu tam thoi khong san sang. Vui long thu lai sau', 'Service unavailable');
+          }
+        }
+
         if (error.status === 0) {
           this.toastr.error('Khong the ket noi den server. Vui long kiem tra ket noi mang', 'Loi ket noi');
         }

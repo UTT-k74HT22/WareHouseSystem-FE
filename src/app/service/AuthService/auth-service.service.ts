@@ -19,7 +19,7 @@ import { AuthStorageService } from "./AuthStorage/auth-storage.service";
 import { AuthTokens } from "../../dto/response/Auth/AuthTokens";
 import { ApiResponse } from "../../dto/response/ApiResponse";
 import { CheckPermissionResponse, MyPermissionsResponse } from "../../dto/response/Permission/PermissionResponse";
-import { catchError, finalize, of, shareReplay } from "rxjs";
+import { catchError, finalize, of, shareReplay, throwError } from "rxjs";
 
 @Injectable({
   providedIn: 'root'
@@ -99,7 +99,9 @@ export class AuthService {
       permissions: []
     };
     this.authStateSubject.next(newState);
-    this.ensurePermissionsLoaded(true).subscribe();
+    this.ensurePermissionsLoaded(true).subscribe({
+      error: () => void 0
+    });
   }
 
   private restoreSession(): void {
@@ -110,7 +112,9 @@ export class AuthService {
         ...this.mapper.mapToState(tokens),
         permissions: []
       });
-      this.ensurePermissionsLoaded().subscribe();
+      this.ensurePermissionsLoaded().subscribe({
+        error: () => void 0
+      });
     }
   }
 
@@ -187,10 +191,9 @@ export class AuthService {
         this.permissionsLoaded = true;
         this.updatePermissions(permissions);
       }),
-      catchError(() => {
+      catchError((error) => {
         this.permissionsLoaded = false;
-        this.updatePermissions([]);
-        return of([]);
+        return throwError(() => error);
       }),
       finalize(() => {
         this.permissionsRequest$ = null;

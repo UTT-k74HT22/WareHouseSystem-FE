@@ -11,7 +11,7 @@
       <button class="btn btn-ghost" (click)="loadReceipts()">
         <i class="fa-solid fa-rotate-right" aria-hidden="true"></i> Làm mới
       </button>
-      <button class="btn btn-primary" (click)="openCreateModal()">+ Tạo phiếu nhập</button>
+      <button class="btn btn-primary" (click)="openCreateModal()" *appHasAnyPermission="createPermissions">+ Tạo phiếu nhập</button>
     </div>
   </div>
 
@@ -114,6 +114,7 @@
             <button
               class="btn-icon btn-delete"
               (click)="openDeleteConfirm(receipt)"
+              *appHasAnyPermission="deletePermissions"
               [disabled]="!canDeleteReceipt(receipt)"
               title="Xóa phiếu nhập">
               <i class="fa-regular fa-trash-can" aria-hidden="true"></i>
@@ -141,7 +142,7 @@
         <button class="btn-icon" (click)="openDetailModal(receipt)" title="Xem chi tiết">
           <i class="fa-regular fa-eye" aria-hidden="true"></i>
         </button>
-        <button class="btn-icon btn-delete" (click)="openDeleteConfirm(receipt)" [disabled]="!canDeleteReceipt(receipt)" title="Xóa phiếu nhập">
+        <button class="btn-icon btn-delete" (click)="openDeleteConfirm(receipt)" *appHasAnyPermission="deletePermissions" [disabled]="!canDeleteReceipt(receipt)" title="Xóa phiếu nhập">
           <i class="fa-regular fa-trash-can" aria-hidden="true"></i>
         </button>
       </div>
@@ -225,7 +226,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" (click)="closeCreateModal()">Hủy</button>
-      <button class="btn btn-primary" (click)="onCreateSubmit()">Tạo phiếu nhập</button>
+      <button class="btn btn-primary" (click)="onCreateSubmit()" *appHasAnyPermission="createPermissions">Tạo phiếu nhập</button>
     </div>
   </div>
 </div>
@@ -243,20 +244,26 @@
     </div>
 
     <div class="detail-action-bar" *ngIf="selectedReceipt">
-      <button class="btn btn-ghost" (click)="openEditModal()" *ngIf="canEditReceipt(selectedReceipt)">
-        <i class="fa-regular fa-pen-to-square" aria-hidden="true"></i> Sửa thông tin chung
-      </button>
-      <button
-        class="btn btn-primary"
-        (click)="openConfirmConfirm(selectedReceipt)"
-        *ngIf="canEditReceipt(selectedReceipt)"
-        [disabled]="!canConfirmReceipt(selectedReceipt)"
-        [title]="selectedReceipt.lines.length === 0 ? 'Cần ít nhất 1 dòng để xác nhận phiếu nhập' : 'Xác nhận phiếu nhập'">
-        <i class="fa-solid fa-check-double" aria-hidden="true"></i> Xác nhận phiếu nhập
-      </button>
-      <button class="btn btn-danger-outline" (click)="openDeleteConfirm(selectedReceipt)" *ngIf="canDeleteReceipt(selectedReceipt)">
-        <i class="fa-regular fa-trash-can" aria-hidden="true"></i> Xóa phiếu nhập
-      </button>
+      <ng-container *appHasAnyPermission="updatePermissions">
+        <button class="btn btn-ghost" (click)="openEditModal()" *ngIf="canEditReceipt(selectedReceipt)">
+          <i class="fa-regular fa-pen-to-square" aria-hidden="true"></i> Sửa thông tin chung
+        </button>
+      </ng-container>
+      <ng-container *appHasAnyPermission="updatePermissions">
+        <button
+          class="btn btn-primary"
+          (click)="openConfirmConfirm(selectedReceipt)"
+          *ngIf="canEditReceipt(selectedReceipt)"
+          [disabled]="!canConfirmReceipt(selectedReceipt)"
+          [title]="selectedReceipt.lines.length === 0 ? 'Cần ít nhất 1 dòng để xác nhận phiếu nhập' : 'Xác nhận phiếu nhập'">
+          <i class="fa-solid fa-check-double" aria-hidden="true"></i> Xác nhận phiếu nhập
+        </button>
+      </ng-container>
+      <ng-container *appHasAnyPermission="deletePermissions">
+        <button class="btn btn-danger-outline" (click)="openDeleteConfirm(selectedReceipt)" *ngIf="canDeleteReceipt(selectedReceipt)">
+          <i class="fa-regular fa-trash-can" aria-hidden="true"></i> Xóa phiếu nhập
+        </button>
+      </ng-container>
     </div>
 
     <div class="detail-tabs" *ngIf="selectedReceipt">
@@ -316,13 +323,15 @@
       <div *ngIf="detailTab === 'lines'">
         <div class="lines-header">
           <h4><i class="fa-solid fa-list-check" aria-hidden="true"></i> Dòng phiếu nhập ({{ selectedReceipt.lines.length }})</h4>
-          <button
-            class="btn btn-primary"
-            *ngIf="canEditReceipt(selectedReceipt)"
-            (click)="openLineEditor('create')"
-            [disabled]="!canAddLine()">
-            <i class="fa-solid fa-plus" aria-hidden="true"></i> Thêm dòng
-          </button>
+          <ng-container *appHasAnyPermission="lineCreatePermissions">
+            <button
+              class="btn btn-primary"
+              *ngIf="canEditReceipt(selectedReceipt)"
+              (click)="openLineEditor('create')"
+              [disabled]="!canAddLine()">
+              <i class="fa-solid fa-plus" aria-hidden="true"></i> Thêm dòng
+            </button>
+          </ng-container>
         </div>
 
         <div class="loading-state loading-state-inline" *ngIf="loadingLineReferences && canEditReceipt(selectedReceipt)">
@@ -370,10 +379,10 @@
                   <span class="line-note">{{ getLineNotesDisplay(line) }}</span>
                 </td>
                 <td *ngIf="canEditReceipt(selectedReceipt)" class="actions col-actions">
-                  <button class="btn-icon" (click)="openLineEditor('edit', line)" title="Sửa dòng">
+                  <button class="btn-icon" (click)="openLineEditor('edit', line)" *appHasAnyPermission="lineUpdatePermissions" title="Sửa dòng">
                     <i class="fa-regular fa-pen-to-square" aria-hidden="true"></i>
                   </button>
-                  <button class="btn-icon btn-delete" (click)="openDeleteLineConfirm(line)" title="Xóa dòng">
+                  <button class="btn-icon btn-delete" (click)="openDeleteLineConfirm(line)" *appHasAnyPermission="lineDeletePermissions" title="Xóa dòng">
                     <i class="fa-regular fa-trash-can" aria-hidden="true"></i>
                   </button>
                 </td>
@@ -519,7 +528,7 @@
 
     <div class="modal-footer">
       <button class="btn btn-ghost" (click)="closeSubModal('lineEditor')">Hủy</button>
-      <button class="btn btn-primary" (click)="onLineSubmit()" [disabled]="lineSubmitting || isLineEditorBusy()">
+      <button class="btn btn-primary" (click)="onLineSubmit()" *appHasAnyPermission="lineEditorMode === 'create' ? lineCreatePermissions : lineUpdatePermissions" [disabled]="lineSubmitting || isLineEditorBusy()">
         {{ getLineSubmitLabel() }}
       </button>
     </div>
@@ -547,7 +556,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" (click)="closeSubModal('edit')">Hủy</button>
-      <button class="btn btn-primary" (click)="onEditSubmit()">Lưu thay đổi</button>
+      <button class="btn btn-primary" (click)="onEditSubmit()" *appHasAnyPermission="updatePermissions">Lưu thay đổi</button>
     </div>
   </div>
 </div>
@@ -561,7 +570,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" (click)="closeSubModal('confirm')">Hủy</button>
-      <button class="btn btn-primary" (click)="onConfirmReceipt()">Xác nhận</button>
+      <button class="btn btn-primary" (click)="onConfirmReceipt()" *appHasAnyPermission="updatePermissions">Xác nhận</button>
     </div>
   </div>
 </div>
@@ -575,7 +584,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" (click)="closeSubModal('deleteLine')">Hủy</button>
-      <button class="btn btn-danger" (click)="onDeleteLineConfirm()">Xóa dòng</button>
+      <button class="btn btn-danger" (click)="onDeleteLineConfirm()" *appHasAnyPermission="lineDeletePermissions">Xóa dòng</button>
     </div>
   </div>
 </div>
@@ -589,7 +598,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" (click)="closeSubModal('delete')">Hủy</button>
-      <button class="btn btn-danger" (click)="onDeleteConfirm()">Xóa</button>
+      <button class="btn btn-danger" (click)="onDeleteConfirm()" *appHasAnyPermission="deletePermissions">Xóa</button>
     </div>
   </div>
 </div>

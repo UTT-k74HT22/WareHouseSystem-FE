@@ -31,6 +31,7 @@ import { BatchService } from '../../service/BatchService/batch.service';
 import { InventoryService } from '../../service/InventoryService/inventory.service';
 import { LocationService } from '../../service/Location/location.service';
 import { ProductService } from '../../service/ProductService/product.service';
+import { HasAnyPermissionDirective } from '../../security/directives/has-any-permission.directive';
 import {
   SearchStockAdjustmentsParams,
   StockAdjustmentService,
@@ -357,11 +358,14 @@ export class StockMovementsComponent implements OnInit {
 @Component({
   selector: 'app-stock-adjustments',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, HasAnyPermissionDirective],
   templateUrl: './stock-adjustments.component.html',
   styleUrls: ['./stock-adjustments.component.css'],
 })
 export class StockAdjustmentsComponent implements OnInit, OnDestroy {
+  createPermissions = ['PERM_STOCK_ADJUSTMENT_CREATE'];
+  approvalPermissions = ['PERM_STOCK_ADJUSTMENT_APPROVAL_UPDATE'];
+
   readonly ReasonType = ReasonType;
   readonly StockAdjustmentsStatus = StockAdjustmentsStatus;
 
@@ -1049,11 +1053,14 @@ export class StockAdjustmentsComponent implements OnInit, OnDestroy {
 @Component({
   selector: 'app-stock-transfers',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, HasAnyPermissionDirective],
   templateUrl: './stock-transfers.component.html',
   styleUrls: ['./stock-transfers.component.css'],
 })
 export class StockTransfersComponent implements OnInit {
+  createPermissions = ['PERM_STOCK_TRANSFER_CREATE'];
+  updatePermissions = ['PERM_STOCK_TRANSFER_UPDATE'];
+
   readonly StockTransferStatus = StockTransferStatus;
 
   transfers: StockTransferViewModel[] = [];

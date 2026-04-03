@@ -9,7 +9,7 @@
       </div>
     </div>
     <div class="hero-actions">
-      <button class="btn btn-primary" (click)="openCreateModal()">+ Thêm Đơn vị</button>
+      <button *appHasAnyPermission="createPermissions" class="btn btn-primary" (click)="openCreateModal()">+ Thêm Đơn vị</button>
     </div>
   </div>
 
@@ -50,8 +50,8 @@
           <td>{{ getTypeLabel(u.type) }}</td>
           <td>{{ u.description ?? '—' }}</td>
           <td class="actions">
-            <button class="btn-icon btn-edit" (click)="openEditModal(u)"><i class="fa-regular fa-pen-to-square" aria-hidden="true"></i></button>
-            <button class="btn-icon btn-delete" (click)="openDeleteConfirm(u)"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></button>
+            <button *appHasAnyPermission="updatePermissions" class="btn-icon btn-edit" (click)="openEditModal(u)"><i class="fa-regular fa-pen-to-square" aria-hidden="true"></i></button>
+            <button *appHasAnyPermission="deletePermissions" class="btn-icon btn-delete" (click)="openDeleteConfirm(u)"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></button>
           </td>
         </tr>
         <tr *ngIf="filteredList.length === 0">
@@ -70,8 +70,8 @@
         <div class="entity-card__row">Mô tả: {{ u.description ?? '—' }}</div>
       </div>
       <div class="entity-card__actions">
-        <button class="btn-icon btn-edit" (click)="openEditModal(u)"><i class="fa-regular fa-pen-to-square" aria-hidden="true"></i></button>
-        <button class="btn-icon btn-delete" (click)="openDeleteConfirm(u)"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></button>
+        <button *appHasAnyPermission="updatePermissions" class="btn-icon btn-edit" (click)="openEditModal(u)"><i class="fa-regular fa-pen-to-square" aria-hidden="true"></i></button>
+        <button *appHasAnyPermission="deletePermissions" class="btn-icon btn-delete" (click)="openDeleteConfirm(u)"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></button>
       </div>
     </div>
   </div>
@@ -94,7 +94,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" (click)="closeAllModals()">Huỷ</button>
-      <button class="btn btn-primary" (click)="onCreateSubmit()">Tạo</button>
+      <button *appHasAnyPermission="createPermissions" class="btn btn-primary" (click)="onCreateSubmit()">Tạo</button>
     </div>
   </div>
 </div>
@@ -115,7 +115,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" (click)="closeAllModals()">Huỷ</button>
-      <button class="btn btn-primary" (click)="onEditSubmit()">Lưu</button>
+      <button *appHasAnyPermission="updatePermissions" class="btn btn-primary" (click)="onEditSubmit()">Lưu</button>
     </div>
   </div>
 </div>
@@ -127,7 +127,7 @@
     <div class="modal-body"><p>Xoá đơn vị tính <strong>{{ uomToDelete?.code }} - {{ uomToDelete?.name }}</strong>?</p></div>
     <div class="modal-footer">
       <button class="btn btn-ghost" (click)="closeAllModals()">Huỷ</button>
-      <button class="btn btn-danger" (click)="onDeleteConfirm()">Xoá</button>
+      <button *appHasAnyPermission="deletePermissions" class="btn btn-danger" (click)="onDeleteConfirm()">Xoá</button>
     </div>
   </div>
 </div>

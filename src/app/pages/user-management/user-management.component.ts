@@ -14,6 +14,9 @@ import { AssignRolesRequest } from '../../dto/request/Role/RoleRequest';
   styleUrls: ['./user-management.component.css']
 })
 export class UserManagementComponent implements OnInit {
+  readonly userRoleReadPermissions = ['PERM_USER_ROLE_READ'];
+  readonly userRoleManagePermissions = ['PERM_USER_ROLE_CREATE', 'PERM_USER_ROLE_DELETE'];
+
   users: AccountResponse[] = [];
   loading = false;
   savingRoles = false;
@@ -32,7 +35,7 @@ export class UserManagementComponent implements OnInit {
   selectedRolesForUser: string[] = [];
   initialRolesForUser: string[] = [];
 
-  statuses = ['ACTIVE', 'INACTIVE', 'LOCKED'];
+  statuses = ['ACTIVE', 'INACTIVE', 'SUSPENDED', 'DELETED'];
 
   constructor(
     private accountService: AccountService,
@@ -127,7 +130,7 @@ export class UserManagementComponent implements OnInit {
     }
 
     if (this.selectedRolesForUser.length === 0) {
-      this.toastr.warning('Quản lý user', 'Mỗi user phải có ít nhất một role.');
+      this.toastr.warning('Quan ly user', 'Moi user phai co it nhat mot role.');
       return;
     }
 
@@ -210,8 +213,10 @@ export class UserManagementComponent implements OnInit {
         return 'Hoạt động';
       case 'INACTIVE':
         return 'Không hoạt động';
-      case 'LOCKED':
-        return 'Bị khóa';
+      case 'SUSPENDED':
+        return 'Tạm ngưng';
+      case 'DELETED':
+        return 'Đã xóa';
       default:
         return statusStr;
     }
@@ -224,8 +229,10 @@ export class UserManagementComponent implements OnInit {
         return 'badge-active';
       case 'INACTIVE':
         return 'badge-inactive';
-      case 'LOCKED':
+      case 'SUSPENDED':
         return 'badge-locked';
+      case 'DELETED':
+        return 'badge-inactive';
       default:
         return 'badge-inactive';
     }
