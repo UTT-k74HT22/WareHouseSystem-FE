@@ -49,7 +49,7 @@
            placeholder="Tìm kiếm..." (keyup.enter)="onSearch()" />
     <select class="filter-select" [(ngModel)]="selectedResource" *ngIf="activeTab === 'permissions'">
       <option value="">-- Tất cả resource --</option>
-      <option *ngFor="let r of resources" [value]="r">{{ r }}</option>
+      <option *ngFor="let resource of resourceOptions" [value]="resource.value">{{ resource.label }}</option>
     </select>
     <select class="filter-select" [(ngModel)]="selectedAction" *ngIf="activeTab === 'permissions'">
       <option value="">-- Tất cả action --</option>
@@ -80,7 +80,7 @@
           <td>{{ currentPage * pageSize + i + 1 }}</td>
           <td><code>{{ perm.code }}</code></td>
           <td>{{ perm.name }}</td>
-          <td><span class="badge badge-resource">{{ perm.resource }}</span></td>
+          <td><span class="badge badge-resource" [title]="perm.resource">{{ getResourceLabel(perm.resource) }}</span></td>
           <td><span class="badge" [ngClass]="'badge-action-' + perm.action.toLowerCase()">{{ perm.action }}</span></td>
           <td>{{ perm.description ?? '—' }}</td>
           <td class="actions">
@@ -166,7 +166,7 @@
           <label>Resource <span class="required">*</span></label>
           <select [(ngModel)]="createPermForm.resource">
             <option value="">Chọn resource</option>
-            <option *ngFor="let r of resources" [value]="r">{{ r }}</option>
+            <option *ngFor="let resource of resourceOptions" [value]="resource.value">{{ resource.label }}</option>
           </select>
         </div>
       </div>

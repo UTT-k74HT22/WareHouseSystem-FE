@@ -22,6 +22,11 @@ interface PermissionGroup {
   permissions: PermissionResponse[];
 }
 
+interface ResourceOption {
+  value: string;
+  label: string;
+}
+
 @Component({
   selector: 'app-rbac',
   templateUrl: './rbac.component.html',
@@ -77,12 +82,31 @@ export class RbacComponent implements OnInit {
 
   ActionType = ActionType;
   actionOptions = Object.values(ActionType);
-  resources = [
-    'auth', 'batch', 'business-partner', 'category', 'email', 'employee',
-    'inventory', 'location', 'inbound-receipt', 'outbound-shipment',
-    'product', 'purchase-order', 'sales-order', 'stock-adjustment',
-    'stock-movement', 'stock-transfer', 'storage', 'units-of-measure',
-    'user', 'warehouse'
+  resourceOptions: ResourceOption[] = [
+    { value: 'PERMISSION', label: 'Permission' },
+    { value: 'ROLE', label: 'Role' },
+    { value: 'ROLE_PERMISSION', label: 'Role Permission' },
+    { value: 'USER_ROLE', label: 'User Role' },
+    { value: 'SYSTEM_DIAGNOSTIC', label: 'System Diagnostic' },
+    { value: 'EMAIL', label: 'Email' },
+    { value: 'USER', label: 'User' },
+    { value: 'EMPLOYEE', label: 'Employee' },
+    { value: 'WAREHOUSE', label: 'Warehouse' },
+    { value: 'LOCATION', label: 'Location' },
+    { value: 'PRODUCT', label: 'Product' },
+    { value: 'CATEGORY', label: 'Category' },
+    { value: 'BUSINESS_PARTNER', label: 'Business Partner' },
+    { value: 'UNIT_OF_MEASURE', label: 'Unit Of Measure' },
+    { value: 'BATCH', label: 'Batch' },
+    { value: 'PURCHASE_ORDER', label: 'Purchase Order' },
+    { value: 'SALES_ORDER', label: 'Sales Order' },
+    { value: 'INBOUND_RECEIPT', label: 'Inbound Receipt' },
+    { value: 'OUTBOUND_SHIPMENT', label: 'Outbound Shipment' },
+    { value: 'INVENTORY', label: 'Inventory' },
+    { value: 'STOCK_MOVEMENT', label: 'Stock Movement' },
+    { value: 'STOCK_ADJUSTMENT', label: 'Stock Adjustment' },
+    { value: 'STOCK_TRANSFER', label: 'Stock Transfer' },
+    { value: 'STORAGE', label: 'Storage' }
   ];
 
   constructor(
@@ -428,9 +452,15 @@ export class RbacComponent implements OnInit {
 
   formatPermissionGroupLabel(resource: string): string {
     return resource
-      .split('-')
-      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .split(/[_-]/)
+      .filter((part) => part.length > 0)
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
       .join(' ');
+  }
+
+  getResourceLabel(resource: string): string {
+    const matchingOption = this.resourceOptions.find((option) => option.value === resource);
+    return matchingOption?.label ?? this.formatPermissionGroupLabel(resource);
   }
 
   openViewUsersModal(role: RoleResponse): void {

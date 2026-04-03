@@ -35,7 +35,8 @@ export class AuthMapper {
       isAuthenticated: !!tokens.accessToken,
       tokens,
       username: payload?.sub ?? null,
-      roles: payload?.roles ?? []
+      roles: payload?.roles ?? [],
+      permissions: []
     };
   }
 
@@ -47,7 +48,8 @@ export class AuthMapper {
       isAuthenticated: false,
       tokens: null,
       username: null,
-      roles: []
+      roles: [],
+      permissions: []
     };
   }
 

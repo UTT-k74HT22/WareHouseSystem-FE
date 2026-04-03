@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import { Router, CanActivate, ActivatedRouteSnapshot, RouterStateSnapshot, UrlTree } from '@angular/router';
-import { Observable, map, take } from 'rxjs';
+import { ActivatedRouteSnapshot, CanActivate, Router, RouterStateSnapshot, UrlTree } from '@angular/router';
+import { map, Observable, of, switchMap, take } from 'rxjs';
 import { AuthService } from '../../service/AuthService/auth-service.service';
 import { ToastrService } from '../../service/SystemService/toastr.service';
 
@@ -19,36 +19,52 @@ export class AuthGuard implements CanActivate {
     route: ActivatedRouteSnapshot,
     state: RouterStateSnapshot
   ): Observable<boolean | UrlTree> | Promise<boolean | UrlTree> | boolean | UrlTree {
-
-    // Sử dụng observable để đảm bảo lấy state mới nhất
     return this.authService.authState$.pipe(
       take(1),
-      map(authState => {
-        // Check nếu user đã đăng nhập
-        if (authState.isAuthenticated) {
-          // Kiểm tra roles nếu route yêu cầu (optional)
-          const requiredRoles = route.data['roles'] as Array<string>;
-          if (requiredRoles && requiredRoles.length > 0) {
-            const userRoles = authState.roles;
-            const hasRole = requiredRoles.some(role => userRoles.includes(role));
-
-            if (!hasRole) {
-              this.toastr.error('Không có quyền', 'Bạn không có quyền truy cập trang này');
-              this.router.navigate(['/dashboard']);
-              return false;
-            }
-          }
-
-          return true;
+      switchMap((authState) => {
+        if (!authState.isAuthenticated) {
+          this.toastr.warning('Chua dang nhap', 'Vui long dang nhap de tiep tuc');
+          this.router.navigate(['/login'], {
+            queryParams: { returnUrl: state.url }
+          });
+          return of(false);
         }
 
-        // Chưa đăng nhập -> redirect về login
-        this.toastr.warning('Chưa đăng nhập', 'Vui lòng đăng nhập để tiếp tục');
-        this.router.navigate(['/login'], {
-          queryParams: { returnUrl: state.url }
-        });
-        return false;
+        const requiredPermissions = route.data['permissions'] as string[] | undefined;
+        if (requiredPermissions && requiredPermissions.length > 0) {
+          return this.authService.ensurePermissionsLoaded().pipe(
+            map((permissions) => {
+              const hasPermission = requiredPermissions.some((permission) => permissions.includes(permission));
+
+              if (!hasPermission) {
+                this.toastr.error('Khong co quyen', 'Ban khong co quyen truy cap trang nay');
+                this.router.navigate(['/dashboard']);
+                return false;
+              }
+
+              return this.hasRequiredRole(route, authState.roles);
+            })
+          );
+        }
+
+        return of(this.hasRequiredRole(route, authState.roles));
       })
     );
+  }
+
+  private hasRequiredRole(route: ActivatedRouteSnapshot, userRoles: string[]): boolean {
+    const requiredRoles = route.data['roles'] as string[] | undefined;
+    if (!requiredRoles || requiredRoles.length === 0) {
+      return true;
+    }
+
+    const hasRole = requiredRoles.some((role) => userRoles.includes(role));
+    if (hasRole) {
+      return true;
+    }
+
+    this.toastr.error('Khong co quyen', 'Ban khong co quyen truy cap trang nay');
+    this.router.navigate(['/dashboard']);
+    return false;
   }
 }

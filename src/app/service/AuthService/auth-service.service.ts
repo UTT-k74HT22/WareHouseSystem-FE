@@ -18,6 +18,8 @@ import { AuthState } from "../../dto/response/Auth/AuthState";
 import { AuthStorageService } from "./AuthStorage/auth-storage.service";
 import { AuthTokens } from "../../dto/response/Auth/AuthTokens";
 import { ApiResponse } from "../../dto/response/ApiResponse";
+import { CheckPermissionResponse, MyPermissionsResponse } from "../../dto/response/Permission/PermissionResponse";
+import { catchError, finalize, of, shareReplay } from "rxjs";
 
 @Injectable({
   providedIn: 'root'
@@ -27,6 +29,8 @@ export class AuthService {
 
   private authStateSubject = new BehaviorSubject<AuthState>(this.mapper.getInitialState());
   authState$ = this.authStateSubject.asObservable();
+  private permissionsRequest$: Observable<string[]> | null = null;
+  private permissionsLoaded = false;
 
   constructor(
     private http: HttpClient,
@@ -89,19 +93,31 @@ export class AuthService {
 
   setSession(tokens: AuthTokens): void {
     this.storage.saveTokens(tokens);
-    const newState = this.mapper.mapToState(tokens);
+    this.permissionsLoaded = false;
+    const newState = {
+      ...this.mapper.mapToState(tokens),
+      permissions: []
+    };
     this.authStateSubject.next(newState);
+    this.ensurePermissionsLoaded(true).subscribe();
   }
 
   private restoreSession(): void {
     const tokens = this.storage.getTokens();
     if (tokens) {
-      this.authStateSubject.next(this.mapper.mapToState(tokens));
+      this.permissionsLoaded = false;
+      this.authStateSubject.next({
+        ...this.mapper.mapToState(tokens),
+        permissions: []
+      });
+      this.ensurePermissionsLoaded().subscribe();
     }
   }
 
   logout(): void {
     this.storage.clear();
+    this.permissionsLoaded = false;
+    this.permissionsRequest$ = null;
     this.authStateSubject.next(this.mapper.getInitialState());
   }
 
@@ -125,15 +141,72 @@ export class AuthService {
     return this.authStateSubject.value.roles;
   }
 
+  getPermissions(): string[] {
+    return this.authStateSubject.value.permissions;
+  }
+
+  hasPermission(permissionCode: string): boolean {
+    return this.getPermissions().includes(permissionCode);
+  }
+
+  hasAnyPermission(permissionCodes: string[]): boolean {
+    return permissionCodes.some((permissionCode) => this.hasPermission(permissionCode));
+  }
+
   // ==================== CHECK PERMISSION ====================
 
-  checkPermission(request: CheckPermissionRequest): Observable<ApiResponse<boolean>> {
-    return this.http.post<ApiResponse<boolean>>(`${this.apiUrl}/check-permission`, request);
+  checkPermission(request: CheckPermissionRequest): Observable<ApiResponse<CheckPermissionResponse>> {
+    return this.http.post<ApiResponse<CheckPermissionResponse>>(`${this.apiUrl}/check-permission`, request);
   }
 
   // ==================== MY PERMISSIONS ====================
 
-  getMyPermissions(): Observable<ApiResponse<{ permissions: string[] }>> {
-    return this.http.get<ApiResponse<{ permissions: string[] }>>(`${this.apiUrl}/my-permissions`);
+  getMyPermissions(): Observable<ApiResponse<MyPermissionsResponse>> {
+    return this.http.get<ApiResponse<MyPermissionsResponse>>(`${this.apiUrl}/my-permissions`);
+  }
+
+  ensurePermissionsLoaded(force = false): Observable<string[]> {
+    if (!this.isAuthenticated()) {
+      this.permissionsLoaded = false;
+      this.permissionsRequest$ = null;
+      this.updatePermissions([]);
+      return of([]);
+    }
+
+    if (!force && this.permissionsLoaded) {
+      return of(this.getPermissions());
+    }
+
+    if (!force && this.permissionsRequest$) {
+      return this.permissionsRequest$;
+    }
+
+    const request$ = this.getMyPermissions().pipe(
+      map((res) => res.success ? (res.data?.permissions ?? []) : []),
+      tap((permissions) => {
+        this.permissionsLoaded = true;
+        this.updatePermissions(permissions);
+      }),
+      catchError(() => {
+        this.permissionsLoaded = false;
+        this.updatePermissions([]);
+        return of([]);
+      }),
+      finalize(() => {
+        this.permissionsRequest$ = null;
+      }),
+      shareReplay(1)
+    );
+
+    this.permissionsRequest$ = request$;
+    return request$;
+  }
+
+  private updatePermissions(permissions: string[]): void {
+    const currentState = this.authStateSubject.value;
+    this.authStateSubject.next({
+      ...currentState,
+      permissions
+    });
   }
 }

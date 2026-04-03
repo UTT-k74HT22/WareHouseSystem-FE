@@ -40,7 +40,7 @@
 
   <!-- Navigation -->
   <div class="sidebar-scroll">
-    <ng-container *ngFor="let section of navSections">
+    <ng-container *ngFor="let section of visibleNavSections">
       <div class="nav-section-title" *ngIf="shouldExpand || mobileOpen">{{ section.title }}</div>
       <div class="nav-section-divider" *ngIf="!shouldExpand && !mobileOpen"></div>
       <nav class="sidebar-nav">
