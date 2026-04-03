@@ -1,6 +1,7 @@
 <aside class="sidebar"
        [class.collapsed]="!shouldExpand"
        [class.pinned]="isPinnedExpanded"
+       [class.mobile-open]="mobileOpen"
        (mouseenter)="onMouseEnter()"
        (mouseleave)="onMouseLeave()">
   <!-- Edge Toggle Button -->
@@ -18,35 +19,41 @@
   <div class="sidebar-header">
     <div class="sidebar-logo">
       <div class="logo-icon">W</div>
-      <div class="logo-text-wrapper" *ngIf="shouldExpand">
+      <div class="logo-text-wrapper" *ngIf="shouldExpand || mobileOpen">
         <span class="logo-text">WareHouse</span>
         <span class="logo-subtext">Management System</span>
       </div>
     </div>
-    <button class="sidebar-pin-btn"
-            *ngIf="shouldExpand"
-            (click)="toggleSidebar()"
-            [class.is-pinned]="isPinnedExpanded"
-            [title]="isPinnedExpanded ? 'Bỏ ghim' : 'Ghim sidebar'">
-      <i class="fa-solid fa-thumbtack" aria-hidden="true"></i>
+    <ng-container *ngIf="!mobileOpen">
+      <button class="sidebar-pin-btn"
+              *ngIf="shouldExpand"
+              (click)="toggleSidebar()"
+              [class.is-pinned]="isPinnedExpanded"
+              [title]="isPinnedExpanded ? 'Bỏ ghim' : 'Ghim sidebar'">
+        <i class="fa-solid fa-thumbtack" aria-hidden="true"></i>
+      </button>
+    </ng-container>
+    <button class="sidebar-close-btn" *ngIf="mobileOpen" (click)="mobileClose.emit()" title="Đóng menu">
+      <i class="fa-solid fa-xmark" aria-hidden="true"></i>
     </button>
   </div>
 
   <!-- Navigation -->
   <div class="sidebar-scroll">
     <ng-container *ngFor="let section of navSections">
-      <div class="nav-section-title" *ngIf="shouldExpand">{{ section.title }}</div>
-      <div class="nav-section-divider" *ngIf="!shouldExpand"></div>
+      <div class="nav-section-title" *ngIf="shouldExpand || mobileOpen">{{ section.title }}</div>
+      <div class="nav-section-divider" *ngIf="!shouldExpand && !mobileOpen"></div>
       <nav class="sidebar-nav">
         <a class="nav-item"
            *ngFor="let item of section.items"
            [routerLink]="item.route"
            routerLinkActive="active"
-           [title]="!shouldExpand ? item.label : ''">
+           [title]="!shouldExpand ? item.label : ''"
+           (click)="mobileClose.emit()">
           <span class="nav-icon">
             <i [class]="item.iconClass" aria-hidden="true"></i>
           </span>
-          <span class="nav-label" *ngIf="shouldExpand">{{ item.label }}</span>
+          <span class="nav-label" *ngIf="shouldExpand || mobileOpen">{{ item.label }}</span>
         </a>
       </nav>
     </ng-container>

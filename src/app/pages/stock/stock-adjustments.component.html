@@ -193,9 +193,9 @@
 </div>
 
 <div class="modal-overlay" *ngIf="showCreateModal" (click)="closeAllModals()">
-  <div class="modal-box modal-lg" (click)="$event.stopPropagation()">
+  <div class="modal-box modal-lg modal-create" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h3>Tạo phiếu điều chỉnh</h3>
+      <h3><i class="fa-solid fa-plus-circle" aria-hidden="true"></i> Tạo phiếu điều chỉnh</h3>
       <button class="modal-close" (click)="closeAllModals()">✕</button>
     </div>
     <div class="modal-body">
@@ -305,7 +305,7 @@
 <div class="modal-overlay" *ngIf="showDetailModal && selectedAdjustment" (click)="closeAllModals()">
   <div class="modal-box modal-lg" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h3>Chi tiết phiếu điều chỉnh</h3>
+      <h3><i class="fa-solid fa-circle-info" aria-hidden="true"></i> Chi tiết phiếu điều chỉnh</h3>
       <button class="modal-close" (click)="closeAllModals()">✕</button>
     </div>
     <div class="modal-body">
@@ -403,7 +403,7 @@
 <div class="modal-overlay" *ngIf="showApproveModal && selectedAdjustment" (click)="closeAllModals()">
   <div class="modal-box modal-sm" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h3>Phê duyệt phiếu điều chỉnh</h3>
+      <h3><i class="fa-solid fa-check-circle" aria-hidden="true"></i> Phê duyệt phiếu điều chỉnh</h3>
       <button class="modal-close" (click)="closeAllModals()">✕</button>
     </div>
     <div class="modal-body">
@@ -428,7 +428,7 @@
 <div class="modal-overlay" *ngIf="showRejectModal && selectedAdjustment" (click)="closeAllModals()">
   <div class="modal-box modal-sm" (click)="$event.stopPropagation()">
     <div class="modal-header modal-header-danger">
-      <h3>Từ chối phiếu điều chỉnh</h3>
+      <h3><i class="fa-solid fa-circle-xmark" aria-hidden="true"></i> Từ chối phiếu điều chỉnh</h3>
       <button class="modal-close" (click)="closeAllModals()">✕</button>
     </div>
     <div class="modal-body">
@@ -443,7 +443,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" (click)="closeAllModals()" [disabled]="actionLoading">Huỷ</button>
-      <button class="btn btn-danger" (click)="onRejectSubmit()" [disabled]="actionLoading">
+      <button class="btn btn-reject" (click)="onRejectSubmit()" [disabled]="actionLoading">
         {{ actionLoading ? 'Đang xử lý...' : 'Xác nhận từ chối' }}
       </button>
     </div>

@@ -4,8 +4,11 @@ export interface AccountResponse {
   id: string,
   account_id: string,
   username: string,
-  status: AccountStatus,
-  email: string,
-  first_name: string,
-  last_name: string
+  status: AccountStatus | string,
+  email: string | null,
+  first_name: string | null,
+  last_name: string | null,
+  full_name?: string | null,
+  created_at?: string | null,
+  updated_at?: string | null
 }

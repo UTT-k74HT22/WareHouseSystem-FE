@@ -13,6 +13,7 @@ export class AppComponent implements OnInit {
   title = 'Ware House System';
   showLayout = false;
   sidebarCollapsed = false;
+  mobileSidebarOpen = false;
 
   // Public auth routes that should render without sidebar/header/footer
   private routesWithoutLayout = [
@@ -94,10 +95,12 @@ export class AppComponent implements OnInit {
 
   onSidebarCollapsedChange(collapsed: boolean): void {
     this.sidebarCollapsed = collapsed;
-    // Trigger resize at multiple points during the CSS transition (300ms)
-    // so Chart.js recalculates canvas dimensions correctly
     setTimeout(() => window.dispatchEvent(new Event('resize')), 100);
     setTimeout(() => window.dispatchEvent(new Event('resize')), 310);
     setTimeout(() => window.dispatchEvent(new Event('resize')), 500);
+  }
+
+  onMobileSidebarToggle(): void {
+    this.mobileSidebarOpen = !this.mobileSidebarOpen;
   }
 }

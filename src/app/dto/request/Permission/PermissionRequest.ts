@@ -18,3 +18,8 @@ export enum ActionType {
   PUT = 'PUT',
   DELETE = 'DELETE'
 }
+
+export interface CheckPermissionRequest {
+  resource: string;
+  action: ActionType;
+}

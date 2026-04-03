@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, Output, EventEmitter } from '@angular/core';
 import { Router, NavigationEnd, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../../service/AuthService/auth-service.service';
 import { ToastrService } from '../../../service/SystemService/toastr.service';
@@ -11,6 +11,8 @@ import { Subject } from 'rxjs';
   styleUrls: ['./header.component.css']
 })
 export class HeaderComponent implements OnInit, OnDestroy {
+  @Output() mobileSidebarToggle = new EventEmitter<void>();
+
   pageTitle: string = 'Dashboard';
   pageSubtitle: string = 'Tổng quan hoạt động kho hôm nay';
 
@@ -85,6 +87,10 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.authService.logout();
     this.toastr.success('Thành công', 'Đăng xuất thành công');
     this.router.navigate(['/login']);
+  }
+
+  toggleMobileSidebar(): void {
+    this.mobileSidebarToggle.emit();
   }
 }
 
