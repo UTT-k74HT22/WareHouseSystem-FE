@@ -60,10 +60,4 @@ export class UserRoleService {
       { params }
     );
   }
-
-  removeAllRolesFromUser(userId: string): Observable<ApiResponse<void>> {
-    return this.http.delete<ApiResponse<void>>(
-      `${this.apiUrl}/${userId}/roles/all`
-    );
-  }
 }

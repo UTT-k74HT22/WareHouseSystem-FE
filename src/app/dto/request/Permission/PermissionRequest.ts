@@ -7,15 +7,15 @@ export interface CreatePermissionRequest {
 
 export interface UpdatePermissionRequest {
   name?: string;
-  resource?: string;
-  action?: ActionType;
   description?: string;
 }
 
 export enum ActionType {
-  GET = 'GET',
-  POST = 'POST',
-  PUT = 'PUT',
+  CREATE = 'CREATE',
+  READ = 'READ',
+  WRITE = 'WRITE',
+  UPDATE = 'UPDATE',
+  EXPORT = 'EXPORT',
   DELETE = 'DELETE'
 }
 

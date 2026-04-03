@@ -53,10 +53,7 @@
     </select>
     <select class="filter-select" [(ngModel)]="selectedAction" *ngIf="activeTab === 'permissions'">
       <option value="">-- Tất cả action --</option>
-      <option value="GET">GET</option>
-      <option value="POST">POST</option>
-      <option value="PUT">PUT</option>
-      <option value="DELETE">DELETE</option>
+      <option *ngFor="let action of actionOptions" [value]="action">{{ action }}</option>
     </select>
     <button class="btn btn-primary" (click)="onSearch()"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i> Tìm kiếm</button>
     <button class="btn btn-ghost" (click)="onResetFilter()"><i class="fa-solid fa-rotate-right" aria-hidden="true"></i> Đặt lại</button>
@@ -177,10 +174,7 @@
         <div class="form-group">
           <label>Action <span class="required">*</span></label>
           <select [(ngModel)]="createPermForm.action">
-            <option value="GET">GET</option>
-            <option value="POST">POST</option>
-            <option value="PUT">PUT</option>
-            <option value="DELETE">DELETE</option>
+            <option *ngFor="let action of actionOptions" [ngValue]="action">{{ action }}</option>
           </select>
         </div>
         <div class="form-group">
@@ -211,20 +205,13 @@
         </div>
         <div class="form-group">
           <label>Resource</label>
-          <select [(ngModel)]="editPermForm.resource">
-            <option *ngFor="let r of resources" [value]="r">{{ r }}</option>
-          </select>
+          <input type="text" [value]="selectedPermission?.resource || ''" disabled />
         </div>
       </div>
       <div class="form-row">
         <div class="form-group">
           <label>Action</label>
-          <select [(ngModel)]="editPermAction">
-            <option value="GET">GET</option>
-            <option value="POST">POST</option>
-            <option value="PUT">PUT</option>
-            <option value="DELETE">DELETE</option>
-          </select>
+          <input type="text" [value]="selectedPermission?.action || ''" disabled />
         </div>
         <div class="form-group">
           <label>Mô tả</label>
@@ -466,42 +453,3 @@
   </div>
 </div>
 
-<!-- MODAL: ASSIGN ROLES TO USER -->
-<div class="modal-overlay" *ngIf="showAssignRoleModal" (click)="closeAllModals()">
-  <div class="modal-box modal-lg" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h3>Gán roles cho user: {{ selectedUser?.username }}</h3>
-      <button class="modal-close" (click)="closeAllModals()">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="role-list">
-        <label
-          class="role-item"
-          *ngFor="let role of allRolesList"
-          [style.background]="isRoleSelected(role.id) ? '#eef2ff' : '#ffffff'"
-          [style.borderColor]="isRoleSelected(role.id) ? '#4f46e5' : '#e5e7eb'"
-          style="display: flex; align-items: center; gap: 12px; min-height: 46px; padding: 10px 12px; border: 1px solid #e5e7eb; border-radius: 8px; margin-bottom: 8px; cursor: pointer;">
-          <input
-            type="checkbox"
-            [checked]="isRoleSelected(role.id)"
-            style="width: 18px; height: 18px; margin: 0; flex-shrink: 0; accent-color: #4f46e5;"
-            (change)="toggleRoleSelection(role.id)" />
-          <div style="flex: 1;">
-            <div style="font-size: 14px; font-weight: 600; color: #1f2937;">{{ role.name }}</div>
-            <div style="font-size: 12px; color: #64748b;">{{ role.description ?? '—' }}</div>
-          </div>
-          <span class="badge" [ngClass]="role.is_default ? 'badge-active' : 'badge-inactive'">
-            {{ role.is_default ? 'Mặc định' : '' }}
-          </span>
-        </label>
-        <div class="empty-state" *ngIf="allRolesList.length === 0">
-          Không có role nào để gán
-        </div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" (click)="closeAllModals()">Huỷ</button>
-      <button class="btn btn-primary" (click)="onAssignRoleSubmit()">Lưu</button>
-    </div>
-  </div>
-</div>

@@ -1,15 +1,21 @@
 import { Component, OnInit } from '@angular/core';
-import { forkJoin } from 'rxjs';
+import { Observable, forkJoin } from 'rxjs';
 import { PermissionService } from '../../service/PermissionService/permission.service';
 import { RoleService } from '../../service/RoleService/role.service';
-import { UserRoleService } from '../../service/UserRoleService/user-role.service';
-import { AccountService } from '../../service/Account/account.service';
 import { ToastrService } from '../../service/SystemService/toastr.service';
 import { PermissionResponse } from '../../dto/response/Permission/PermissionResponse';
 import { RoleResponse } from '../../dto/response/Role/RoleResponse';
 import { AccountResponse } from '../../dto/response/Account/AccountResponse';
-import { CreatePermissionRequest, UpdatePermissionRequest, ActionType } from '../../dto/request/Permission/PermissionRequest';
-import { CreateRoleRequest, UpdateRoleRequest, AssignPermissionsRequest, AssignRolesRequest } from '../../dto/request/Role/RoleRequest';
+import {
+  ActionType,
+  CreatePermissionRequest,
+  UpdatePermissionRequest
+} from '../../dto/request/Permission/PermissionRequest';
+import {
+  AssignPermissionsRequest,
+  CreateRoleRequest,
+  UpdateRoleRequest
+} from '../../dto/request/Role/RoleRequest';
 
 interface PermissionGroup {
   resource: string;
@@ -37,7 +43,7 @@ export class RbacComponent implements OnInit {
 
   searchKeyword = '';
   selectedResource = '';
-  selectedAction = '';
+  selectedAction: ActionType | '' = '';
 
   showCreatePermModal = false;
   showEditPermModal = false;
@@ -56,11 +62,9 @@ export class RbacComponent implements OnInit {
   permissionGroups: PermissionGroup[] = [];
   expandedPermissionGroups: Record<string, boolean> = {};
   selectedPermissionsForRole: string[] = [];
+  initialPermissionsForRole: string[] = [];
 
-  showAssignRoleModal = false;
   showViewUsersModal = false;
-  allRolesList: RoleResponse[] = [];
-  selectedRolesForUser: string[] = [];
   usersOfRole: AccountResponse[] = [];
   roleUsersCurrentPage = 0;
   roleUsersTotalPages = 0;
@@ -68,12 +72,11 @@ export class RbacComponent implements OnInit {
 
   createPermForm: CreatePermissionRequest = this.initCreatePermForm();
   editPermForm: UpdatePermissionRequest = {};
-  editPermAction: ActionType = ActionType.GET;
-
   createRoleForm: CreateRoleRequest = this.initCreateRoleForm();
   editRoleForm: UpdateRoleRequest = {};
 
   ActionType = ActionType;
+  actionOptions = Object.values(ActionType);
   resources = [
     'auth', 'batch', 'business-partner', 'category', 'email', 'employee',
     'inventory', 'location', 'inbound-receipt', 'outbound-shipment',
@@ -85,8 +88,6 @@ export class RbacComponent implements OnInit {
   constructor(
     private permissionService: PermissionService,
     private roleService: RoleService,
-    private userRoleService: UserRoleService,
-    private accountService: AccountService,
     private toastr: ToastrService
   ) {}
 
@@ -96,16 +97,19 @@ export class RbacComponent implements OnInit {
 
   loadData(): void {
     this.loading = true;
+
     if (this.activeTab === 'permissions') {
       this.loadPermissions();
-    } else {
-      this.loadRoles();
+      return;
     }
+
+    this.loadRoles();
   }
 
   loadPermissions(): void {
     this.permissionService.getAll(
-      0, 200,
+      0,
+      200,
       this.selectedResource || undefined,
       this.selectedAction || undefined,
       this.searchKeyword || undefined
@@ -161,8 +165,15 @@ export class RbacComponent implements OnInit {
 
   onPageChange(page: number): void {
     if (page < 0 || page >= this.totalPages) return;
+
     this.currentPage = page;
-    this.applyPermFilter();
+
+    if (this.activeTab === 'permissions') {
+      this.applyPermFilter();
+      return;
+    }
+
+    this.applyRoleFilter();
   }
 
   switchTab(tab: 'permissions' | 'roles'): void {
@@ -174,46 +185,6 @@ export class RbacComponent implements OnInit {
     this.loadData();
   }
 
-  private applyPermFilter(): void {
-    let filtered = [...this.allPermissions];
-    const keyword = this.searchKeyword.trim().toLowerCase();
-    if (keyword) {
-      filtered = filtered.filter(p =>
-        p.name.toLowerCase().includes(keyword) ||
-        p.resource.toLowerCase().includes(keyword) ||
-        p.code.toLowerCase().includes(keyword)
-      );
-    }
-    this.totalElements = filtered.length;
-    this.totalPages = this.totalElements === 0 ? 0 : Math.ceil(this.totalElements / this.pageSize);
-    const start = this.currentPage * this.pageSize;
-    this.permissions = filtered.slice(start, start + this.pageSize);
-  }
-
-  private applyRoleFilter(): void {
-    let filtered = [...this.allRoles];
-    const keyword = this.searchKeyword.trim().toLowerCase();
-    if (keyword) {
-      filtered = filtered.filter(r =>
-        r.name.toLowerCase().includes(keyword) ||
-        r.code.toLowerCase().includes(keyword) ||
-        (r.description || '').toLowerCase().includes(keyword)
-      );
-    }
-    this.totalElements = filtered.length;
-    this.totalPages = this.totalElements === 0 ? 0 : Math.ceil(this.totalElements / this.pageSize);
-    const start = this.currentPage * this.pageSize;
-    this.roles = filtered.slice(start, start + this.pageSize);
-  }
-
-  private initCreatePermForm(): CreatePermissionRequest {
-    return { name: '', resource: '', action: ActionType.GET };
-  }
-
-  private initCreateRoleForm(): CreateRoleRequest {
-    return { name: '', description: '', is_default: false };
-  }
-
   openCreatePermModal(): void {
     this.createPermForm = this.initCreatePermForm();
     this.showCreatePermModal = true;
@@ -222,36 +193,39 @@ export class RbacComponent implements OnInit {
   onCreatePermSubmit(): void {
     this.permissionService.create(this.createPermForm).subscribe({
       next: (res) => {
-        if (res.success) {
-          this.toastr.success('Phân quyền', 'Tạo permission thành công!');
-          this.showCreatePermModal = false;
-          this.loadPermissions();
-        }
+        if (!res.success) return;
+
+        this.toastr.success('Phân quyền', 'Tạo permission thành công!');
+        this.showCreatePermModal = false;
+        this.loadPermissions();
       }
     });
   }
 
   openEditPermModal(perm: PermissionResponse): void {
-    this.selectedPermission = perm;
-    this.editPermForm = {
-      name: perm.name,
-      resource: perm.resource,
-      action: perm.action as ActionType,
-      description: perm.description ?? undefined
-    };
-    this.editPermAction = perm.action as ActionType;
-    this.showEditPermModal = true;
+    this.setEditPermissionState(perm);
+
+    this.permissionService.getById(perm.id).subscribe({
+      next: (res) => {
+        if (!res.success) {
+          return;
+        }
+
+        this.setEditPermissionState(res.data);
+      }
+    });
   }
 
   onEditPermSubmit(): void {
     if (!this.selectedPermission) return;
+
     this.permissionService.update(this.selectedPermission.id, this.editPermForm).subscribe({
       next: (res) => {
-        if (res.success) {
-          this.toastr.success('Phân quyền', 'Cập nhật permission thành công!');
-          this.showEditPermModal = false;
-          this.loadPermissions();
-        }
+        if (!res.success) return;
+
+        this.toastr.success('Phân quyền', 'Cập nhật permission thành công!');
+        this.showEditPermModal = false;
+        this.loadPermissions();
       }
     });
   }
@@ -263,13 +237,14 @@ export class RbacComponent implements OnInit {
 
   onDeletePermConfirm(): void {
     if (!this.permissionToDelete) return;
+
     this.permissionService.delete(this.permissionToDelete.id).subscribe({
       next: (res) => {
-        if (res.success) {
-          this.toastr.success('Phân quyền', 'Xóa permission thành công!');
-          this.showDeletePermConfirm = false;
-          this.loadPermissions();
-        }
+        if (!res.success) return;
+
+        this.toastr.success('Phân quyền', 'Xóa permission thành công!');
+        this.showDeletePermConfirm = false;
+        this.loadPermissions();
       }
     });
   }
@@ -282,34 +257,39 @@ export class RbacComponent implements OnInit {
   onCreateRoleSubmit(): void {
     this.roleService.create(this.createRoleForm).subscribe({
       next: (res) => {
-        if (res.success) {
-          this.toastr.success('Phân quyền', 'Tạo role thành công!');
-          this.showCreateRoleModal = false;
-          this.loadRoles();
-        }
+        if (!res.success) return;
+
+        this.toastr.success('Phân quyền', 'Tạo role thành công!');
+        this.showCreateRoleModal = false;
+        this.loadRoles();
       }
     });
   }
 
   openEditRoleModal(role: RoleResponse): void {
-    this.selectedRole = role;
-    this.editRoleForm = {
-      name: role.name,
-      description: role.description ?? undefined,
-      is_default: role.is_default
-    };
-    this.showEditRoleModal = true;
+    this.setEditRoleState(role);
+
+    this.roleService.getById(role.id).subscribe({
+      next: (res) => {
+        if (!res.success) {
+          return;
+        }
+
+        this.setEditRoleState(res.data);
+      }
+    });
   }
 
   onEditRoleSubmit(): void {
     if (!this.selectedRole) return;
+
     this.roleService.update(this.selectedRole.id, this.editRoleForm).subscribe({
       next: (res) => {
-        if (res.success) {
-          this.toastr.success('Phân quyền', 'Cập nhật role thành công!');
-          this.showEditRoleModal = false;
-          this.loadRoles();
-        }
+        if (!res.success) return;
+
+        this.toastr.success('Phân quyền', 'Cập nhật role thành công!');
+        this.showEditRoleModal = false;
+        this.loadRoles();
       }
     });
   }
@@ -321,13 +301,14 @@ export class RbacComponent implements OnInit {
 
   onDeleteRoleConfirm(): void {
     if (!this.roleToDelete) return;
+
     this.roleService.delete(this.roleToDelete.id).subscribe({
       next: (res) => {
-        if (res.success) {
-          this.toastr.success('Phân quyền', 'Xóa role thành công!');
-          this.showDeleteRoleConfirm = false;
-          this.loadRoles();
-        }
+        if (!res.success) return;
+
+        this.toastr.success('Phân quyền', 'Xóa role thành công!');
+        this.showDeleteRoleConfirm = false;
+        this.loadRoles();
       }
     });
   }
@@ -335,20 +316,23 @@ export class RbacComponent implements OnInit {
   openAssignPermModal(role: RoleResponse): void {
     this.selectedRole = role;
     this.selectedPermissionsForRole = [];
+    this.initialPermissionsForRole = [];
+
     forkJoin({
       allPermissions: this.permissionService.getAll(0, 200),
       assignedPermissions: this.roleService.getPermissions(role.id, 0, 200)
     }).subscribe({
       next: (res) => {
-        if (res.allPermissions.success) {
-          this.allAvailablePermissions = res.allPermissions.data.content;
-          this.selectedPermissionsForRole = res.assignedPermissions.success
-            ? res.assignedPermissions.data.content.map((permission) => permission.id)
-            : [];
-          this.permissionGroups = this.buildPermissionGroups(this.allAvailablePermissions);
-          this.initPermissionGroupExpansion();
-          this.showAssignPermModal = true;
-        }
+        if (!res.allPermissions.success) return;
+
+        this.allAvailablePermissions = res.allPermissions.data.content;
+        this.selectedPermissionsForRole = res.assignedPermissions.success
+          ? res.assignedPermissions.data.content.map((permission) => permission.id)
+          : [];
+        this.initialPermissionsForRole = [...this.selectedPermissionsForRole];
+        this.permissionGroups = this.buildPermissionGroups(this.allAvailablePermissions);
+        this.initPermissionGroupExpansion();
+        this.showAssignPermModal = true;
       },
       error: () => {
         this.allAvailablePermissions = [];
@@ -360,14 +344,34 @@ export class RbacComponent implements OnInit {
 
   onAssignPermSubmit(): void {
     if (!this.selectedRole) return;
-    const request: AssignPermissionsRequest = { permission_ids: this.selectedPermissionsForRole };
-    this.roleService.assignPermissions(this.selectedRole.id, request).subscribe({
-      next: (res) => {
-        if (res.success) {
-          this.toastr.success('Phân quyền', 'Gán permissions thành công!');
-          this.showAssignPermModal = false;
-          this.loadRoles();
-        }
+
+    const roleId = this.selectedRole.id;
+    const initialPermissionSet = new Set(this.initialPermissionsForRole);
+    const selectedPermissionSet = new Set(this.selectedPermissionsForRole);
+
+    const permissionIdsToAdd = this.selectedPermissionsForRole.filter((permissionId) => !initialPermissionSet.has(permissionId));
+    const permissionIdsToRemove = this.initialPermissionsForRole.filter((permissionId) => !selectedPermissionSet.has(permissionId));
+
+    const operations: Observable<unknown>[] = permissionIdsToRemove.map((permissionId) =>
+      this.roleService.removePermission(roleId, permissionId)
+    );
+
+    if (permissionIdsToAdd.length > 0) {
+      const request: AssignPermissionsRequest = { permission_ids: permissionIdsToAdd };
+      operations.push(this.roleService.assignPermissions(roleId, request));
+    }
+
+    if (operations.length === 0) {
+      this.toastr.info('Phân quyền', 'Không có thay đổi permission nào.');
+      this.showAssignPermModal = false;
+      return;
+    }
+
+    forkJoin(operations).subscribe({
+      next: () => {
+        this.toastr.success('Phân quyền', 'Cập nhật permissions cho role thành công!');
+        this.showAssignPermModal = false;
+        this.loadRoles();
       }
     });
   }
@@ -376,9 +380,10 @@ export class RbacComponent implements OnInit {
     const idx = this.selectedPermissionsForRole.indexOf(permId);
     if (idx >= 0) {
       this.selectedPermissionsForRole.splice(idx, 1);
-    } else {
-      this.selectedPermissionsForRole.push(permId);
+      return;
     }
+
+    this.selectedPermissionsForRole.push(permId);
   }
 
   isPermissionSelected(permId: string): boolean {
@@ -412,9 +417,10 @@ export class RbacComponent implements OnInit {
     group.permissions.forEach((perm) => {
       if (checked) {
         selectedIds.add(perm.id);
-      } else {
-        selectedIds.delete(perm.id);
+        return;
       }
+
+      selectedIds.delete(perm.id);
     });
 
     this.selectedPermissionsForRole = Array.from(selectedIds);
@@ -427,13 +433,138 @@ export class RbacComponent implements OnInit {
       .join(' ');
   }
 
+  openViewUsersModal(role: RoleResponse): void {
+    this.selectedRole = role;
+    this.roleUsersCurrentPage = 0;
+    this.loadRoleUsers();
+    this.showViewUsersModal = true;
+  }
+
+  loadRoleUsers(): void {
+    if (!this.selectedRole) return;
+
+    this.roleService.getUsers(this.selectedRole.id, this.roleUsersCurrentPage, 10).subscribe({
+      next: (res) => {
+        if (!res.success) return;
+
+        this.usersOfRole = res.data.content;
+        this.roleUsersTotalElements = res.data.total_elements;
+        this.roleUsersTotalPages = res.data.total_pages;
+      },
+      error: () => {
+        this.usersOfRole = [];
+      }
+    });
+  }
+
+  onRoleUsersPageChange(page: number): void {
+    if (page < 0 || page >= this.roleUsersTotalPages) return;
+
+    this.roleUsersCurrentPage = page;
+    this.loadRoleUsers();
+  }
+
+  closeAllModals(): void {
+    this.showCreatePermModal = false;
+    this.showEditPermModal = false;
+    this.showDeletePermConfirm = false;
+    this.showCreateRoleModal = false;
+    this.showEditRoleModal = false;
+    this.showDeleteRoleConfirm = false;
+    this.showAssignPermModal = false;
+    this.showViewUsersModal = false;
+
+    this.permissionGroups = [];
+    this.expandedPermissionGroups = {};
+    this.initialPermissionsForRole = [];
+    this.usersOfRole = [];
+
+    this.selectedPermission = null;
+    this.permissionToDelete = null;
+    this.selectedRole = null;
+    this.roleToDelete = null;
+  }
+
+  private applyPermFilter(): void {
+    let filtered = [...this.allPermissions];
+    const keyword = this.searchKeyword.trim().toLowerCase();
+
+    if (keyword) {
+      filtered = filtered.filter((permission) =>
+        permission.name.toLowerCase().includes(keyword) ||
+        permission.resource.toLowerCase().includes(keyword) ||
+        permission.code.toLowerCase().includes(keyword)
+      );
+    }
+
+    this.totalElements = filtered.length;
+    this.totalPages = this.totalElements === 0 ? 0 : Math.ceil(this.totalElements / this.pageSize);
+
+    const start = this.currentPage * this.pageSize;
+    this.permissions = filtered.slice(start, start + this.pageSize);
+  }
+
+  private applyRoleFilter(): void {
+    let filtered = [...this.allRoles];
+    const keyword = this.searchKeyword.trim().toLowerCase();
+
+    if (keyword) {
+      filtered = filtered.filter((role) =>
+        role.name.toLowerCase().includes(keyword) ||
+        role.code.toLowerCase().includes(keyword) ||
+        (role.description || '').toLowerCase().includes(keyword)
+      );
+    }
+
+    this.totalElements = filtered.length;
+    this.totalPages = this.totalElements === 0 ? 0 : Math.ceil(this.totalElements / this.pageSize);
+
+    const start = this.currentPage * this.pageSize;
+    this.roles = filtered.slice(start, start + this.pageSize);
+  }
+
+  private initCreatePermForm(): CreatePermissionRequest {
+    return {
+      name: '',
+      resource: '',
+      action: ActionType.READ
+    };
+  }
+
+  private initCreateRoleForm(): CreateRoleRequest {
+    return {
+      name: '',
+      description: '',
+      is_default: false
+    };
+  }
+
+  private setEditPermissionState(permission: PermissionResponse): void {
+    this.selectedPermission = permission;
+    this.editPermForm = {
+      name: permission.name,
+      description: permission.description ?? undefined
+    };
+    this.showEditPermModal = true;
+  }
+
+  private setEditRoleState(role: RoleResponse): void {
+    this.selectedRole = role;
+    this.editRoleForm = {
+      name: role.name,
+      description: role.description ?? undefined,
+      is_default: role.is_default
+    };
+    this.showEditRoleModal = true;
+  }
+
   private buildPermissionGroups(permissions: PermissionResponse[]): PermissionGroup[] {
     const groupedPermissions = permissions.reduce((groups, permission) => {
-      const resource = permission.resource;
-      if (!groups[resource]) {
-        groups[resource] = [];
+      if (!groups[permission.resource]) {
+        groups[permission.resource] = [];
       }
-      groups[resource].push(permission);
+
+      groups[permission.resource].push(permission);
       return groups;
     }, {} as Record<string, PermissionResponse[]>);
 
@@ -445,6 +576,7 @@ export class RbacComponent implements OnInit {
           if (actionOrder !== 0) {
             return actionOrder;
           }
+
           return left.name.localeCompare(right.name);
         })
       }))
@@ -460,115 +592,20 @@ export class RbacComponent implements OnInit {
 
   private getPermissionActionOrder(action: string): number {
     switch (action.toUpperCase()) {
-      case 'GET':
+      case 'CREATE':
         return 1;
-      case 'POST':
+      case 'READ':
         return 2;
-      case 'PUT':
+      case 'WRITE':
         return 3;
-      case 'DELETE':
+      case 'UPDATE':
         return 4;
+      case 'EXPORT':
+        return 5;
+      case 'DELETE':
+        return 6;
       default:
         return 99;
     }
   }
-
-  closeAllModals(): void {
-    this.showCreatePermModal = false;
-    this.showEditPermModal = false;
-    this.showDeletePermConfirm = false;
-    this.showCreateRoleModal = false;
-    this.showEditRoleModal = false;
-    this.showDeleteRoleConfirm = false;
-    this.showAssignPermModal = false;
-    this.showAssignRoleModal = false;
-    this.showViewUsersModal = false;
-    this.permissionGroups = [];
-    this.expandedPermissionGroups = {};
-    this.selectedPermission = null;
-    this.permissionToDelete = null;
-    this.selectedRole = null;
-    this.roleToDelete = null;
-    this.usersOfRole = [];
-  }
-
-  openAssignRoleModal(user: AccountResponse): void {
-    this.selectedUser = user;
-    this.selectedRolesForUser = [];
-    forkJoin({
-      allRoles: this.roleService.getAll(0, 200),
-      userRoles: this.userRoleService.getUserRoles(user.account_id, 0, 200)
-    }).subscribe({
-      next: (res) => {
-        if (res.allRoles.success) {
-          this.allRolesList = res.allRoles.data.content;
-          this.selectedRolesForUser = res.userRoles.success
-            ? res.userRoles.data.content.map((role) => role.id)
-            : [];
-          this.showAssignRoleModal = true;
-        }
-      },
-      error: () => {
-        this.allRolesList = [];
-      }
-    });
-  }
-
-  onAssignRoleSubmit(): void {
-    if (!this.selectedUser) return;
-    const request: AssignRolesRequest = { role_ids: this.selectedRolesForUser };
-    this.userRoleService.assignRolesToUser(this.selectedUser.account_id, request).subscribe({
-      next: (res) => {
-        if (res.success) {
-          this.toastr.success('Phân quyền', 'Gán roles cho user thành công!');
-          this.showAssignRoleModal = false;
-          this.loadRoles();
-        }
-      }
-    });
-  }
-
-  toggleRoleSelection(roleId: string): void {
-    const idx = this.selectedRolesForUser.indexOf(roleId);
-    if (idx >= 0) {
-      this.selectedRolesForUser.splice(idx, 1);
-    } else {
-      this.selectedRolesForUser.push(roleId);
-    }
-  }
-
-  isRoleSelected(roleId: string): boolean {
-    return this.selectedRolesForUser.includes(roleId);
-  }
-
-  openViewUsersModal(role: RoleResponse): void {
-    this.selectedRole = role;
-    this.roleUsersCurrentPage = 0;
-    this.loadRoleUsers();
-    this.showViewUsersModal = true;
-  }
-
-  loadRoleUsers(): void {
-    if (!this.selectedRole) return;
-    this.roleService.getUsers(this.selectedRole.id, this.roleUsersCurrentPage, 10).subscribe({
-      next: (res) => {
-        if (res.success) {
-          this.usersOfRole = res.data.content;
-          this.roleUsersTotalElements = res.data.total_elements;
-          this.roleUsersTotalPages = res.data.total_pages;
-        }
-      },
-      error: () => {
-        this.usersOfRole = [];
-      }
-    });
-  }
-
-  onRoleUsersPageChange(page: number): void {
-    if (page < 0 || page >= this.roleUsersTotalPages) return;
-    this.roleUsersCurrentPage = page;
-    this.loadRoleUsers();
-  }
-
-  selectedUser: AccountResponse | null = null;
 }
