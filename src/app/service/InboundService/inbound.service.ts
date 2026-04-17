@@ -39,14 +39,30 @@ export class InboundService {
       .set('size', size);
 
     if (filters) {
-      params = this.setParamWithAliases(params, 'receiptNumber', filters.receiptNumber, ['receipt_number']);
-      params = this.setParamWithAliases(params, 'purchaseOrderId', filters.purchaseOrderId, ['purchase_order_id']);
-      params = this.setParamWithAliases(params, 'warehouseId', filters.warehouseId, ['warehouse_id']);
-      params = this.setParamWithAliases(params, 'status', filters.status);
-      params = this.setParamWithAliases(params, 'receiptDateFrom', filters.receiptDateFrom, ['receipt_date_from']);
-      params = this.setParamWithAliases(params, 'receiptDateTo', filters.receiptDateTo, ['receipt_date_to']);
-      params = this.setParamWithAliases(params, 'sortBy', filters.sortBy);
-      params = this.setParamWithAliases(params, 'direction', filters.direction);
+      if (filters.receiptNumber) {
+        params = params.set('receipt_number', filters.receiptNumber);
+      }
+      if (filters.purchaseOrderId) {
+        params = params.set('purchase_order_id', filters.purchaseOrderId);
+      }
+      if (filters.warehouseId) {
+        params = params.set('warehouse_id', filters.warehouseId);
+      }
+      if (filters.status) {
+        params = params.set('status', filters.status);
+      }
+      if (filters.receiptDateFrom) {
+        params = params.set('receipt_date_from', filters.receiptDateFrom);
+      }
+      if (filters.receiptDateTo) {
+        params = params.set('receipt_date_to', filters.receiptDateTo);
+      }
+      if (filters.sortBy) {
+        params = params.set('sort_by', filters.sortBy);
+      }
+      if (filters.direction) {
+        params = params.set('direction', filters.direction);
+      }
     }
 
     return this.http.get<ApiResponse<PageResponse<InboundReceiptResponse>>>(this.apiUrl, { params });
@@ -80,25 +96,5 @@ export class InboundService {
   /** PUT /api/v1/inbound-receipts/:id/confirm */
   confirm(id: string): Observable<ApiResponse<InboundReceiptResponse>> {
     return this.http.put<ApiResponse<InboundReceiptResponse>>(`${this.apiUrl}/${id}/confirm`, {});
-  }
-
-  private setParamWithAliases(
-    params: HttpParams,
-    key: string,
-    value?: string | number | boolean | null,
-    aliases: string[] = []
-  ): HttpParams {
-    if (value === undefined || value === null || value === '') {
-      return params;
-    }
-
-    const normalizedValue = String(value);
-    let nextParams = params.set(key, normalizedValue);
-
-    for (const alias of aliases) {
-      nextParams = nextParams.set(alias, normalizedValue);
-    }
-
-    return nextParams;
   }
 }

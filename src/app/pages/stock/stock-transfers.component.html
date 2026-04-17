@@ -36,6 +36,13 @@
       </div>
     </div>
     <div class="stat-item">
+      <div class="stat-bar stat-bar--draft"></div>
+      <div class="stat-body">
+        <div class="stat-label">Chờ xử lý</div>
+        <div class="stat-value">{{ pendingCount }}</div>
+      </div>
+    </div>
+    <div class="stat-item">
       <div class="stat-bar stat-bar--success"></div>
       <div class="stat-body">
         <div class="stat-label">Hoàn tất</div>
@@ -94,9 +101,16 @@
             <span class="badge" [ngClass]="getStatusClass(transfer.status)">{{ getStatusLabel(transfer.status) }}</span>
           </td>
           <td>
-            <div class="table-actions" [class.single-action]="!canUpdateTransfer(transfer)">
+            <div class="table-actions">
               <button class="btn-icon" title="Chi tiết" (click)="openDetailModal(transfer)">
                 <i class="fa-regular fa-eye" aria-hidden="true"></i>
+              </button>
+              <button
+                *ngIf="canSubmitTransfer(transfer)"
+                class="btn-icon btn-primary"
+                title="Gửi xử lý"
+                (click)="openSubmitModal(transfer)">
+                <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
               </button>
               <button
                 *ngIf="canUpdateTransfer(transfer)"
@@ -138,6 +152,13 @@
       <div class="entity-card__actions transfer-card-actions">
         <button class="btn-icon" title="Chi tiết" (click)="openDetailModal(transfer)">
           <i class="fa-regular fa-eye" aria-hidden="true"></i>
+        </button>
+        <button
+          *ngIf="canSubmitTransfer(transfer)"
+          class="btn-icon btn-primary"
+          title="Gửi xử lý"
+          (click)="openSubmitModal(transfer)">
+          <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
         </button>
         <button
           *ngIf="canUpdateTransfer(transfer)"
@@ -350,8 +371,34 @@
 
     <div class="modal-footer">
       <button class="btn btn-ghost" (click)="closeAllModals()">Đóng</button>
+      <button *ngIf="canSubmitTransfer(selectedTransfer)" class="btn btn-primary" (click)="openSubmitModal(selectedTransfer)">Gửi xử lý</button>
       <button *ngIf="canUpdateTransfer(selectedTransfer)" class="btn btn-danger" (click)="openCancelModal(selectedTransfer)">Huỷ phiếu</button>
-      <button *ngIf="canUpdateTransfer(selectedTransfer)" class="btn btn-primary" (click)="openCompleteModal(selectedTransfer)">Hoàn tất phiếu</button>
+      <button *ngIf="canUpdateTransfer(selectedTransfer)" class="btn btn-success" (click)="openCompleteModal(selectedTransfer)">Hoàn tất phiếu</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" *ngIf="showSubmitModal && actionTransfer" (click)="closeAllModals()">
+  <div class="modal-box modal-sm" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Gửi phiếu chuyển kho</h3>
+      <button class="modal-close" (click)="closeAllModals()">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="callout callout-info">
+        Sau khi gửi, phiếu sẽ chuyển sang trạng thái "Chờ xử lý" và có thể được hoàn tất để thực hiện chuyển kho.
+      </div>
+      <p><strong>{{ actionTransfer.transfer_number }}</strong></p>
+      <p>{{ actionTransfer.product_name }} | {{ actionTransfer.quantity }} {{ actionTransfer.uom_code }}</p>
+      <p>{{ actionTransfer.from_location_code }} → {{ actionTransfer.to_location_code }}</p>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-ghost" (click)="closeAllModals()" [disabled]="submitting">Đóng</button>
+      <button class="btn btn-primary" (click)="onSubmitConfirm()" [disabled]="submitting">
+        {{ submitting ? 'Đang xử lý...' : 'Xác nhận gửi' }}
+      </button>
     </div>
   </div>
 </div>
@@ -390,7 +437,7 @@
 
     <div class="modal-body">
       <div class="callout callout-warning">
-        Chỉ phiếu đang ở trạng thái nháp mới được huỷ. Huỷ phiếu không thay đổi tồn kho vì chuyển chưa được thực thi.
+        Phiếu ở trạng thái Nháp hoặc Chờ xử lý có thể bị huỷ. Huỷ phiếu không thay đổi tồn kho vì chuyển chưa được thực thi.
       </div>
       <p><strong>{{ actionTransfer.transfer_number }}</strong></p>
       <p>{{ actionTransfer.product_name }} | {{ actionTransfer.quantity }} {{ actionTransfer.uom_code }}</p>

@@ -12,6 +12,7 @@ import { PurchaseOrderLineResponse } from '../../dto/response/PurchaseOrderLine/
 import { BatchStatus } from '../../helper/enums/BatchStatus';
 import { InboundReceiptStatus } from '../../helper/enums/InboundReceiptStatus';
 import { LocationStatus } from '../../helper/enums/LocationStatus';
+import { ProductStatus } from '../../helper/enums/ProductStatus';
 import { QualityStatus } from '../../helper/enums/QualityStatus';
 
 export type InboundLineEditorMode = 'create' | 'edit';
@@ -208,7 +209,13 @@ export class InboundLineEditorService {
 
   getCreateAvailablePurchaseOrderLines(context: InboundLineEditorContext): PurchaseOrderLineResponse[] {
     return context.detailPurchaseOrderLines
-      .filter((line) => this.getRemainingCapacityForPurchaseOrderLine(context, line.id) > 0)
+      .filter((line) => {
+        const product = context.products.find((p) => p.id === line.product_id);
+        if (!product || product.status === ProductStatus.INACTIVE) {
+          return false;
+        }
+        return this.getRemainingCapacityForPurchaseOrderLine(context, line.id) > 0;
+      })
       .sort((left, right) => left.line_number - right.line_number);
   }
 
@@ -277,6 +284,10 @@ export class InboundLineEditorService {
     const product = this.getSelectedProduct(context);
     if (!product) {
       return 'Không xác định được sản phẩm của dòng đơn mua hàng.';
+    }
+
+    if (product.status === ProductStatus.INACTIVE) {
+      return 'Sản phẩm đang bị ngưng hoạt động và không thể nhận hàng.';
     }
 
     const location = this.getAvailableLineLocations(context).find((item) => item.id === context.lineForm.location_id);

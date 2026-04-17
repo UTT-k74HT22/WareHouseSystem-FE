@@ -601,7 +601,7 @@ export class InboundComponent implements OnInit {
   }
 
   canDeleteReceipt(receipt: InboundReceiptResponse): boolean {
-    return receipt.status === InboundReceiptStatus.DRAFT;
+    return receipt.status === InboundReceiptStatus.DRAFT && receipt.lines.length === 0;
   }
 
   canConfirmReceipt(receipt: InboundReceiptResponse): boolean {
