@@ -19,6 +19,9 @@ import { ProductStatus } from '../../helper/enums/ProductStatus';
   styleUrls: ['./batch.component.css']
 })
 export class BatchComponent implements OnInit {
+  createPermissions = ['PERM_BATCH_CREATE'];
+  updatePermissions = ['PERM_BATCH_UPDATE'];
+
   allBatches: BatchResponse[] = [];
   batches: BatchResponse[] = [];
   trackedProducts: ProductResponse[] = [];

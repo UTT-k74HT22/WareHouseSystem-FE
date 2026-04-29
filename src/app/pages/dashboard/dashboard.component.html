@@ -18,7 +18,7 @@
     </div>
     <div class="dash-header-right">
       <!-- Warehouse filter -->
-      <div class="filter-wrap">
+      <div class="filter-wrap" *ngIf="canReadWarehouses">
         <i class="fa-solid fa-warehouse filter-icon" aria-hidden="true"></i>
         <select class="filter-select" [(ngModel)]="selectedWarehouseId" (change)="onWarehouseChange()">
           <option [value]="undefined">Tất cả kho</option>

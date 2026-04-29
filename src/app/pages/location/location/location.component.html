@@ -11,11 +11,11 @@
     </div>
 
     <div class="hero-actions">
-      <button class="btn btn-ghost" type="button">
+      <button *appHasAnyPermission="exportPermissions" class="btn btn-ghost" type="button">
         Xuất Excel
       </button>
 
-      <button class="btn btn-primary" type="button" (click)="openCreateModal()">
+      <button *appHasAnyPermission="createPermissions" class="btn btn-primary" type="button" (click)="openCreateModal()">
         + Thêm Vị Trí Mới
       </button>
     </div>
@@ -235,6 +235,7 @@
                   <i class="fa-regular fa-eye" aria-hidden="true"></i>
                 </button>
                 <button
+                  *appHasAnyPermission="updatePermissions"
                   class="btn-action btn-edit"
                   (click)="openEditModal(location)"
                   title="Chỉnh sửa"
@@ -242,6 +243,7 @@
                   <i class="fa-regular fa-pen-to-square" aria-hidden="true"></i>
                 </button>
                 <button
+                  *appHasAnyPermission="deletePermissions"
                   class="btn-action btn-delete"
                   (click)="openDeleteConfirm(location)"
                   title="Xóa"
@@ -365,13 +367,13 @@
         >
           Đóng
         </button>
-        <button class="btn btn-info" (click)="openStatusChangeModal(selectedLocation); closeDetails()">
+        <button *appHasAnyPermission="updatePermissions" class="btn btn-info" (click)="openStatusChangeModal(selectedLocation); closeDetails()">
           Đổi trạng thái
         </button>
-        <button class="btn btn-warning" (click)="openEditModal(selectedLocation); closeDetails()">
+        <button *appHasAnyPermission="updatePermissions" class="btn btn-warning" (click)="openEditModal(selectedLocation); closeDetails()">
           Chỉnh sửa
         </button>
-        <button class="btn btn-danger" (click)="openDeleteConfirm(selectedLocation); closeDetails()">
+        <button *appHasAnyPermission="deletePermissions" class="btn btn-danger" (click)="openDeleteConfirm(selectedLocation); closeDetails()">
           Xóa
         </button>
       </div>
@@ -497,7 +499,7 @@
 
       <div class="modal-footer">
         <button class="btn btn-secondary" (click)="closeCreateModal()">Hủy</button>
-        <button class="btn btn-primary" (click)="onSubmitCreate()">Tạo mới</button>
+        <button *appHasAnyPermission="createPermissions" class="btn btn-primary" (click)="onSubmitCreate()">Tạo mới</button>
       </div>
     </div>
   </div>
@@ -585,7 +587,7 @@
 
       <div class="modal-footer">
         <button class="btn btn-secondary" (click)="closeEditModal()">Hủy</button>
-        <button class="btn btn-warning" (click)="onSubmitEdit()">Cập nhật</button>
+        <button *appHasAnyPermission="updatePermissions" class="btn btn-warning" (click)="onSubmitEdit()">Cập nhật</button>
       </div>
     </div>
   </div>
@@ -608,7 +610,7 @@
 
       <div class="modal-footer">
         <button class="btn btn-secondary" (click)="closeDeleteConfirm()">Hủy</button>
-        <button class="btn btn-danger" (click)="onConfirmDelete()">Xóa</button>
+        <button *appHasAnyPermission="deletePermissions" class="btn btn-danger" (click)="onConfirmDelete()">Xóa</button>
       </div>
     </div>
   </div>
@@ -654,7 +656,7 @@
 
       <div class="modal-footer">
         <button class="btn btn-secondary" (click)="closeStatusChangeModal()">Hủy</button>
-        <button class="btn btn-info" (click)="onSubmitStatusChange()">Cập nhật</button>
+        <button *appHasAnyPermission="updatePermissions" class="btn btn-info" (click)="onSubmitStatusChange()">Cập nhật</button>
       </div>
     </div>
   </div>

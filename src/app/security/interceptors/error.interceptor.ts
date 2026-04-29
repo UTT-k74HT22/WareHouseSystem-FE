@@ -1,28 +1,21 @@
 import { Injectable } from '@angular/core';
 import {
-  HttpRequest,
-  HttpHandler,
+  HttpErrorResponse,
   HttpEvent,
+  HttpHandler,
   HttpInterceptor,
-  HttpErrorResponse
+  HttpRequest
 } from '@angular/common/http';
-import { Observable, throwError, BehaviorSubject } from 'rxjs';
-import { catchError, filter, take, switchMap } from 'rxjs/operators';
+import { BehaviorSubject, Observable, throwError } from 'rxjs';
+import { catchError, filter, switchMap, take } from 'rxjs/operators';
+import { Router } from '@angular/router';
 import { AuthService } from '../../service/AuthService/auth-service.service';
 import { ToastrService } from '../../service/SystemService/toastr.service';
-import { Router } from '@angular/router';
 
-/**
- * Error Interceptor - Xử lý các lỗi HTTP
- * - 401 Unauthorized: Token hết hạn -> refresh token hoặc logout
- * - 403 Forbidden: Không có quyền
- * - 500 Server Error: Lỗi server
- */
 @Injectable()
 export class ErrorInterceptor implements HttpInterceptor {
-
   private isRefreshing = false;
-  private refreshTokenSubject: BehaviorSubject<any> = new BehaviorSubject<any>(null);
+  private refreshTokenSubject = new BehaviorSubject<string | null>(null);
 
   constructor(
     private authService: AuthService,
@@ -33,25 +26,37 @@ export class ErrorInterceptor implements HttpInterceptor {
   intercept(request: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
     return next.handle(request).pipe(
       catchError((error: HttpErrorResponse) => {
-
-        // Xử lý lỗi 401 Unauthorized
         if (error.status === 401) {
           return this.handle401Error(request, next);
         }
 
-        // Xử lý lỗi 403 Forbidden
         if (error.status === 403) {
-          this.toastr.error('Bạn không có quyền thực hiện hành động này', 'Không có quyền');
+          if (!request.url.includes('/auth/my-permissions')) {
+            this.authService.ensurePermissionsLoaded(true).subscribe({
+              error: () => void 0
+            });
+          }
+
+          this.toastr.error('Ban khong co quyen thuc hien hanh dong nay', 'Khong co quyen');
         }
 
-        // Xử lý lỗi 500 Internal Server Error
         if (error.status === 500) {
-          this.toastr.error('Đã xảy ra lỗi từ phía server. Vui lòng thử lại sau', 'Lỗi server');
+          this.toastr.error('Da xay ra loi tu phia server. Vui long thu lai sau', 'Loi server');
         }
 
-        // Xử lý lỗi 0 - Không kết nối được server
+        if (error.status === 503) {
+          const isPermissionSourceError = request.url.includes('/auth/my-permissions')
+            || request.url.includes('/auth/check-permission');
+
+          if (isPermissionSourceError) {
+            this.toastr.error('Khong the tai du lieu phan quyen hien tai. Vui long thu lai sau', 'Dich vu phan quyen tam thoi gian doan');
+          } else {
+            this.toastr.error('Dich vu tam thoi khong san sang. Vui long thu lai sau', 'Service unavailable');
+          }
+        }
+
         if (error.status === 0) {
-          this.toastr.error('Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng', 'Lỗi kết nối');
+          this.toastr.error('Khong the ket noi den server. Vui long kiem tra ket noi mang', 'Loi ket noi');
         }
 
         return throwError(() => error);
@@ -59,19 +64,12 @@ export class ErrorInterceptor implements HttpInterceptor {
     );
   }
 
-  /**
-   * Xử lý lỗi 401 - Token hết hạn
-   * TODO: Implement refresh token logic khi backend có API refresh
-   */
-  private handle401Error(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
-    // Nếu đang refresh token thì đợi
+  private handle401Error(request: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
     if (this.isRefreshing) {
       return this.refreshTokenSubject.pipe(
-        filter(token => token != null),
+        filter((token): token is string => token != null),
         take(1),
-        switchMap(token => {
-          return next.handle(this.addToken(request, token));
-        })
+        switchMap((token) => next.handle(this.addToken(request, token)))
       );
     }
 
@@ -81,7 +79,7 @@ export class ErrorInterceptor implements HttpInterceptor {
     const tokens = this.authService.getTokens();
     if (!tokens?.refreshToken) {
       this.isRefreshing = false;
-      this.toastr.warning('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại', 'Hết phiên');
+      this.toastr.warning('Phien dang nhap da het han. Vui long dang nhap lai', 'Het phien');
       this.authService.logout();
       this.router.navigate(['/login']);
       return throwError(() => new Error('Token expired'));
@@ -90,36 +88,34 @@ export class ErrorInterceptor implements HttpInterceptor {
     return this.authService.refreshToken({ refresh_token: tokens.refreshToken }).pipe(
       switchMap((res) => {
         this.isRefreshing = false;
-        if (res.success && res.data) {
-          this.authService.setSession({
-            accessToken: res.data.access_token,
-            refreshToken: tokens.refreshToken,
-            accessTokenExpiresAt: Number(res.data.expire_access_token),
-            refreshTokenExpiresAt: Number(tokens.refreshTokenExpiresAt)
-          });
-          this.refreshTokenSubject.next(res.data.access_token);
-          return next.handle(this.addToken(request, res.data.access_token));
-        } else {
-          this.toastr.warning('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại', 'Hết phiên');
+
+        if (!res.success || !res.data) {
+          this.toastr.warning('Phien dang nhap da het han. Vui long dang nhap lai', 'Het phien');
           this.authService.logout();
           this.router.navigate(['/login']);
           return throwError(() => new Error('Token refresh failed'));
         }
+
+        this.authService.setSession({
+          accessToken: res.data.access_token,
+          refreshToken: tokens.refreshToken,
+          accessTokenExpiresAt: Number(res.data.expire_access_token),
+          refreshTokenExpiresAt: Number(tokens.refreshTokenExpiresAt)
+        });
+        this.refreshTokenSubject.next(res.data.access_token);
+        return next.handle(this.addToken(request, res.data.access_token));
       }),
-      catchError((err) => {
+      catchError((refreshError) => {
         this.isRefreshing = false;
-        this.toastr.warning('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại', 'Hết phiên');
+        this.toastr.warning('Phien dang nhap da het han. Vui long dang nhap lai', 'Het phien');
         this.authService.logout();
         this.router.navigate(['/login']);
-        return throwError(() => err);
+        return throwError(() => refreshError);
       })
     );
   }
 
-  /**
-   * Thêm token vào request
-   */
-  private addToken(request: HttpRequest<any>, token: string): HttpRequest<any> {
+  private addToken(request: HttpRequest<unknown>, token: string): HttpRequest<unknown> {
     return request.clone({
       setHeaders: {
         Authorization: `Bearer ${token}`

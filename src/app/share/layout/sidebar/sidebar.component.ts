@@ -3,6 +3,7 @@ import { SIDEBAR_NAV_SECTIONS } from '../../../helper/constraint/sidebar-nav';
 import { NavigationEnd, Router } from '@angular/router';
 import { Subject } from 'rxjs';
 import { filter, takeUntil } from 'rxjs/operators';
+import { AuthService } from '../../../service/AuthService/auth-service.service';
 
 @Component({
   selector: 'app-sidebar',
@@ -11,6 +12,7 @@ import { filter, takeUntil } from 'rxjs/operators';
 })
 export class SidebarComponent implements OnInit, OnDestroy {
   readonly navSections = SIDEBAR_NAV_SECTIONS;
+  visibleNavSections = SIDEBAR_NAV_SECTIONS;
 
   @Input() mobileOpen = false;
   @Output() mobileClose = new EventEmitter<void>();
@@ -22,10 +24,19 @@ export class SidebarComponent implements OnInit, OnDestroy {
 
   @Output() collapsedChange = new EventEmitter<boolean>();
 
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    private authService: AuthService
+  ) {}
 
   ngOnInit(): void {
     this.emitCollapsedState();
+    this.authService.authState$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((state) => {
+        this.visibleNavSections = this.filterNavSections(state.permissions || []);
+      });
+
     this.router.events
       .pipe(
         filter(event => event instanceof NavigationEnd),
@@ -75,5 +86,17 @@ export class SidebarComponent implements OnInit, OnDestroy {
   private emitCollapsedState(): void {
     this.isCollapsed = !this.shouldExpand;
     this.collapsedChange.emit(this.isCollapsed);
+  }
+
+  private filterNavSections(permissions: string[]) {
+    return this.navSections
+      .map((section) => ({
+        ...section,
+        items: section.items.filter((item) =>
+          !item.requiredPermissions?.length ||
+          item.requiredPermissions.some((permission) => permissions.includes(permission))
+        )
+      }))
+      .filter((section) => section.items.length > 0);
   }
 }

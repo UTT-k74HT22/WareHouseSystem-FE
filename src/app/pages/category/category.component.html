@@ -9,7 +9,7 @@
       </div>
     </div>
     <div class="hero-actions">
-      <button class="btn btn-primary" (click)="openCreateModal()">+ Thêm Danh mục</button>
+      <button *appHasAnyPermission="createPermissions" class="btn btn-primary" (click)="openCreateModal()">+ Thêm Danh mục</button>
     </div>
   </div>
 
@@ -69,8 +69,8 @@
             </span>
           </td>
           <td class="actions">
-            <button class="btn-icon btn-edit" (click)="openEditModal(cat)"><i class="fa-regular fa-pen-to-square" aria-hidden="true"></i></button>
-            <button class="btn-icon btn-delete" (click)="openDeleteConfirm(cat)" [disabled]="cat.status === CategoryStatus.INACTIVE">
+            <button *appHasAnyPermission="updatePermissions" class="btn-icon btn-edit" (click)="openEditModal(cat)"><i class="fa-regular fa-pen-to-square" aria-hidden="true"></i></button>
+            <button *appHasAnyPermission="deletePermissions" class="btn-icon btn-delete" (click)="openDeleteConfirm(cat)" [disabled]="cat.status === CategoryStatus.INACTIVE">
               <i class="fa-regular fa-trash-can" aria-hidden="true"></i>
             </button>
           </td>
@@ -93,8 +93,8 @@
         </div>
       </div>
       <div class="entity-card__actions">
-        <button class="btn-icon btn-edit" (click)="openEditModal(cat)"><i class="fa-regular fa-pen-to-square" aria-hidden="true"></i></button>
-        <button class="btn-icon btn-delete" (click)="openDeleteConfirm(cat)"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></button>
+        <button *appHasAnyPermission="updatePermissions" class="btn-icon btn-edit" (click)="openEditModal(cat)"><i class="fa-regular fa-pen-to-square" aria-hidden="true"></i></button>
+        <button *appHasAnyPermission="deletePermissions" class="btn-icon btn-delete" (click)="openDeleteConfirm(cat)"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></button>
       </div>
     </div>
   </div>
@@ -129,7 +129,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" (click)="closeAllModals()">Huỷ</button>
-      <button class="btn btn-primary" (click)="onCreateSubmit()">Tạo danh mục</button>
+      <button *appHasAnyPermission="createPermissions" class="btn btn-primary" (click)="onCreateSubmit()">Tạo danh mục</button>
     </div>
   </div>
 </div>
@@ -164,7 +164,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" (click)="closeAllModals()">Huỷ</button>
-      <button class="btn btn-primary" (click)="onEditSubmit()">Lưu thay đổi</button>
+      <button *appHasAnyPermission="updatePermissions" class="btn btn-primary" (click)="onEditSubmit()">Lưu thay đổi</button>
     </div>
   </div>
 </div>
@@ -181,7 +181,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" (click)="closeAllModals()">Huỷ</button>
-      <button class="btn btn-danger" (click)="onDeleteConfirm()">Ngừng hoạt động</button>
+      <button *appHasAnyPermission="deletePermissions" class="btn btn-danger" (click)="onDeleteConfirm()">Ngừng hoạt động</button>
     </div>
   </div>
 </div>

@@ -17,6 +17,9 @@ import { WarehouseService } from '../../service/WarehouseService/warehouse.servi
   styleUrls: ['./sales-order.component.css']
 })
 export class SalesOrderComponent implements OnInit {
+  createPermissions = ['PERM_SALES_ORDER_CREATE'];
+  updatePermissions = ['PERM_SALES_ORDER_UPDATE'];
+
   orders: SalesOrderResponse[] = [];
   customers: BusinessPartnerResponse[] = [];
   warehouses: WareHouseResponse[] = [];

@@ -18,6 +18,11 @@ import { SearchProductRequest } from '../../dto/request/Product/SearchProductReq
   styleUrls: ['./product.component.css']
 })
 export class ProductComponent implements OnInit {
+  readonly createPermissions = ['PERM_PRODUCT_CREATE'];
+  readonly updatePermissions = ['PERM_PRODUCT_UPDATE'];
+  readonly deletePermissions = ['PERM_PRODUCT_DELETE'];
+  readonly exportPermissions = ['PERM_PRODUCT_READ'];
+
   // ─── Dữ liệu ────────────────────────────────────────────────────
   products: ProductResponse[] = [];
   categories: CategoryResponse[] = [];

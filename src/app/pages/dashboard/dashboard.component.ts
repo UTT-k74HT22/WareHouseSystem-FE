@@ -30,11 +30,13 @@ const REFRESH_INTERVAL_MS = 30_000;
   styleUrls: ['./dashboard.component.css']
 })
 export class DashboardComponent implements OnInit, OnDestroy {
+  private readonly warehouseReadPermission = 'PERM_WAREHOUSE_READ';
 
   // ─── Auth ────────────────────────────────────────────────────────────────
   authState: AuthState | null = null;
   username = '';
   roles: string[] = [];
+  canReadWarehouses = false;
 
   // ─── UI state ────────────────────────────────────────────────────────────
   loading = true;
@@ -177,7 +179,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.roles = state.roles;
       });
 
-    this.loadWarehouses();
+    this.resolveDashboardPermissions();
     this.startPolling();
     this.startCountdown();
   }
@@ -284,6 +286,25 @@ export class DashboardComponent implements OnInit, OnDestroy {
       .pipe(catchError(() => of({ success: false, data: [] as WareHouseResponse[] })))
       .subscribe((res) => {
         this.warehouses = res.success ? (res.data as WareHouseResponse[]) : [];
+      });
+  }
+
+  private resolveDashboardPermissions(): void {
+    this.authService.ensurePermissionsLoaded()
+      .pipe(
+        takeUntil(this.destroy$),
+        catchError(() => of([] as string[]))
+      )
+      .subscribe((permissions) => {
+        this.canReadWarehouses = permissions.includes(this.warehouseReadPermission);
+
+        if (this.canReadWarehouses) {
+          this.loadWarehouses();
+          return;
+        }
+
+        this.warehouses = [];
+        this.selectedWarehouseId = undefined;
       });
   }
 

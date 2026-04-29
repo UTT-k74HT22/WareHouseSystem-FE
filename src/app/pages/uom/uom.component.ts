@@ -7,15 +7,20 @@ import { ToastrService } from '../../service/SystemService/toastr.service';
 import { CreateUOMRequest } from '../../dto/request/UOM/CreateUOMRequest';
 import { UpdateUOMRequest } from '../../dto/request/UOM/UpdateUOMRequest';
 import { UnitsOfMeasureType } from '../../helper/enums/UnitsOfMeasureType';
+import { HasAnyPermissionDirective } from '../../security/directives/has-any-permission.directive';
 
 @Component({
   selector: 'app-uom',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, HasAnyPermissionDirective],
   templateUrl: './uom.component.html',
   styleUrls: ['./uom.component.css']
 })
 export class UomComponent implements OnInit {
+  readonly createPermissions = ['PERM_UNIT_OF_MEASURE_CREATE'];
+  readonly updatePermissions = ['PERM_UNIT_OF_MEASURE_UPDATE'];
+  readonly deletePermissions = ['PERM_UNIT_OF_MEASURE_DELETE'];
+
   readonly UnitsOfMeasureType = UnitsOfMeasureType;
   readonly typeOptions = Object.values(UnitsOfMeasureType);
 

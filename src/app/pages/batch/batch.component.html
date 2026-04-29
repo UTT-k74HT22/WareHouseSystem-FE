@@ -11,7 +11,7 @@
       <button class="btn btn-ghost" (click)="loadBatches()">
         <i class="fa-solid fa-rotate-right" aria-hidden="true"></i> Làm mới
       </button>
-      <button class="btn btn-primary" (click)="openCreateModal()">+ Tạo lô</button>
+      <button class="btn btn-primary" (click)="openCreateModal()" *appHasAnyPermission="createPermissions">+ Tạo lô</button>
     </div>
   </div>
 
@@ -126,13 +126,14 @@
             <button class="btn-icon" title="Xem chi tiết" (click)="openDetailModal(batch)">
               <i class="fa-regular fa-eye" aria-hidden="true"></i>
             </button>
-            <button class="btn-icon" title="Sửa thông tin lô" (click)="openEditModal(batch)">
+            <button class="btn-icon" title="Sửa thông tin lô" (click)="openEditModal(batch)" *appHasAnyPermission="updatePermissions">
               <i class="fa-regular fa-pen-to-square" aria-hidden="true"></i>
             </button>
             <button
               class="btn-icon"
               title="Cập nhật trạng thái / cách ly"
               (click)="openStatusModal(batch)"
+              *appHasAnyPermission="updatePermissions"
               [disabled]="!canChangeStatus(batch)">
               <i class="fa-solid fa-shield-virus" aria-hidden="true"></i>
             </button>
@@ -164,13 +165,14 @@
         <button class="btn-icon" title="Xem chi tiết" (click)="openDetailModal(batch)">
           <i class="fa-regular fa-eye" aria-hidden="true"></i>
         </button>
-        <button class="btn-icon" title="Sửa thông tin lô" (click)="openEditModal(batch)">
+        <button class="btn-icon" title="Sửa thông tin lô" (click)="openEditModal(batch)" *appHasAnyPermission="updatePermissions">
           <i class="fa-regular fa-pen-to-square" aria-hidden="true"></i>
         </button>
         <button
           class="btn-icon"
           title="Cập nhật trạng thái / cách ly"
           (click)="openStatusModal(batch)"
+          *appHasAnyPermission="updatePermissions"
           [disabled]="!canChangeStatus(batch)">
           <i class="fa-solid fa-shield-virus" aria-hidden="true"></i>
         </button>
@@ -236,7 +238,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" (click)="closeCreateModal()">Hủy</button>
-      <button class="btn btn-primary" (click)="onCreateSubmit()" [disabled]="loadingProducts || creatableProducts.length === 0">Tạo lô</button>
+      <button class="btn btn-primary" (click)="onCreateSubmit()" *appHasAnyPermission="createPermissions" [disabled]="loadingProducts || creatableProducts.length === 0">Tạo lô</button>
     </div>
   </div>
 </div>
@@ -254,10 +256,10 @@
     </div>
 
     <div class="detail-action-bar" *ngIf="selectedBatch">
-      <button class="btn btn-ghost" (click)="openEditModal()">
+      <button class="btn btn-ghost" (click)="openEditModal()" *appHasAnyPermission="updatePermissions">
         <i class="fa-regular fa-pen-to-square" aria-hidden="true"></i> Sửa thông tin lô
       </button>
-      <button class="btn btn-primary" (click)="openStatusModal(selectedBatch)" [disabled]="!canChangeStatus(selectedBatch)">
+      <button class="btn btn-primary" (click)="openStatusModal(selectedBatch)" *appHasAnyPermission="updatePermissions" [disabled]="!canChangeStatus(selectedBatch)">
         <i class="fa-solid fa-shield-virus" aria-hidden="true"></i> Cập nhật trạng thái
       </button>
     </div>

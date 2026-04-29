@@ -17,6 +17,10 @@ import {AccountService} from "../../service/Account/account.service";
   styleUrls: ['./warehouse.component.css']
 })
 export class WarehouseComponent implements OnInit {
+  readonly createPermissions = ['PERM_WAREHOUSE_CREATE'];
+  readonly updatePermissions = ['PERM_WAREHOUSE_UPDATE'];
+  readonly deletePermissions = ['PERM_WAREHOUSE_DELETE'];
+  readonly exportPermissions = ['PERM_WAREHOUSE_READ'];
 
   wareHouses: WareHouseResponse[] = [];
   accountManagers: AccountResponse[] = [];

@@ -10,6 +10,16 @@
   pointer-events: none;
 }
 
+.toast-container,
+.toast,
+.toast-title,
+.toast-message,
+.toast-close {
+  font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
 .toast {
   position: relative;
   display: flex;

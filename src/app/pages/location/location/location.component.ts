@@ -20,6 +20,10 @@ import {AccountResponse} from "../../../dto/response/Account/AccountResponse";
   styleUrls: ['./location.component.css']
 })
 export class LocationComponent implements OnInit {
+  readonly createPermissions = ['PERM_LOCATION_CREATE'];
+  readonly updatePermissions = ['PERM_LOCATION_UPDATE'];
+  readonly deletePermissions = ['PERM_LOCATION_DELETE'];
+  readonly exportPermissions = ['PERM_LOCATION_READ'];
 
   locations: LocationResponse[] = [];
   warehouses: WareHouseResponse[] = [];
