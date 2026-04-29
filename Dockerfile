@@ -1,0 +1,29 @@
+FROM node:20-alpine AS build
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+RUN npm ci
+
+COPY . .
+RUN npx ng build --configuration production
+
+FROM nginx:1.27-alpine
+
+COPY deploy/nginx/nginx.conf /etc/nginx/nginx.conf
+COPY deploy/nginx/templates/default.conf.template /etc/nginx/templates/default.conf.template
+COPY deploy/docker-entrypoint.d/40-envsubst-runtime-config.sh /docker-entrypoint.d/40-envsubst-runtime-config.sh
+
+COPY --from=build /app/dist/whs-fe /usr/share/nginx/html
+
+# đảm bảo không bị folder runtime-config.js lỗi từ Angular build cũ
+RUN rm -rf /usr/share/nginx/html/assets/runtime-config.js
+
+COPY src/runtime-config.template.js /usr/share/nginx/html/assets/runtime-config.template.js
+
+RUN sed -i 's/\r$//' /docker-entrypoint.d/40-envsubst-runtime-config.sh \
+    && chmod +x /docker-entrypoint.d/40-envsubst-runtime-config.sh
+
+EXPOSE 80
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=5 \
+    CMD wget -q --spider http://127.0.0.1/healthz || exit 1
