@@ -1,0 +1,12 @@
+.git
+.github
+.idea
+.vscode
+.codex
+.gemini
+.angular
+node_modules
+dist
+coverage
+documents
+npm-debug.log
