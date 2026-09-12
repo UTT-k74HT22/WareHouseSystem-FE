@@ -519,10 +519,14 @@
 }
 
 .stat-value {
-  font-size: 36px;
+  font-size: 26px;
   font-weight: 800;
-  color: #f8fafc;
+  color: #16a34a;
   margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: visible;
+  display: block;
+  width: 100%;
 }
 
 .stat-label {
