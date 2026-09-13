@@ -435,7 +435,7 @@ export class StockAdjustmentsComponent implements OnInit, OnDestroy {
     this.subscriptions.add(
       this.authService.authState$.subscribe((state) => {
         this.roles = state.roles || [];
-        this.isAdminReviewer = this.roles.some((role) => role.toUpperCase().includes('ADMIN'));
+        this.isAdminReviewer = this.roles.some((role) => (role || '').trim().toUpperCase() === 'ADMIN');
       })
     );
 
@@ -788,11 +788,11 @@ export class StockAdjustmentsComponent implements OnInit, OnDestroy {
       return true;
     }
 
-    const roleSet = this.roles.map((role) => role.toUpperCase());
-    if (roleSet.some((role) => role.includes('ADMIN'))) {
+    const roleSet = this.roles.map((role) => (role || '').trim().toUpperCase());
+    if (roleSet.some((role) => role === 'ADMIN')) {
       return false;
     }
-    if (roleSet.some((role) => role.includes('MANAGER'))) {
+    if (roleSet.some((role) => role === 'MANAGER')) {
       return (
         [ReasonType.THEFT, ReasonType.SYSTEM_ERROR].includes(this.createForm.reason) ||
         Math.abs(this.quantityDeltaPreview) >= 5

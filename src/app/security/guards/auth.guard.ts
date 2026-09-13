@@ -62,7 +62,8 @@ export class AuthGuard implements CanActivate {
       return true;
     }
 
-    const hasRole = requiredRoles.some((role) => userRoles.includes(role));
+    const normalizedRoles = (userRoles || []).map((r) => (r || '').trim().toUpperCase());
+    const hasRole = requiredRoles.some((role) => normalizedRoles.includes((role || '').trim().toUpperCase()));
     if (hasRole) {
       return true;
     }
