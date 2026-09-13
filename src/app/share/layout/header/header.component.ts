@@ -42,10 +42,10 @@ export class HeaderComponent implements OnInit, OnDestroy {
         if (state.isAuthenticated && state.username) {
           this.username = state.username;
           this.avatarInitial = state.username.charAt(0).toUpperCase();
-          const roles = state.roles || [];
-          if (roles.some(r => r.includes('ADMIN'))) {
+          const roles = (state.roles || []).map((r) => (r || '').trim().toUpperCase());
+          if (roles.includes('ADMIN')) {
             this.roleDisplay = 'Administrator';
-          } else if (roles.some(r => r.includes('MANAGER'))) {
+          } else if (roles.includes('MANAGER')) {
             this.roleDisplay = 'Warehouse Manager';
           } else {
             this.roleDisplay = 'Warehouse Staff';

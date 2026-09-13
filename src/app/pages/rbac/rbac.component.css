@@ -362,9 +362,11 @@
 .badge-inactive { background: #fee2e2; color: #991b1b; }
 
 .badge-resource { background: #e0e7ff; color: #3730a3; }
-.badge-action-get    { background: #d1fae5; color: #065f46; }
-.badge-action-post   { background: #dbeafe; color: #1e40af; }
-.badge-action-put    { background: #fef3c7; color: #92400e; }
+.badge-action-create { background: #dcfce7; color: #166534; }
+.badge-action-read   { background: #dbeafe; color: #1d4ed8; }
+.badge-action-write  { background: #ede9fe; color: #6d28d9; }
+.badge-action-update { background: #fef3c7; color: #92400e; }
+.badge-action-export { background: #cffafe; color: #0f766e; }
 .badge-action-delete { background: #fee2e2; color: #991b1b; }
 
 .tabs-container {

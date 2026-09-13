@@ -37,8 +37,9 @@ export class JwtInterceptor implements HttpInterceptor {
    * Không cần thêm token cho login/register
    */
   private isAuthRequest(url: string): boolean {
-    return url.includes('/auth/login') ||
-           url.includes('/auth/register') ||
-           url.includes('/auth/refresh');
+    const path = url.split('?')[0];
+    return path.endsWith('/auth/login') ||
+           path.endsWith('/auth/register') ||
+           path.endsWith('/auth/refresh-token');
   }
 }

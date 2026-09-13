@@ -11,7 +11,7 @@
       <button class="btn btn-ghost" (click)="loadOrders()">
         <i class="fa-solid fa-rotate-right" aria-hidden="true"></i> Làm mới
       </button>
-      <button class="btn btn-primary" (click)="openCreateModal()">+ Tạo đơn hàng</button>
+      <button class="btn btn-primary" (click)="openCreateModal()" *appHasAnyPermission="createPermissions">+ Tạo đơn hàng</button>
     </div>
   </div>
 
@@ -99,7 +99,7 @@
             <button class="btn-icon" (click)="openDetailModal(order)" title="Xem chi tiết">
               <i class="fa-regular fa-eye" aria-hidden="true"></i>
             </button>
-            <button class="btn-icon btn-delete" (click)="openCancelConfirm(order)" [disabled]="!canCancelOrder(order)" title="Hủy đơn hàng">
+            <button class="btn-icon btn-delete" (click)="openCancelConfirm(order)" *appHasAnyPermission="updatePermissions" [disabled]="!canCancelOrder(order)" title="Hủy đơn hàng">
               <i class="fa-regular fa-trash-can" aria-hidden="true"></i>
             </button>
           </td>
@@ -125,7 +125,7 @@
         <button class="btn-icon" (click)="openDetailModal(order)" title="Xem chi tiết">
           <i class="fa-regular fa-eye" aria-hidden="true"></i>
         </button>
-        <button class="btn-icon btn-delete" (click)="openCancelConfirm(order)" [disabled]="!canCancelOrder(order)" title="Hủy đơn hàng">
+        <button class="btn-icon btn-delete" (click)="openCancelConfirm(order)" *appHasAnyPermission="updatePermissions" [disabled]="!canCancelOrder(order)" title="Hủy đơn hàng">
           <i class="fa-regular fa-trash-can" aria-hidden="true"></i>
         </button>
       </div>
@@ -211,7 +211,7 @@
         <div class="lines-section mt-4">
           <div class="lines-header">
             <h4><i class="fa-solid fa-boxes-packing" aria-hidden="true"></i> Danh sách sản phẩm</h4>
-            <button type="button" class="btn btn-secondary btn-sm" (click)="addLine()">
+            <button type="button" class="btn btn-secondary btn-sm" (click)="addLine()" *appHasAnyPermission="createPermissions">
               <i class="fa-solid fa-plus" aria-hidden="true"></i> Thêm dòng
             </button>
           </div>
@@ -245,7 +245,7 @@
                     <span class="font-bold">{{ (line.get('quantity_ordered')?.value * line.get('unit_price')?.value) | number:'1.0-0' }}</span>
                   </td>
                   <td class="text-center">
-                    <button type="button" class="btn-icon btn-delete" (click)="removeLine(i)" title="Xóa dòng">
+                    <button type="button" class="btn-icon btn-delete" (click)="removeLine(i)" *appHasAnyPermission="createPermissions" title="Xóa dòng">
                       <i class="fa-solid fa-trash-can" aria-hidden="true"></i>
                     </button>
                   </td>
@@ -276,7 +276,7 @@
       <button class="btn btn-ghost" (click)="closeAllModals()">
         <i class="fa-solid fa-xmark" aria-hidden="true"></i> Huỷ
       </button>
-      <button class="btn btn-primary" (click)="onCreateSubmit()">
+      <button class="btn btn-primary" (click)="onCreateSubmit()" *appHasAnyPermission="createPermissions">
         <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Lưu đơn hàng
       </button>
     </div>
@@ -301,16 +301,22 @@
 
     <!-- Detail Action Bar -->
     <div class="detail-action-bar" *ngIf="selectedOrder">
-      <button class="btn btn-ghost" (click)="openEditModal()" *ngIf="canEditOrder(selectedOrder)" title="Sửa thông tin đơn hàng">
-        <i class="fa-regular fa-pen-to-square" aria-hidden="true"></i> Sửa header
-      </button>
-      <button class="btn btn-primary" (click)="confirmOrder(selectedOrder.id)" *ngIf="canConfirmOrder(selectedOrder)" [disabled]="!selectedOrder.lines || selectedOrder.lines.length === 0"
-              [title]="!selectedOrder.lines || selectedOrder.lines.length === 0 ? 'Cần ít nhất 1 dòng sản phẩm để xác nhận' : 'Xác nhận đơn hàng'">
-        <i class="fa-solid fa-check-double" aria-hidden="true"></i> Xác nhận đơn
-      </button>
-      <button class="btn-danger-outline" (click)="openCancelConfirm(selectedOrder)" *ngIf="canCancelOrder(selectedOrder)">
-        <i class="fa-regular fa-trash-can" aria-hidden="true"></i> Huỷ đơn
-      </button>
+      <ng-container *appHasAnyPermission="updatePermissions">
+        <button class="btn btn-ghost" (click)="openEditModal()" *ngIf="canEditOrder(selectedOrder)" title="Sửa thông tin đơn hàng">
+          <i class="fa-regular fa-pen-to-square" aria-hidden="true"></i> Sửa header
+        </button>
+      </ng-container>
+      <ng-container *appHasAnyPermission="updatePermissions">
+        <button class="btn btn-primary" (click)="confirmOrder(selectedOrder.id)" *ngIf="canConfirmOrder(selectedOrder)" [disabled]="!selectedOrder.lines || selectedOrder.lines.length === 0"
+                [title]="!selectedOrder.lines || selectedOrder.lines.length === 0 ? 'Cần ít nhất 1 dòng sản phẩm để xác nhận' : 'Xác nhận đơn hàng'">
+          <i class="fa-solid fa-check-double" aria-hidden="true"></i> Xác nhận đơn
+        </button>
+      </ng-container>
+      <ng-container *appHasAnyPermission="updatePermissions">
+        <button class="btn-danger-outline" (click)="openCancelConfirm(selectedOrder)" *ngIf="canCancelOrder(selectedOrder)">
+          <i class="fa-regular fa-trash-can" aria-hidden="true"></i> Huỷ đơn
+        </button>
+      </ng-container>
     </div>
 
     <!-- Tabs -->
@@ -454,7 +460,7 @@
       <button class="btn btn-ghost" (click)="closeAllModals()">
         <i class="fa-solid fa-xmark" aria-hidden="true"></i> Huỷ
       </button>
-      <button class="btn-danger-outline" (click)="onCancelConfirm()">
+      <button class="btn-danger-outline" (click)="onCancelConfirm()" *appHasAnyPermission="updatePermissions">
         <i class="fa-solid fa-check" aria-hidden="true"></i> Xác nhận hủy
       </button>
     </div>

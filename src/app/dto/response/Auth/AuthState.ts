@@ -5,4 +5,5 @@ export interface AuthState {
   tokens: AuthTokens | null;
   username: string | null;
   roles: string[];
+  permissions: string[];
 }

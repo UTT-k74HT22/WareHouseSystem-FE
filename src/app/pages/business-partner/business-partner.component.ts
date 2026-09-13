@@ -13,6 +13,11 @@ import { UpdateBusinessPartnerRequest } from '../../dto/request/BusinessPartner/
   styleUrls: ['./business-partner.component.css']
 })
 export class BusinessPartnerComponent implements OnInit {
+  readonly createPermissions = ['PERM_BUSINESS_PARTNER_CREATE'];
+  readonly updatePermissions = ['PERM_BUSINESS_PARTNER_UPDATE'];
+  readonly deletePermissions = ['PERM_BUSINESS_PARTNER_DELETE'];
+  readonly exportPermissions = ['PERM_BUSINESS_PARTNER_READ'];
+
   // ─── Dữ liệu ────────────────────────────────────────────────────
   partners: BusinessPartnerResponse[] = [];
   filteredPartners: BusinessPartnerResponse[] = [];
