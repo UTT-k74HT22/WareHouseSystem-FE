@@ -31,6 +31,7 @@ export class ToastrComponent implements OnInit, OnDestroy {
   toasts: Toast[] = [];
   private toastId = 0;
   private subscription: Subscription | undefined;
+  private dismissTimer: ReturnType<typeof setTimeout> | undefined;
 
   constructor(private toastrService: ToastrService) {}
 
@@ -41,9 +42,8 @@ export class ToastrComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    if (this.subscription) {
-      this.subscription.unsubscribe();
-    }
+    this.subscription?.unsubscribe();
+    this.clearDismissTimer();
   }
 
   showToast(type: 'success' | 'error' | 'warning' | 'info', title: string, message: string, duration: number = 5000): void {
@@ -55,10 +55,11 @@ export class ToastrComponent implements OnInit, OnDestroy {
       duration
     };
 
-    this.toasts.push(toast);
+    this.clearDismissTimer();
+    this.toasts = [toast];
 
     if (duration > 0) {
-      setTimeout(() => {
+      this.dismissTimer = setTimeout(() => {
         this.removeToast(toast.id);
       }, duration);
     }
@@ -82,6 +83,16 @@ export class ToastrComponent implements OnInit, OnDestroy {
 
   removeToast(id: number): void {
     this.toasts = this.toasts.filter(toast => toast.id !== id);
+    if (this.toasts.length === 0) {
+      this.clearDismissTimer();
+    }
+  }
+
+  private clearDismissTimer(): void {
+    if (this.dismissTimer !== undefined) {
+      clearTimeout(this.dismissTimer);
+      this.dismissTimer = undefined;
+    }
   }
 
   getIcon(type: string): string {

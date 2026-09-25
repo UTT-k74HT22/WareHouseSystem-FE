@@ -108,7 +108,7 @@ import { ChatBubbleComponent } from './share/chat-bubble/chat-bubble.component';
       closeButton: true,
       newestOnTop: true,
       tapToDismiss: true,
-      maxOpened: 5,
+      maxOpened: 1,
       autoDismiss: true
     }),
   ],
