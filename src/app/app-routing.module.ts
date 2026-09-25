@@ -1,8 +1,8 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
+import { LandingComponent } from './authenticate/landing/landing.component';
 import { LoginComponent } from './authenticate/login/login.component';
 import { RegisterComponent } from './authenticate/register/register.component';
-import { LandingComponent } from './authenticate/landing/landing.component';
 import { DashboardComponent } from './pages/dashboard/dashboard.component';
 import { WarehouseComponent } from './pages/warehouse/warehouse.component';
 import { LocationComponent } from './pages/location/location/location.component';
@@ -16,7 +16,7 @@ import { PurchaseOrderComponent } from './pages/purchase-order/purchase-order.co
 import { SalesOrderComponent } from './pages/sales-order/sales-order.component';
 import { InboundComponent } from './pages/inbound/inbound.component';
 import { OutboundComponent } from './pages/outbound/outbound.component';
-import { StockMovementsComponent,StockAdjustmentsComponent,StockTransfersComponent } from './pages/stock/stock.component';
+import { StockAdjustmentsComponent, StockMovementsComponent, StockTransfersComponent } from './pages/stock/stock.component';
 import { InventoryComponent } from './pages/inventory/inventory.component';
 import { EmployeeComponent } from './pages/employee/employee.component';
 import { ProfileComponent } from './pages/account/profile/profile.component';
@@ -32,6 +32,27 @@ import { UserManagementComponent } from './pages/user-management/user-management
 import { JobTrackerComponent } from './pages/job-tracker/job-tracker.component';
 import { ChatBotComponent } from './pages/chatbot/chatbot.component';
 
+const routePermissions = {
+  warehouse: ['PERM_WAREHOUSE_READ'],
+  location: ['PERM_LOCATION_READ'],
+  product: ['PERM_PRODUCT_READ'],
+  category: ['PERM_CATEGORY_READ'],
+  businessPartner: ['PERM_BUSINESS_PARTNER_READ'],
+  unitOfMeasure: ['PERM_UNIT_OF_MEASURE_READ'],
+  batch: ['PERM_BATCH_READ'],
+  purchaseOrder: ['PERM_PURCHASE_ORDER_READ'],
+  salesOrder: ['PERM_SALES_ORDER_READ'],
+  inboundReceipt: ['PERM_INBOUND_RECEIPT_READ'],
+  outboundShipment: ['PERM_OUTBOUND_SHIPMENT_READ'],
+  inventory: ['PERM_INVENTORY_READ'],
+  stockMovement: ['PERM_STOCK_MOVEMENT_READ'],
+  stockAdjustment: ['PERM_STOCK_ADJUSTMENT_READ'],
+  stockTransfer: ['PERM_STOCK_TRANSFER_READ'],
+  employee: ['PERM_EMPLOYEE_READ'],
+  rbac: ['PERM_PERMISSION_READ', 'PERM_ROLE_READ'],
+  user: ['PERM_USER_READ']
+};
+
 const routes: Routes = [
   {
     path: '',
@@ -41,8 +62,6 @@ const routes: Routes = [
     path: 'home',
     component: LandingComponent
   },
-
-  // ── Public Routes (Guest Only) ──────────────────────
   {
     path: 'login',
     component: LoginComponent,
@@ -68,24 +87,22 @@ const routes: Routes = [
     component: ResetPasswordComponent,
     canActivate: [GuestGuard]
   },
-
-  // ── Protected Routes (Auth Required) ────────────────
   {
     path: 'dashboard',
     component: DashboardComponent,
     canActivate: [AuthGuard],
     data: {
       title: 'Dashboard',
-      subtitle: 'Tổng quan hoạt động kho hôm nay'
+      subtitle: 'Tong quan hoat dong kho hom nay'
     }
   },
-    {
+  {
     path: 'job-tracker',
     component: JobTrackerComponent,
     canActivate: [AuthGuard],
     data: {
-      title: 'Theo dõi tiến trình',
-      subtitle: 'Tiến trình export, import và background jobs'
+      title: 'Theo doi tien trinh',
+      subtitle: 'Tien trinh export, import va background jobs'
     }
   },
   {
@@ -93,16 +110,18 @@ const routes: Routes = [
     component: ChatBotComponent,
     canActivate: [AuthGuard],
     data: {
-      title: 'Trợ lý AI',
-      subtitle: 'Trợ lý ảo hỗ trợ vận hành kho hàng'
+      title: 'Tro ly AI',
+      subtitle: 'Tro ly ao ho tro van hanh kho hang'
     }
-  },  {
+  },
+  {
     path: 'warehouse',
     component: WarehouseComponent,
     canActivate: [AuthGuard],
     data: {
-      title: 'Quản lý kho',
-      subtitle: 'Danh sách và thông tin các kho hàng'
+      title: 'Quan ly kho',
+      subtitle: 'Danh sach va thong tin cac kho hang',
+      permissions: routePermissions.warehouse
     }
   },
   {
@@ -110,19 +129,19 @@ const routes: Routes = [
     component: LocationComponent,
     canActivate: [AuthGuard],
     data: {
-      title: 'Quản lý vị trí',
-      subtitle: 'Danh sách và thông tin các vị trí trong kho'
+      title: 'Quan ly vi tri',
+      subtitle: 'Danh sach va thong tin cac vi tri trong kho',
+      permissions: routePermissions.location
     }
   },
-
-  // ── Master Data ──────────────────────────────────────
   {
     path: 'product',
     component: ProductComponent,
     canActivate: [AuthGuard],
     data: {
-      title: 'Sản phẩm',
-      subtitle: 'Danh mục sản phẩm'
+      title: 'San pham',
+      subtitle: 'Danh muc san pham',
+      permissions: routePermissions.product
     }
   },
   {
@@ -130,8 +149,9 @@ const routes: Routes = [
     component: CategoryComponent,
     canActivate: [AuthGuard],
     data: {
-      title: 'Danh mục',
-      subtitle: 'Quản lý danh mục sản phẩm'
+      title: 'Danh muc',
+      subtitle: 'Quan ly danh muc san pham',
+      permissions: routePermissions.category
     }
   },
   {
@@ -139,8 +159,9 @@ const routes: Routes = [
     component: BusinessPartnerComponent,
     canActivate: [AuthGuard],
     data: {
-      title: 'Đối tác',
-      subtitle: 'Nhà cung cấp & khách hàng'
+      title: 'Doi tac',
+      subtitle: 'Nha cung cap va khach hang',
+      permissions: routePermissions.businessPartner
     }
   },
   {
@@ -148,8 +169,9 @@ const routes: Routes = [
     component: UomComponent,
     canActivate: [AuthGuard],
     data: {
-      title: 'Đơn vị tính',
-      subtitle: 'Đơn vị đo lường'
+      title: 'Don vi tinh',
+      subtitle: 'Don vi do luong',
+      permissions: routePermissions.unitOfMeasure
     }
   },
   {
@@ -157,19 +179,19 @@ const routes: Routes = [
     component: BatchComponent,
     canActivate: [AuthGuard],
     data: {
-      title: 'Lô hàng',
-      subtitle: 'Quản lý lô hàng & hạn sử dụng'
+      title: 'Lo hang',
+      subtitle: 'Quan ly lo hang va han su dung',
+      permissions: routePermissions.batch
     }
   },
-
-  // ── Operations ───────────────────────────────────────
   {
     path: 'purchase-order',
     component: PurchaseOrderComponent,
     canActivate: [AuthGuard],
     data: {
-      title: 'Đơn mua hàng',
-      subtitle: 'Quản lý đơn đặt hàng nhà cung cấp'
+      title: 'Don mua hang',
+      subtitle: 'Quan ly don dat hang nha cung cap',
+      permissions: routePermissions.purchaseOrder
     }
   },
   {
@@ -177,8 +199,9 @@ const routes: Routes = [
     component: SalesOrderComponent,
     canActivate: [AuthGuard],
     data: {
-      title: 'Đơn bán hàng',
-      subtitle: 'Quản lý đơn bán hàng khách hàng'
+      title: 'Don ban hang',
+      subtitle: 'Quan ly don ban hang khach hang',
+      permissions: routePermissions.salesOrder
     }
   },
   {
@@ -186,8 +209,9 @@ const routes: Routes = [
     component: InboundComponent,
     canActivate: [AuthGuard],
     data: {
-      title: 'Nhập kho',
-      subtitle: 'Phiếu nhập kho từ nhà cung cấp'
+      title: 'Nhap kho',
+      subtitle: 'Phieu nhap kho tu nha cung cap',
+      permissions: routePermissions.inboundReceipt
     }
   },
   {
@@ -195,19 +219,19 @@ const routes: Routes = [
     component: OutboundComponent,
     canActivate: [AuthGuard],
     data: {
-      title: 'Xuất kho',
-      subtitle: 'Phiếu xuất kho giao khách hàng'
+      title: 'Xuat kho',
+      subtitle: 'Phieu xuat kho giao khach hang',
+      permissions: routePermissions.outboundShipment
     }
   },
-
-  // ── Stock & Inventory ────────────────────────────────
   {
     path: 'inventory',
     component: InventoryComponent,
     canActivate: [AuthGuard],
     data: {
-      title: 'Tồn kho',
-      subtitle: 'Theo dõi tồn kho theo vị trí'
+      title: 'Ton kho',
+      subtitle: 'Theo doi ton kho theo vi tri',
+      permissions: routePermissions.inventory
     }
   },
   {
@@ -215,8 +239,9 @@ const routes: Routes = [
     component: StockMovementsComponent,
     canActivate: [AuthGuard],
     data: {
-      title: 'Lịch sử kho',
-      subtitle: 'Toàn bộ giao dịch kho'
+      title: 'Lich su kho',
+      subtitle: 'Toan bo giao dich kho',
+      permissions: routePermissions.stockMovement
     }
   },
   {
@@ -224,8 +249,9 @@ const routes: Routes = [
     component: StockAdjustmentsComponent,
     canActivate: [AuthGuard],
     data: {
-      title: 'Điều chỉnh kho',
-      subtitle: 'Phiếu điều chỉnh tồn kho'
+      title: 'Dieu chinh kho',
+      subtitle: 'Phieu dieu chinh ton kho',
+      permissions: routePermissions.stockAdjustment
     }
   },
   {
@@ -233,29 +259,29 @@ const routes: Routes = [
     component: StockTransfersComponent,
     canActivate: [AuthGuard],
     data: {
-      title: 'Chuyển kho',
-      subtitle: 'Chuyển hàng giữa các vị trí'
+      title: 'Chuyen kho',
+      subtitle: 'Chuyen hang giua cac vi tri',
+      permissions: routePermissions.stockTransfer
     }
   },
-
-  // ── Nhân sự ────────────────────────────────────────
   {
     path: 'employee',
     component: EmployeeComponent,
     canActivate: [AuthGuard],
     data: {
-      title: 'Nhân viên',
-      subtitle: 'Quản lý thông tin nhân viên'
+      title: 'Nhan vien',
+      subtitle: 'Quan ly thong tin nhan vien',
+      permissions: routePermissions.employee
     }
   },
-  // ── RBAC ────────────────────────────────────────
   {
     path: 'rbac',
     component: RbacComponent,
     canActivate: [AuthGuard],
     data: {
-      title: 'Phân quyền',
-      subtitle: 'Quản lý quyền và vai trò'
+      title: 'Phan quyen',
+      subtitle: 'Quan ly quyen va vai tro',
+      permissions: routePermissions.rbac
     }
   },
   {
@@ -263,19 +289,18 @@ const routes: Routes = [
     component: UserManagementComponent,
     canActivate: [AuthGuard],
     data: {
-      title: 'Quản lý người dùng',
-      subtitle: 'Quản lý tài khoản và phân quyền'
+      title: 'Quan ly nguoi dung',
+      subtitle: 'Quan ly tai khoan va phan quyen',
+      permissions: routePermissions.user
     }
   },
-
-  // ── Tài khoản cá nhân ──────────────────────────────
   {
     path: 'account/profile',
     component: ProfileComponent,
     canActivate: [AuthGuard],
     data: {
-      title: 'Thông tin cá nhân',
-      subtitle: 'Quản lý hồ sơ tài khoản'
+      title: 'Thong tin ca nhan',
+      subtitle: 'Quan ly ho so tai khoan'
     }
   },
   {
@@ -283,8 +308,8 @@ const routes: Routes = [
     component: ChangePasswordComponent,
     canActivate: [AuthGuard],
     data: {
-      title: 'Đổi mật khẩu',
-      subtitle: 'Cập nhật mật khẩu tài khoản'
+      title: 'Doi mat khau',
+      subtitle: 'Cap nhat mat khau tai khoan'
     }
   },
   {
@@ -292,13 +317,14 @@ const routes: Routes = [
     component: SettingsComponent,
     canActivate: [AuthGuard],
     data: {
-      title: 'Cài đặt',
-      subtitle: 'Tùy chỉnh trải nghiệm sử dụng'
+      title: 'Cai dat',
+      subtitle: 'Tuy chinh trai nghiem su dung'
     }
   },
-
-  // 404
-  { path: '**', component: NotFoundComponent }
+  {
+    path: '**',
+    component: NotFoundComponent
+  }
 ];
 
 @NgModule({
@@ -306,4 +332,3 @@ const routes: Routes = [
   exports: [RouterModule]
 })
 export class AppRoutingModule {}
-

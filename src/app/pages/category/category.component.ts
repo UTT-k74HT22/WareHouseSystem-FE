@@ -13,6 +13,10 @@ import { UpdateCategoryStatusRequest } from '../../dto/request/Category/UpdateCa
   styleUrls: ['./category.component.css']
 })
 export class CategoryComponent implements OnInit {
+  readonly createPermissions = ['PERM_CATEGORY_CREATE'];
+  readonly updatePermissions = ['PERM_CATEGORY_UPDATE'];
+  readonly deletePermissions = ['PERM_CATEGORY_UPDATE'];
+
   // ─── Dữ liệu ────────────────────────────────────────────────────
   allCategories: CategoryResponse[] = [];
   categories: CategoryResponse[] = [];
