@@ -24,6 +24,9 @@ type ShipmentDetail = OutboundShipmentsResponse & { lines: OutboundShipmentLines
   styleUrls: ['./outbound.component.css']
 })
 export class OutboundComponent implements OnInit {
+  createPermissions = ['PERM_OUTBOUND_SHIPMENT_CREATE'];
+  updatePermissions = ['PERM_OUTBOUND_SHIPMENT_UPDATE'];
+
   shipments: OutboundShipmentsResponse[] = [];
   confirmedOrders: SalesOrderResponse[] = [];
   selectedOrder: SalesOrderResponse | null = null;

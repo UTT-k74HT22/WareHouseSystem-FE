@@ -9,7 +9,7 @@
       </div>
     </div>
     <div class="hero-actions">
-      <button class="btn btn-primary" type="button" (click)="openCreateModal()">
+      <button *appHasAnyPermission="createPermissions" class="btn btn-primary" type="button" (click)="openCreateModal()">
         + Thêm Nhân viên
       </button>
     </div>
@@ -224,17 +224,19 @@
                     <button class="btn-action btn-view" (click)="viewDetails(emp)" title="Xem chi tiết">
                       <i class="fa-regular fa-eye" aria-hidden="true"></i>
                     </button>
-                    <button class="btn-action btn-edit" (click)="openEditModal(emp)" title="Chỉnh sửa">
+                    <button *appHasAnyPermission="updatePermissions" class="btn-action btn-edit" (click)="openEditModal(emp)" title="Chỉnh sửa">
                       <i class="fa-regular fa-pen-to-square" aria-hidden="true"></i>
                     </button>
-                    <button
-                      class="btn-action btn-delete"
-                      (click)="openDeleteConfirm(emp)"
-                      title="Cho nghỉ việc"
-                      *ngIf="emp.status !== EmployeeStatus.TERMINATED"
-                    >
-                      <i class="fa-regular fa-trash-can" aria-hidden="true"></i>
-                    </button>
+                    <ng-container *appHasAnyPermission="deletePermissions">
+                      <button
+                        class="btn-action btn-delete"
+                        (click)="openDeleteConfirm(emp)"
+                        title="Cho nghỉ việc"
+                        *ngIf="emp.status !== EmployeeStatus.TERMINATED"
+                      >
+                        <i class="fa-regular fa-trash-can" aria-hidden="true"></i>
+                      </button>
+                    </ng-container>
                   </div>
                 </td>
               </tr>
@@ -363,14 +365,16 @@
 
       <div class="modal-footer">
         <button class="btn btn-secondary" (click)="closeDetails()">Đóng</button>
-        <button class="btn btn-warning" (click)="openEditModal(selectedEmployee); closeDetails()">Chỉnh sửa</button>
-        <button
-          class="btn btn-danger"
-          (click)="openDeleteConfirm(selectedEmployee); closeDetails()"
-          *ngIf="selectedEmployee.status !== EmployeeStatus.TERMINATED"
-        >
-          Cho nghỉ việc
-        </button>
+        <button *appHasAnyPermission="updatePermissions" class="btn btn-warning" (click)="openEditModal(selectedEmployee); closeDetails()">Chỉnh sửa</button>
+        <ng-container *appHasAnyPermission="deletePermissions">
+          <button
+            class="btn btn-danger"
+            (click)="openDeleteConfirm(selectedEmployee); closeDetails()"
+            *ngIf="selectedEmployee.status !== EmployeeStatus.TERMINATED"
+          >
+            Cho nghỉ việc
+          </button>
+        </ng-container>
       </div>
     </div>
   </div>
@@ -536,7 +540,7 @@
 
       <div class="modal-footer">
         <button class="btn btn-secondary" (click)="closeCreateModal()">Hủy</button>
-        <button class="btn btn-primary" (click)="submitCreate()">Tạo mới</button>
+        <button *appHasAnyPermission="createPermissions" class="btn btn-primary" (click)="submitCreate()">Tạo mới</button>
       </div>
     </div>
   </div>
@@ -637,7 +641,7 @@
 
       <div class="modal-footer">
         <button class="btn btn-secondary" (click)="closeEditModal()">Hủy</button>
-        <button class="btn btn-warning" (click)="submitEdit()">Cập nhật</button>
+        <button *appHasAnyPermission="updatePermissions" class="btn btn-warning" (click)="submitEdit()">Cập nhật</button>
       </div>
     </div>
   </div>
@@ -660,7 +664,7 @@
 
       <div class="modal-footer">
         <button class="btn btn-secondary" (click)="closeDeleteConfirm()">Hủy</button>
-        <button class="btn btn-danger" (click)="confirmDelete()">Xác nhận</button>
+        <button *appHasAnyPermission="deletePermissions" class="btn btn-danger" (click)="confirmDelete()">Xác nhận</button>
       </div>
     </div>
   </div>

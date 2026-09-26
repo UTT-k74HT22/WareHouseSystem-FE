@@ -8,7 +8,7 @@
       </div>
     </div>
     <div class="hero-actions">
-      <button class="btn btn-primary" (click)="openCreateModal()">+ Tạo phiếu chuyển</button>
+      <button class="btn btn-primary" (click)="openCreateModal()" *appHasAnyPermission="createPermissions">+ Tạo phiếu chuyển</button>
       <div class="view-toggle">
         <button class="btn-view-toggle" [class.active]="viewMode === 'grid'" (click)="viewMode = 'grid'" title="Chế độ lưới">
           <i class="fa-solid fa-grip" aria-hidden="true"></i>
@@ -98,20 +98,24 @@
               <button class="btn-icon" title="Chi tiết" (click)="openDetailModal(transfer)">
                 <i class="fa-regular fa-eye" aria-hidden="true"></i>
               </button>
-              <button
-                *ngIf="canUpdateTransfer(transfer)"
-                class="btn-icon btn-complete"
-                title="Hoàn tất"
-                (click)="openCompleteModal(transfer)">
-                <i class="fa-solid fa-check" aria-hidden="true"></i>
-              </button>
-              <button
-                *ngIf="canUpdateTransfer(transfer)"
-                class="btn-icon btn-delete"
-                title="Huỷ"
-                (click)="openCancelModal(transfer)">
-                <i class="fa-solid fa-xmark" aria-hidden="true"></i>
-              </button>
+              <ng-container *appHasAnyPermission="updatePermissions">
+                <button
+                  *ngIf="canUpdateTransfer(transfer)"
+                  class="btn-icon btn-complete"
+                  title="Hoàn tất"
+                  (click)="openCompleteModal(transfer)">
+                  <i class="fa-solid fa-check" aria-hidden="true"></i>
+                </button>
+              </ng-container>
+              <ng-container *appHasAnyPermission="updatePermissions">
+                <button
+                  *ngIf="canUpdateTransfer(transfer)"
+                  class="btn-icon btn-delete"
+                  title="Huỷ"
+                  (click)="openCancelModal(transfer)">
+                  <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                </button>
+              </ng-container>
             </div>
           </td>
         </tr>
@@ -139,20 +143,24 @@
         <button class="btn-icon" title="Chi tiết" (click)="openDetailModal(transfer)">
           <i class="fa-regular fa-eye" aria-hidden="true"></i>
         </button>
-        <button
-          *ngIf="canUpdateTransfer(transfer)"
-          class="btn-icon btn-complete"
-          title="Hoàn tất"
-          (click)="openCompleteModal(transfer)">
-          <i class="fa-solid fa-check" aria-hidden="true"></i>
-        </button>
-        <button
-          *ngIf="canUpdateTransfer(transfer)"
-          class="btn-icon btn-delete"
-          title="Huỷ"
-          (click)="openCancelModal(transfer)">
-          <i class="fa-solid fa-xmark" aria-hidden="true"></i>
-        </button>
+        <ng-container *appHasAnyPermission="updatePermissions">
+          <button
+            *ngIf="canUpdateTransfer(transfer)"
+            class="btn-icon btn-complete"
+            title="Hoàn tất"
+            (click)="openCompleteModal(transfer)">
+            <i class="fa-solid fa-check" aria-hidden="true"></i>
+          </button>
+        </ng-container>
+        <ng-container *appHasAnyPermission="updatePermissions">
+          <button
+            *ngIf="canUpdateTransfer(transfer)"
+            class="btn-icon btn-delete"
+            title="Huỷ"
+            (click)="openCancelModal(transfer)">
+            <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+          </button>
+        </ng-container>
       </div>
     </div>
   </div>
@@ -269,7 +277,7 @@
 
     <div class="modal-footer">
       <button class="btn btn-ghost" (click)="closeAllModals()" [disabled]="submitting">Đóng</button>
-      <button class="btn btn-primary" (click)="onCreateSubmit()" [disabled]="submitting">
+      <button class="btn btn-primary" (click)="onCreateSubmit()" *appHasAnyPermission="createPermissions" [disabled]="submitting">
         {{ submitting ? 'Đang tạo...' : 'Tạo phiếu nháp' }}
       </button>
     </div>
@@ -350,8 +358,12 @@
 
     <div class="modal-footer">
       <button class="btn btn-ghost" (click)="closeAllModals()">Đóng</button>
-      <button *ngIf="canUpdateTransfer(selectedTransfer)" class="btn btn-danger" (click)="openCancelModal(selectedTransfer)">Huỷ phiếu</button>
-      <button *ngIf="canUpdateTransfer(selectedTransfer)" class="btn btn-primary" (click)="openCompleteModal(selectedTransfer)">Hoàn tất phiếu</button>
+      <ng-container *appHasAnyPermission="updatePermissions">
+        <button *ngIf="canUpdateTransfer(selectedTransfer)" class="btn btn-danger" (click)="openCancelModal(selectedTransfer)">Huỷ phiếu</button>
+      </ng-container>
+      <ng-container *appHasAnyPermission="updatePermissions">
+        <button *ngIf="canUpdateTransfer(selectedTransfer)" class="btn btn-primary" (click)="openCompleteModal(selectedTransfer)">Hoàn tất phiếu</button>
+      </ng-container>
     </div>
   </div>
 </div>
@@ -374,7 +386,7 @@
 
     <div class="modal-footer">
       <button class="btn btn-ghost" (click)="closeAllModals()" [disabled]="submitting">Đóng</button>
-      <button class="btn btn-primary" (click)="onCompleteConfirm()" [disabled]="submitting">
+      <button class="btn btn-primary" (click)="onCompleteConfirm()" *appHasAnyPermission="updatePermissions" [disabled]="submitting">
         {{ submitting ? 'Đang xử lý...' : 'Xác nhận hoàn tất' }}
       </button>
     </div>
@@ -399,7 +411,7 @@
 
     <div class="modal-footer">
       <button class="btn btn-ghost" (click)="closeAllModals()" [disabled]="submitting">Đóng</button>
-      <button class="btn btn-danger" (click)="onCancelConfirm()" [disabled]="submitting">
+      <button class="btn btn-danger" (click)="onCancelConfirm()" *appHasAnyPermission="updatePermissions" [disabled]="submitting">
         {{ submitting ? 'Đang xử lý...' : 'Xác nhận huỷ' }}
       </button>
     </div>

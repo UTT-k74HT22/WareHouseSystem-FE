@@ -16,6 +16,9 @@ import { EMPLOYEE_STATUS_LABELS, ROLE_TYPE_LABELS } from '../../helper/constrain
   styleUrls: ['./employee.component.css']
 })
 export class EmployeeComponent implements OnInit {
+  readonly createPermissions = ['PERM_EMPLOYEE_CREATE'];
+  readonly updatePermissions = ['PERM_EMPLOYEE_UPDATE'];
+  readonly deletePermissions = ['PERM_EMPLOYEE_DELETE'];
 
   employees: EmployeeResponse[] = [];
   warehouses: WareHouseResponse[] = [];

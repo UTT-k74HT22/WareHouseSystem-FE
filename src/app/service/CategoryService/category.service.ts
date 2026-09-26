@@ -44,9 +44,4 @@ export class CategoryService {
   changeStatus(id: string, request: UpdateCategoryStatusRequest): Observable<ApiResponse<CategoryResponse>> {
     return this.http.patch<ApiResponse<CategoryResponse>>(`${this.apiUrl}/${id}/status`, request);
   }
-
-  /** DELETE /api/v1/categories/:id */
-  delete(id: string): Observable<ApiResponse<void>> {
-    return this.http.delete<ApiResponse<void>>(`${this.apiUrl}/${id}`);
-  }
 }

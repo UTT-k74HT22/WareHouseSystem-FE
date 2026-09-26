@@ -48,6 +48,7 @@ import { UserManagementComponent } from './pages/user-management/user-management
 import { JobTrackerComponent } from './pages/job-tracker/job-tracker.component';
 import { ChatBotComponent } from './pages/chatbot/chatbot.component';
 import { ChatBubbleComponent } from './share/chat-bubble/chat-bubble.component';
+import { HasAnyPermissionDirective } from './security/directives/has-any-permission.directive';
 
 @NgModule({
   declarations: [
@@ -100,6 +101,7 @@ import { ChatBubbleComponent } from './share/chat-bubble/chat-bubble.component';
     FormsModule,
     HttpClientModule,
     NgChartsModule,
+    HasAnyPermissionDirective,
     ToastrModule.forRoot({
       timeOut: 3000,
       positionClass: 'toast-top-right',
