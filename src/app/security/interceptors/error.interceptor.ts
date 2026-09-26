@@ -6,7 +6,7 @@ import {
   HttpInterceptor,
   HttpRequest
 } from '@angular/common/http';
-import { Observable, throwError, BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, Observable, throwError } from 'rxjs';
 import { catchError, filter, take, switchMap, finalize } from 'rxjs/operators';
 import { AuthService } from '../../service/AuthService/auth-service.service';
 import { ToastrService } from '../../service/SystemService/toastr.service';
@@ -22,7 +22,7 @@ import { ApiErrorService } from '../../service/SystemService/api-error.service';
 @Injectable()
 export class ErrorInterceptor implements HttpInterceptor {
   private isRefreshing = false;
-  private refreshTokenSubject: BehaviorSubject<any> = new BehaviorSubject<any>(null);
+  private refreshTokenSubject = new BehaviorSubject<string | null>(null);
 
   constructor(
     private authService: AuthService,
@@ -44,10 +44,7 @@ export class ErrorInterceptor implements HttpInterceptor {
     );
   }
 
-  /**
-   * Xử lý lỗi 401 - Token hết hạn
-   * TODO: Implement refresh token logic khi backend có API refresh
-   */
+  /** Xử lý lỗi 401 bằng cách làm mới token và thử lại request. */
   private handle401Error(
     request: HttpRequest<any>,
     next: HttpHandler,
@@ -56,11 +53,9 @@ export class ErrorInterceptor implements HttpInterceptor {
     // Nếu đang refresh token thì đợi
     if (this.isRefreshing) {
       return this.refreshTokenSubject.pipe(
-        filter(token => token != null),
+        filter((token): token is string => token !== null),
         take(1),
-        switchMap(token => {
-          return next.handle(this.addToken(request, token));
-        })
+        switchMap(token => next.handle(this.addToken(request, token)))
       );
     }
 
@@ -74,8 +69,15 @@ export class ErrorInterceptor implements HttpInterceptor {
       return throwError(() => originalError);
     }
 
+    const requestSessionVersion = this.authService.getSessionVersion();
+    let refreshedSessionVersion: number | null = null;
+
     return this.authService.refreshToken({ refresh_token: tokens.refreshToken }).pipe(
       switchMap((res) => {
+        if (!this.authService.isCurrentSession(requestSessionVersion)) {
+          return throwError(() => originalError);
+        }
+
         if (res.success && res.data) {
           this.authService.setSession({
             accessToken: res.data.access_token,
@@ -83,6 +85,7 @@ export class ErrorInterceptor implements HttpInterceptor {
             accessTokenExpiresAt: Number(res.data.expire_access_token),
             refreshTokenExpiresAt: Number(tokens.refreshTokenExpiresAt)
           });
+          refreshedSessionVersion = this.authService.getSessionVersion();
           this.refreshTokenSubject.next(res.data.access_token);
           return next.handle(this.addToken(request, res.data.access_token));
         } else {
@@ -91,7 +94,15 @@ export class ErrorInterceptor implements HttpInterceptor {
         }
       }),
       catchError((err) => {
-        this.expireSession();
+        const errorBelongsToCurrentSession =
+          this.authService.isCurrentSession(requestSessionVersion) ||
+          (refreshedSessionVersion !== null && this.authService.isCurrentSession(refreshedSessionVersion));
+
+        if (errorBelongsToCurrentSession) {
+          this.expireSession();
+        } else {
+          this.resetRefreshWaiters('SESSION_CHANGED');
+        }
         return throwError(() => this.apiError.localize(
           err instanceof HttpErrorResponse ? err : originalError
         ));
@@ -124,9 +135,13 @@ export class ErrorInterceptor implements HttpInterceptor {
     if (this.authService.isAuthenticated()) {
       this.toastr.warning('Hết phiên', 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
     }
-    this.refreshTokenSubject.error(new Error('SESSION_EXPIRED'));
-    this.refreshTokenSubject = new BehaviorSubject<any>(null);
+    this.resetRefreshWaiters('SESSION_EXPIRED');
     this.authService.logout();
     this.router.navigate(['/login']);
+  }
+
+  private resetRefreshWaiters(reason: 'SESSION_CHANGED' | 'SESSION_EXPIRED'): void {
+    this.refreshTokenSubject.error(new Error(reason));
+    this.refreshTokenSubject = new BehaviorSubject<string | null>(null);
   }
 }
