@@ -103,10 +103,17 @@ export class TokenExpiryService implements OnDestroy {
       return;
     }
 
+    const requestSessionVersion = this.authService.getSessionVersion();
     this.authService.refreshToken({ refresh_token: tokens.refreshToken }).subscribe({
       next: (res: ApiResponse<RefreshTokenResponse>) => {
+        if (!this.authService.isCurrentSession(requestSessionVersion)) {
+          return;
+        }
+
         if (res.success && res.data) {
-          this.authStorage.saveTokens({
+          // setSession updates both localStorage and the in-memory token read by
+          // JwtInterceptor. Saving only to storage leaves requests using the old token.
+          this.authService.setSession({
             accessToken: res.data.access_token,
             refreshToken: tokens.refreshToken,
             accessTokenExpiresAt: Number(res.data.expire_access_token),
@@ -118,7 +125,9 @@ export class TokenExpiryService implements OnDestroy {
         }
       },
       error: () => {
-        this.handleRefreshExpired();
+        if (this.authService.isCurrentSession(requestSessionVersion)) {
+          this.handleRefreshExpired();
+        }
       }
     });
   }
