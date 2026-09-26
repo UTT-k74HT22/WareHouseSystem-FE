@@ -110,7 +110,7 @@ import { HasAnyPermissionDirective } from './security/directives/has-any-permiss
       closeButton: true,
       newestOnTop: true,
       tapToDismiss: true,
-      maxOpened: 5,
+      maxOpened: 1,
       autoDismiss: true
     }),
   ],

@@ -1,5 +1,5 @@
 export interface FieldError {
   field: string;
   message: string;
-  rejected_value: any;
+  rejected_value: unknown;
 }

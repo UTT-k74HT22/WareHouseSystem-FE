@@ -20,4 +20,13 @@ describe('ToastrComponent', () => {
   it('should create', () => {
     expect(component).toBeTruthy();
   });
+
+  it('should replace the current toast when a new toast arrives', () => {
+    component.showToast('error', 'Lỗi cũ', 'Thông báo cũ', 0);
+    component.showToast('warning', 'Lỗi mới', 'Thông báo mới', 0);
+
+    expect(component.toasts.length).toBe(1);
+    expect(component.toasts[0].title).toBe('Lỗi mới');
+    expect(component.toasts[0].message).toBe('Thông báo mới');
+  });
 });
