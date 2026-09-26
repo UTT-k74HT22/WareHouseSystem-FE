@@ -3,9 +3,7 @@ import { LocationResponse } from '../../../dto/response/Location/LocationRespons
 import { LocationService } from '../../../service/Location/location.service';
 import { LocationStatus } from '../../../helper/enums/LocationStatus';
 import { LocationType } from '../../../helper/enums/LocationType';
-import { CreateLocationRequest } from '../../../dto/request/Location/CreateLocationRequest';
-import { UpdateLocationRequest } from '../../../dto/request/Location/UpdateLocationRequest';
-import { ChangeLocationStatusRequest } from '../../../dto/request/Location/ChangeLocationStatusRequest';
+import { CreateLocationRequest, UpdateLocationRequest } from '../../../dto/request/Location/LocationRequest';
 import { SearchLocationRequest } from '../../../dto/request/Location/SearchLocationRequest';
 import { ToastrService } from '../../../service/SystemService/toastr.service';
 import { LOCATION_STATUS_LABELS, LOCATION_TYPE_LABELS } from '../../../helper/constraint/location-labels';
@@ -36,12 +34,11 @@ export class LocationComponent implements OnInit {
   totalElements: number = 0;
   totalPages: number = 0;
 
-  // Filter properties
+  // Filter properties (server-side via GET /locations with optional filters)
   searchTerm: string = '';
   selectedWarehouseId: string = '';
   selectedStatus: '' | LocationStatus = '';
   selectedType: '' | LocationType = '';
-  selectedZone: string = '';
 
   // Modal states
   showCreateModal: boolean = false;
@@ -71,6 +68,8 @@ export class LocationComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadLocations();
+    this.loadWareHouses();
+    this.loadStats();
   }
 
   private initCreateForm(): CreateLocationRequest {
@@ -95,11 +94,32 @@ export class LocationComponent implements OnInit {
     };
   }
 
-  loadLocations(): void {
-    this.loading = true;
+  loadLocations(silent = false): void {
+    // silent = true khi gõ search/đổi filter: giữ bảng cũ, không flash spinner, không unmount input
+    if (!silent) {
+      this.loading = true;
+    }
+    const seq = ++this.loadSeq;
 
-    this.locationService.getAll(this.currentPage, this.pageSize).subscribe({
+    const request: SearchLocationRequest = {};
+    if (this.searchTerm?.trim()) {
+      request.keyword = this.searchTerm.trim();
+    }
+    if (this.selectedWarehouseId) {
+      request.warehouse_id = this.selectedWarehouseId;
+    }
+    if (this.selectedStatus) {
+      request.status = this.selectedStatus;
+    }
+    if (this.selectedType) {
+      request.type = this.selectedType;
+    }
+
+    this.locationService.getAll(this.currentPage, this.pageSize, request).subscribe({
       next: (response) => {
+        if (seq !== this.loadSeq) {
+          return; // response cũ về sau thì bỏ qua
+        }
         if (response.success && response.data) {
           this.locations = response.data.content;
           this.totalElements = response.data.total_elements;
@@ -108,6 +128,9 @@ export class LocationComponent implements OnInit {
         this.loading = false;
       },
       error: (error) => {
+        if (seq !== this.loadSeq) {
+          return;
+        }
         console.error('Error fetching locations:', error);
         this.toastr.error('Lỗi tải dữ liệu', error.error?.message || 'Có lỗi khi tải danh sách vị trí');
         this.loading = false;
@@ -128,53 +151,49 @@ export class LocationComponent implements OnInit {
     });
   }
 
-  // Filter and search methods
+  // Filter and search methods (server-side via GET /locations with optional filters)
   getFilteredLocations(): LocationResponse[] {
-    return this.locations.filter(location => {
-      const matchesSearch = !this.searchTerm ||
-        location.name.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-        location.code.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-        (location.zone && location.zone.toLowerCase().includes(this.searchTerm.toLowerCase()));
-
-      const matchesWarehouse = !this.selectedWarehouseId ||
-        location.warehouse_id === this.selectedWarehouseId;
-
-      const matchesStatus = !this.selectedStatus ||
-        location.status === this.selectedStatus;
-
-      const matchesType = !this.selectedType ||
-        location.type === this.selectedType;
-
-      const matchesZone = !this.selectedZone ||
-        (location.zone && location.zone.toLowerCase().includes(this.selectedZone.toLowerCase()));
-
-      return matchesSearch && matchesWarehouse && matchesStatus && matchesType && matchesZone;
-    });
+    return this.locations;
   }
 
+  private searchTimer: ReturnType<typeof setTimeout> | null = null;
+  private loadSeq = 0;
+
   onSearch(): void {
-    // Search is handled by getFilteredLocations()
+    if (this.searchTimer) {
+      clearTimeout(this.searchTimer);
+    }
+    this.searchTimer = setTimeout(() => {
+      this.currentPage = 0;
+      this.loadLocations(true);
+    }, 500);
   }
 
   onFilterChange(): void {
-    // Filter is handled by getFilteredLocations()
+    this.currentPage = 0;
+    this.loadLocations(true);
   }
 
-  // Statistics methods
-  getActiveCount(): number {
-    return this.locations.filter(l => l.status === LocationStatus.ACTIVE).length;
-  }
+  // Statistics methods (global counts from /locations/stats)
+  statsActive = 0;
+  statsInactive = 0;
+  statsFull = 0;
+  statsMaintenance = 0;
 
-  getInactiveCount(): number {
-    return this.locations.filter(l => l.status === LocationStatus.INACTIVE).length;
-  }
-
-  getFullCount(): number {
-    return this.locations.filter(l => l.status === LocationStatus.FULL).length;
-  }
-
-  getMaintenanceCount(): number {
-    return this.locations.filter(l => l.status === LocationStatus.MAINTENANCE).length;
+  private loadStats(): void {
+    this.locationService.getStats().subscribe({
+      next: (response) => {
+        if (response.success && response.data) {
+          this.statsActive = response.data.active;
+          this.statsInactive = response.data.inactive;
+          this.statsFull = response.data.full;
+          this.statsMaintenance = response.data.maintenance;
+        }
+      },
+      error: (error) => {
+        console.error('Error fetching location stats:', error);
+      }
+    });
   }
 
   // Label helpers
@@ -255,8 +274,8 @@ export class LocationComponent implements OnInit {
       this.toastr.error('Vị trí', 'Vui lòng nhập tên vị trí.');
       return;
     }
-    if (!this.createForm.zone?.trim()) {
-      this.toastr.error('Vị trí', 'Vui lòng nhập khu vực.');
+    if (this.createForm.capacity == null || Number(this.createForm.capacity) <= 0) {
+      this.toastr.error('Vị trí', 'Sức chứa phải lớn hơn 0.');
       return;
     }
     this.loading = true;
@@ -267,6 +286,7 @@ export class LocationComponent implements OnInit {
           this.toastr.success('Thành công', 'Tạo vị trí mới thành công');
           this.closeCreateModal();
           this.loadLocations();
+          this.loadStats();
         }
       },
       error: (error) => {
@@ -299,14 +319,32 @@ export class LocationComponent implements OnInit {
   onSubmitEdit(): void {
     if (!this.locationToEdit) return;
 
+    if (!this.editForm.name?.trim()) {
+      this.toastr.error('Vị trí', 'Vui lòng nhập tên vị trí.');
+      return;
+    }
+    if (this.editForm.capacity == null || Number(this.editForm.capacity) <= 0) {
+      this.toastr.error('Vị trí', 'Sức chứa phải lớn hơn 0.');
+      return;
+    }
+    if (Number(this.editForm.capacity) < Number(this.locationToEdit.used_capacity || 0)) {
+      this.toastr.error('Vị trí', 'Sức chứa mới không được nhỏ hơn lượng đã dùng.');
+      return;
+    }
+
     this.loading = true;
 
-    this.locationService.update(this.locationToEdit.id, this.editForm).subscribe({
+    this.locationService.update(this.locationToEdit.id, {
+      ...this.editForm,
+      name: this.editForm.name.trim(),
+      zone: this.editForm.zone?.trim()
+    }).subscribe({
       next: (response) => {
         if (response.success) {
           this.toastr.success('Thành công', 'Cập nhật vị trí thành công');
           this.closeEditModal();
           this.loadLocations();
+          this.loadStats();
         }
       },
       error: (error) => {
@@ -334,9 +372,14 @@ export class LocationComponent implements OnInit {
   onSubmitStatusChange(): void {
     if (!this.locationToChangeStatus) return;
 
+    if (this.newStatus === this.locationToChangeStatus.status) {
+      this.toastr.warning('Không thay đổi', 'Trạng thái mới giống trạng thái hiện tại');
+      return;
+    }
+
     this.loading = true;
 
-    const request: ChangeLocationStatusRequest = {
+    const request: UpdateLocationRequest = {
       status: this.newStatus,
       reason: this.statusChangeReason
     };
@@ -347,6 +390,7 @@ export class LocationComponent implements OnInit {
           this.toastr.success('Thành công', 'Thay đổi trạng thái vị trí thành công');
           this.closeStatusChangeModal();
           this.loadLocations();
+          this.loadStats();
         }
       },
       error: (error) => {
@@ -379,6 +423,7 @@ export class LocationComponent implements OnInit {
           this.toastr.success('Thành công', 'Xóa vị trí thành công');
           this.closeDeleteConfirm();
           this.loadLocations();
+          this.loadStats();
         }
       },
       error: (error) => {

@@ -10,3 +10,9 @@ export interface CreateLocationRequest {
   status?: LocationStatus;
   notes?: string;
 }
+
+export type UpdateLocationRequest = Partial<Omit<CreateLocationRequest, 'warehouse_id' | 'status'>> & {
+  // chỉ dùng cho PATCH /{id}/status, PUT bỏ qua
+  status?: LocationStatus;
+  reason?: string;
+};

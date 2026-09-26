@@ -35,7 +35,7 @@
       <div class="stat-bar"></div>
       <div class="stat-body">
         <div class="stat-label">Đang hoạt động</div>
-        <div class="stat-value">{{ getActiveCount() }}</div>
+        <div class="stat-value">{{ statsActive }}</div>
       </div>
     </div>
 
@@ -43,7 +43,7 @@
       <div class="stat-bar"></div>
       <div class="stat-body">
         <div class="stat-label">Đầy</div>
-        <div class="stat-value">{{ getFullCount() }}</div>
+        <div class="stat-value">{{ statsFull }}</div>
       </div>
     </div>
 
@@ -51,13 +51,13 @@
       <div class="stat-bar"></div>
       <div class="stat-body">
         <div class="stat-label">Đang bảo trì</div>
-        <div class="stat-value">{{ getMaintenanceCount() }}</div>
+        <div class="stat-value">{{ statsMaintenance }}</div>
       </div>
     </div>
   </div>
 
-  <!-- Search and Filter Section -->
-  <div class="filter-section" *ngIf="!loading && locations.length > 0">
+  <!-- Search and Filter Section (luôn hiển thị để không mất focus khi gõ) -->
+  <div class="filter-section">
     <div class="search-box">
       <i class="fa-solid fa-magnifying-glass search-icon" aria-hidden="true"></i>
       <input
@@ -68,6 +68,11 @@
         (input)="onSearch()"
       />
     </div>
+
+    <select class="filter-select" [(ngModel)]="selectedWarehouseId" (change)="onFilterChange()">
+      <option [ngValue]="''">Tất cả kho</option>
+      <option *ngFor="let wh of warehouses" [ngValue]="wh.id">{{ wh.code }} - {{ wh.name }}</option>
+    </select>
 
     <select class="filter-select" [(ngModel)]="selectedStatus" (change)="onFilterChange()">
       <option [ngValue]="''">Tất cả trạng thái</option>

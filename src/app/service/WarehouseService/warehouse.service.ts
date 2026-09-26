@@ -4,11 +4,10 @@ import { Observable } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { BaseURL } from '../../../environments/BaseURL';
 import { WareHouseResponse } from '../../dto/response/WareHouse/WareHouseResponse';
+import { WareHouseStats } from '../../dto/response/WareHouse/WareHouseStats';
 import { ApiResponse } from "../../dto/response/ApiResponse";
 import { PageResponse } from "../../dto/response/PageResponse";
-import { CreateWarehouseRequest } from "../../dto/request/WareHouse/CreateWarehouseRequest";
-import { UpdateWarehouseRequest } from "../../dto/request/WareHouse/UpdateWarehouseRequest";
-import { ChangeStatusRequest } from "../../dto/request/WareHouse/ChangeStatusRequest";
+import { CreateWarehouseRequest, UpdateWarehouseRequest } from "../../dto/request/WareHouse/WarehouseRequest";
 
 @Injectable({
   providedIn: 'root'
@@ -20,17 +19,35 @@ export class WarehouseService {
   constructor(private http: HttpClient) {}
 
   /**
-   * Get all warehouses with pagination
+   * Get warehouses with pagination and optional filters.
+   * No filter = all warehouses; with keyword/status/type = filtered search.
    */
-  getAll(page: number = 0, size: number = 10): Observable<ApiResponse<PageResponse<WareHouseResponse>>> {
-    const params = new HttpParams()
+  getAll(page: number = 0, size: number = 10, keyword = '', status = '', type = ''): Observable<ApiResponse<PageResponse<WareHouseResponse>>> {
+    let params = new HttpParams()
       .set('page', page.toString())
       .set('size', size.toString());
+
+    if (keyword?.trim()) {
+      params = params.set('keyword', keyword.trim());
+    }
+    if (status) {
+      params = params.set('status', status);
+    }
+    if (type) {
+      params = params.set('type', type);
+    }
 
     return this.http.get<ApiResponse<PageResponse<WareHouseResponse>>>(
       this.apiUrl,
       { params }
     );
+  }
+
+  /**
+   * Get warehouse statistics by status (global counts).
+   */
+  getStats(): Observable<ApiResponse<WareHouseStats>> {
+    return this.http.get<ApiResponse<WareHouseStats>>(`${this.apiUrl}/stats`);
   }
 
   /**
@@ -43,7 +60,7 @@ export class WarehouseService {
   getList(): Observable<ApiResponse<WareHouseResponse[]>> {
     return this.http.get<ApiResponse<WareHouseResponse[]>>(`${this.apiUrl}/all`).pipe(
       catchError(() =>
-        this.getAll(0, 200).pipe(
+        this.getAll(0, 100).pipe(
           map((response) => ({
             ...response,
             data: response.data?.content || []
@@ -70,14 +87,15 @@ export class WarehouseService {
   /**
    * Change warehouse status
    */
-  changeStatus(id: string, request: ChangeStatusRequest): Observable<ApiResponse<WareHouseResponse>> {
+  changeStatus(id: string, request: UpdateWarehouseRequest): Observable<ApiResponse<WareHouseResponse>> {
     return this.http.patch<ApiResponse<WareHouseResponse>>(`${this.apiUrl}/${id}/status`, request);
   }
 
   /**
-   * Delete a warehouse (if backend supports)
+   * Delete a warehouse (soft delete -> INACTIVE, BE returns 204).
+   * BE validates active locations (WH_005) and inventory (WH_006).
    */
-  delete(id: string): Observable<ApiResponse<void>> {
-    return this.http.delete<ApiResponse<void>>(`${this.apiUrl}/${id}`);
+  delete(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 }
