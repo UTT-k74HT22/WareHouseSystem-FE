@@ -45,14 +45,15 @@ export interface ChatBotResponse {
 })
 export class ChatBotService {
   private readonly API_URL = BaseURL.API_URL + 'chatbot/chat';
-  private conversationId?: string;
+  // Conversation riêng theo UI scope (trang chatbot vs bubble) để 2 nơi không chen vào nhau
+  private conversationIds = new Map<string, string>();
 
   constructor(private http: HttpClient) {}
 
-  sendMessage(message?: string, intent?: ChatBotIntent, payload?: { [key: string]: any }): Observable<ChatBotResponse> {
+  sendMessage(message?: string, intent?: ChatBotIntent, payload?: { [key: string]: any }, scope = 'default'): Observable<ChatBotResponse> {
     const request: ChatBotRequest = {
       message,
-      conversationId: this.conversationId,
+      conversationId: this.conversationIds.get(scope),
       intent,
       payload
     };
@@ -60,13 +61,13 @@ export class ChatBotService {
     return this.http.post<ChatBotResponse>(this.API_URL, request).pipe(
       tap((response) => {
         if (response?.conversationId) {
-          this.conversationId = response.conversationId;
+          this.conversationIds.set(scope, response.conversationId);
         }
       })
     );
   }
 
-  resetConversation(): void {
-    this.conversationId = undefined;
+  resetConversation(scope = 'default'): void {
+    this.conversationIds.delete(scope);
   }
 }

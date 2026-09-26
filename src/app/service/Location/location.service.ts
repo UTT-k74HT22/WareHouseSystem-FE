@@ -3,11 +3,10 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { BaseURL } from '../../../environments/BaseURL';
 import { LocationResponse } from '../../dto/response/Location/LocationResponse';
+import { LocationStats } from '../../dto/response/Location/LocationStats';
 import { ApiResponse } from '../../dto/response/ApiResponse';
 import { PageResponse } from '../../dto/response/PageResponse';
-import { CreateLocationRequest } from '../../dto/request/Location/CreateLocationRequest';
-import { UpdateLocationRequest } from '../../dto/request/Location/UpdateLocationRequest';
-import { ChangeLocationStatusRequest } from '../../dto/request/Location/ChangeLocationStatusRequest';
+import { CreateLocationRequest, UpdateLocationRequest } from '../../dto/request/Location/LocationRequest';
 import { SearchLocationRequest } from '../../dto/request/Location/SearchLocationRequest';
 
 @Injectable({
@@ -19,12 +18,35 @@ export class LocationService {
   constructor(private http: HttpClient) {}
 
   /**
-   * Get all locations with pagination
+   * Get locations with pagination and optional filters.
+   * No filter = all locations; with filter = filtered search.
    */
-  getAll(page: number = 0, size: number = 10): Observable<ApiResponse<PageResponse<LocationResponse>>> {
-    const params = new HttpParams()
+  getAll(page: number = 0, size: number = 10, filter: SearchLocationRequest = {}): Observable<ApiResponse<PageResponse<LocationResponse>>> {
+    let params = new HttpParams()
       .set('page', page.toString())
       .set('size', size.toString());
+
+    if (filter.warehouse_id) {
+      params = params.set('warehouseId', filter.warehouse_id);
+    }
+    if (filter.code) {
+      params = params.set('code', filter.code);
+    }
+    if (filter.name) {
+      params = params.set('name', filter.name);
+    }
+    if (filter.zone) {
+      params = params.set('zone', filter.zone);
+    }
+    if (filter.keyword?.trim()) {
+      params = params.set('keyword', filter.keyword.trim());
+    }
+    if (filter.type) {
+      params = params.set('type', filter.type);
+    }
+    if (filter.status) {
+      params = params.set('status', filter.status);
+    }
 
     return this.http.get<ApiResponse<PageResponse<LocationResponse>>>(
       this.apiUrl,
@@ -54,36 +76,10 @@ export class LocationService {
   }
 
   /**
-   * Search locations with filters
+   * Get location statistics by status (global counts).
    */
-  search(request: SearchLocationRequest, page: number = 0, size: number = 10): Observable<ApiResponse<PageResponse<LocationResponse>>> {
-    let params = new HttpParams()
-      .set('page', page.toString())
-      .set('size', size.toString());
-
-    if (request.warehouse_id) {
-      params = params.set('warehouseId', request.warehouse_id);
-    }
-    if (request.code) {
-      params = params.set('code', request.code);
-    }
-    if (request.name) {
-      params = params.set('name', request.name);
-    }
-    if (request.zone) {
-      params = params.set('zone', request.zone);
-    }
-    if (request.type) {
-      params = params.set('type', request.type);
-    }
-    if (request.status) {
-      params = params.set('status', request.status);
-    }
-
-    return this.http.get<ApiResponse<PageResponse<LocationResponse>>>(
-      `${this.apiUrl}/search`,
-      { params }
-    );
+  getStats(): Observable<ApiResponse<LocationStats>> {
+    return this.http.get<ApiResponse<LocationStats>>(`${this.apiUrl}/stats`);
   }
 
   /**
@@ -103,7 +99,7 @@ export class LocationService {
   /**
    * Change location status
    */
-  changeStatus(id: string, request: ChangeLocationStatusRequest): Observable<ApiResponse<LocationResponse>> {
+  changeStatus(id: string, request: UpdateLocationRequest): Observable<ApiResponse<LocationResponse>> {
     return this.http.patch<ApiResponse<LocationResponse>>(`${this.apiUrl}/${id}/status`, request);
   }
 

@@ -3,9 +3,7 @@ import { WareHouseResponse } from '../../dto/response/WareHouse/WareHouseRespons
 import { WarehouseService } from '../../service/WarehouseService/warehouse.service';
 import { WareHouseStatus } from '../../helper/enums/WareHouseStatus';
 import { WareHouseType } from '../../helper/enums/WareHouseType';
-import { CreateWarehouseRequest } from '../../dto/request/WareHouse/CreateWarehouseRequest';
-import { UpdateWarehouseRequest } from '../../dto/request/WareHouse/UpdateWarehouseRequest';
-import { ChangeStatusRequest } from '../../dto/request/WareHouse/ChangeStatusRequest';
+import { CreateWarehouseRequest, UpdateWarehouseRequest } from '../../dto/request/WareHouse/WarehouseRequest';
 import { ToastrService } from '../../service/SystemService/toastr.service';
 import {WAREHOUSE_STATUS_LABELS, WAREHOUSE_TYPE_LABELS} from "../../helper/constraint/warehouse-labels";
 import {AccountResponse} from "../../dto/response/Account/AccountResponse";
@@ -64,6 +62,7 @@ export class WarehouseComponent implements OnInit {
   ngOnInit(): void {
     this.loadWarehouses();
     this.loadAccountManagers();
+    this.loadStats();
   }
 
   private initCreateForm(): CreateWarehouseRequest {
@@ -89,11 +88,19 @@ export class WarehouseComponent implements OnInit {
     };
   }
 
-  private loadWarehouses(): void {
-    this.loading = true;
+  private loadWarehouses(silent = false): void {
+    // silent = true khi gõ search/đổi filter: giữ bảng cũ, không flash spinner, không unmount input
+    if (!silent) {
+      this.loading = true;
+    }
+    const seq = ++this.loadSeq;
 
-    this.warehouseService.getAll(this.currentPage, this.pageSize).subscribe({
+    this.warehouseService.getAll(this.currentPage, this.pageSize, this.searchTerm, this.selectedStatus, this.selectedType)
+      .subscribe({
       next: (response) => {
+        if (seq !== this.loadSeq) {
+          return; // response cũ về sau thì bỏ qua
+        }
         if (response.success && response.data) {
           this.wareHouses = response.data.content;
           this.totalElements = response.data.total_elements;
@@ -102,6 +109,9 @@ export class WarehouseComponent implements OnInit {
         this.loading = false;
       },
       error: (error) => {
+        if (seq !== this.loadSeq) {
+          return;
+        }
         console.error('Error fetching warehouses:', error);
         this.toastr.error('Lỗi tải dữ liệu', error.error?.message || 'Có lỗi khi tải danh sách kho');
         this.loading = false;
@@ -123,43 +133,47 @@ export class WarehouseComponent implements OnInit {
     })
   }
 
-  // Filter and search methods
+  // Filter and search methods (server-side via GET /warehouse?keyword&status&type)
   getFilteredWarehouses(): WareHouseResponse[] {
-    return this.wareHouses.filter(warehouse => {
-      const matchesSearch = !this.searchTerm ||
-        warehouse.name.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-        warehouse.code.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-        warehouse.address.toLowerCase().includes(this.searchTerm.toLowerCase());
-
-      const matchesStatus = !this.selectedStatus ||
-        warehouse.status === this.selectedStatus;
-
-      const matchesType = !this.selectedType ||
-        warehouse.ware_house_type === this.selectedType;
-
-      return matchesSearch && matchesStatus && matchesType;
-    });
+    return this.wareHouses;
   }
 
+  private searchTimer: ReturnType<typeof setTimeout> | null = null;
+  private loadSeq = 0;
+
   onSearch(): void {
-    // Search is handled by getFilteredWarehouses()
+    if (this.searchTimer) {
+      clearTimeout(this.searchTimer);
+    }
+    this.searchTimer = setTimeout(() => {
+      this.currentPage = 0;
+      this.loadWarehouses(true);
+    }, 500);
   }
 
   onFilterChange(): void {
-    // Filter is handled by getFilteredWarehouses()
+    this.currentPage = 0;
+    this.loadWarehouses(true);
   }
 
-  // Statistics methods
-  getActiveCount(): number {
-    return this.wareHouses.filter(w => w.status === WareHouseStatus.ACTIVE).length;
-  }
+  // Statistics methods (global counts from /warehouse/stats)
+  statsActive = 0;
+  statsInactive = 0;
+  statsMaintenance = 0;
 
-  getInactiveCount(): number {
-    return this.wareHouses.filter(w => w.status === WareHouseStatus.INACTIVE).length;
-  }
-
-  getMaintenanceCount(): number {
-    return this.wareHouses.filter(w => w.status === WareHouseStatus.UNDER_MAINTENANCE).length;
+  private loadStats(): void {
+    this.warehouseService.getStats().subscribe({
+      next: (response) => {
+        if (response.success && response.data) {
+          this.statsActive = response.data.active;
+          this.statsInactive = response.data.inactive;
+          this.statsMaintenance = response.data.maintenance;
+        }
+      },
+      error: (error) => {
+        console.error('Error fetching warehouse stats:', error);
+      }
+    });
   }
 
   // Label helpers
@@ -189,13 +203,23 @@ export class WarehouseComponent implements OnInit {
       return;
     }
 
+    const payload: CreateWarehouseRequest = {
+      ...this.createForm,
+      name: this.createForm.name.trim(),
+      address: this.createForm.address.trim(),
+      phone: this.createForm.phone.trim(),
+      email: this.createForm.email.trim(),
+      manager_id: this.createForm.manager_id?.trim()
+    };
+
     this.loading = true;
-    this.warehouseService.create(this.createForm).subscribe({
+    this.warehouseService.create(payload).subscribe({
       next: (response) => {
         if (response.success) {
           this.toastr.success('Thành công', 'Tạo kho mới thành công!');
           this.closeCreateModal();
           this.loadWarehouses();
+          this.loadStats();
         } else {
           this.toastr.error('Lỗi', response.message || 'Có lỗi khi tạo kho');
           this.loading = false;
@@ -233,13 +257,23 @@ export class WarehouseComponent implements OnInit {
       return;
     }
 
+    const payload: UpdateWarehouseRequest = {
+      ...this.editForm,
+      name: this.editForm.name.trim(),
+      address: this.editForm.address.trim(),
+      phone: this.editForm.phone.trim(),
+      email: this.editForm.email.trim(),
+      manager_id: this.editForm.manager_id?.trim() ? this.editForm.manager_id.trim() : undefined
+    };
+
     this.loading = true;
-    this.warehouseService.update(this.warehouseToEdit.id, this.editForm).subscribe({
+    this.warehouseService.update(this.warehouseToEdit.id, payload).subscribe({
       next: (response) => {
         if (response.success) {
           this.toastr.success('Thành công', 'Cập nhật kho thành công!');
           this.closeEditModal();
           this.loadWarehouses();
+          this.loadStats();
         } else {
           this.toastr.error('Lỗi', response.message || 'Có lỗi khi cập nhật kho');
           this.loading = false;
@@ -269,20 +303,13 @@ export class WarehouseComponent implements OnInit {
     }
 
     this.loading = true;
-    const request: ChangeStatusRequest = {
-      status: WareHouseStatus.INACTIVE
-    };
 
-    this.warehouseService.changeStatus(this.warehouseToDelete.id, request).subscribe({
-      next: (response) => {
-        if (response.success) {
-          this.toastr.success('Thành công', 'Xóa kho thành công!');
+    this.warehouseService.delete(this.warehouseToDelete.id).subscribe({
+      next: () => {
+        this.toastr.success('Thành công', 'Xóa kho thành công!');
           this.closeDeleteConfirm();
           this.loadWarehouses();
-        } else {
-          this.toastr.error('Lỗi', response.message || 'Có lỗi khi xóa kho');
-          this.loading = false;
-        }
+          this.loadStats();
       },
       error: (error) => {
         console.error('Error deleting warehouse:', error);
@@ -307,10 +334,15 @@ export class WarehouseComponent implements OnInit {
     if (!this.warehouseToChangeStatus) {
       return;
     }
+    if (this.newStatus === this.warehouseToChangeStatus.status) {
+      this.toastr.warning('Không thay đổi', 'Trạng thái mới giống trạng thái hiện tại');
+      return;
+    }
 
-    const request: ChangeStatusRequest = {
+    // PATCH /{id}/status chỉ cần status; các field PUT bắt buộc không áp dụng ở đây
+    const request = {
       status: this.newStatus
-    };
+    } as unknown as UpdateWarehouseRequest;
 
     this.loading = true;
     this.warehouseService.changeStatus(this.warehouseToChangeStatus.id, request).subscribe({
@@ -319,6 +351,7 @@ export class WarehouseComponent implements OnInit {
           this.toastr.success('Thành công', 'Thay đổi trạng thái thành công!');
           this.closeStatusChangeModal();
           this.loadWarehouses();
+          this.loadStats();
         } else {
           this.toastr.error('Lỗi', response.message || 'Có lỗi khi thay đổi trạng thái');
           this.loading = false;
@@ -340,7 +373,9 @@ export class WarehouseComponent implements OnInit {
     this.selectedWarehouse = null;
   }
 
-  // Validation methods
+  // Validation methods (đồng bộ với BE: phone ^(0\d{9}|\+84\d{9})$)
+  private readonly phoneRegex = /^(0\d{9}|\+84\d{9})$/;
+
   private validateCreateForm(): boolean {
     // if (!this.createForm.code.trim()) {
     //   this.toastr.warning('Thiếu thông tin', 'Vui lòng nhập mã kho');
@@ -358,14 +393,22 @@ export class WarehouseComponent implements OnInit {
       this.toastr.warning('Thiếu thông tin', 'Vui lòng nhập số điện thoại');
       return false;
     }
+    if (!this.phoneRegex.test(this.createForm.phone.trim())) {
+      this.toastr.warning('Số điện thoại không hợp lệ', 'Nhập 10 số bắt đầu bằng 0 hoặc +84 kèm 9 số');
+      return false;
+    }
     if (!this.createForm.email.trim()) {
       this.toastr.warning('Thiếu thông tin', 'Vui lòng nhập email');
       return false;
     }
     // Basic email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(this.createForm.email)) {
+    if (!emailRegex.test(this.createForm.email.trim())) {
       this.toastr.warning('Email không hợp lệ', 'Vui lòng nhập đúng định dạng email');
+      return false;
+    }
+    if (!this.createForm.manager_id?.trim()) {
+      this.toastr.warning('Thiếu thông tin', 'Vui lòng chọn quản lý kho');
       return false;
     }
     return true;
@@ -384,13 +427,17 @@ export class WarehouseComponent implements OnInit {
       this.toastr.warning('Thiếu thông tin', 'Vui lòng nhập số điện thoại');
       return false;
     }
+    if (!this.phoneRegex.test(this.editForm.phone.trim())) {
+      this.toastr.warning('Số điện thoại không hợp lệ', 'Nhập 10 số bắt đầu bằng 0 hoặc +84 kèm 9 số');
+      return false;
+    }
     if (!this.editForm.email.trim()) {
       this.toastr.warning('Thiếu thông tin', 'Vui lòng nhập email');
       return false;
     }
     // Basic email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(this.editForm.email)) {
+    if (!emailRegex.test(this.editForm.email.trim())) {
       this.toastr.warning('Email không hợp lệ', 'Vui lòng nhập đúng định dạng email');
       return false;
     }
