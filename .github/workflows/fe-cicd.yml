@@ -92,6 +92,9 @@ jobs:
     if: github.ref == 'refs/heads/staging'
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
       - name: Set lowercase image name
         run: echo "IMAGE_NAME=$(echo '${{ github.repository_owner }}/whs-frontend' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
 
@@ -107,10 +110,12 @@ jobs:
           script: |
             set -e
             echo "==== Deploying WHS Frontend ===="
-            cd /opt/whs/deploy
+            DEPLOY_DIR="/home/devops/whs/WareHouseSystem-INFRA/deploy"
+            cd "$DEPLOY_DIR"
 
-            # Login to GHCR (supports GHCR_TOKEN or GITHUB_TOKEN)
-            echo "${{ secrets.GHCR_TOKEN || secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ secrets.GHCR_USERNAME || github.actor }}" --password-stdin
+            # Login to GHCR
+            # NOTE: GHCR_TOKEN must be a PAT with read:packages scope — GITHUB_TOKEN does NOT work from external servers
+            echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u "${{ secrets.GHCR_USERNAME || github.actor }}" --password-stdin
 
             # Pull latest frontend image
             IMAGE_REF="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest"
