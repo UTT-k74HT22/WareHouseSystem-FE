@@ -32,13 +32,13 @@
   <div class="filter-section">
     <input class="search-input" type="text" [(ngModel)]="searchKeyword"
            placeholder="Tìm theo tên, mã..." (keyup.enter)="onSearch()" />
-    <select class="filter-select" [(ngModel)]="selectedType">
+    <select class="filter-select" [(ngModel)]="selectedType" (change)="onSearch()">
       <option value="">-- Tất cả loại --</option>
       <option value="SUPPLIER">Nhà cung cấp</option>
       <option value="CUSTOMER">Khách hàng</option>
       <option value="BOTH">Cả hai</option>
     </select>
-    <select class="filter-select" [(ngModel)]="selectedStatus">
+    <select class="filter-select" [(ngModel)]="selectedStatus" (change)="onSearch()">
       <option value="">-- Tất cả trạng thái --</option>
       <option value="ACTIVE">Đang hoạt động</option>
       <option value="INACTIVE">Ngừng hoạt động</option>

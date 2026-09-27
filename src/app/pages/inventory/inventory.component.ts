@@ -100,12 +100,10 @@ export class InventoryComponent implements OnInit {
         map((response) => response.data),
         catchError(() => of([] as WareHouseResponse[]))
       ),
-      locations: this.locationService.getAll(0, 200).pipe(
-        map((response) => response.data.content),
+      locations: this.locationService.getFullList().pipe(
         catchError(() => of([] as LocationResponse[]))
       ),
-      products: this.productService.getAll(0, 200).pipe(
-        map((response) => response.data.content),
+      products: this.productService.getFullList().pipe(
         catchError(() => of([] as ProductResponse[]))
       )
     }).subscribe((result) => {

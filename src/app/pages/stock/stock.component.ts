@@ -151,8 +151,7 @@ export class StockMovementsComponent implements OnInit {
 
   private loadLookupData(): void {
     forkJoin({
-      products: this.productService.getAll(0, 200).pipe(
-        map((response) => response.data.content),
+      products: this.productService.getFullList().pipe(
         catchError(() => of([]))
       ),
       warehouses: this.warehouseService.getList().pipe(

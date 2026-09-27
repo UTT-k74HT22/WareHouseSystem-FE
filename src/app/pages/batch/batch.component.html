@@ -46,12 +46,12 @@
       placeholder="Mã lô, mã lô NCC, tên sản phẩm, SKU..."
       (keyup.enter)="onSearch()" />
 
-    <select class="filter-select" [(ngModel)]="selectedProductId">
+    <select class="filter-select" [(ngModel)]="selectedProductId" (change)="onSearch()">
       <option value="">-- Tất cả sản phẩm --</option>
       <option *ngFor="let product of trackedProducts" [value]="product.id">{{ getProductLabel(product) }}</option>
     </select>
 
-    <select class="filter-select" [(ngModel)]="selectedStatus">
+    <select class="filter-select" [(ngModel)]="selectedStatus" (change)="onSearch()">
       <option value="">-- Tất cả trạng thái --</option>
       <option [value]="BatchStatus.AVAILABLE">Sẵn dùng</option>
       <option [value]="BatchStatus.QUARANTINE">Cách ly</option>

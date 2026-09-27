@@ -58,6 +58,11 @@ export class PurchaseOrderService {
     return this.http.get<ApiResponse<PageResponse<PurchaseOrderResponse>>>(this.apiUrl, { params });
   }
 
+  /** GET /api/v1/purchase-orders/stats */
+  getStats(): Observable<ApiResponse<Record<string, number>>> {
+    return this.http.get<ApiResponse<Record<string, number>>>(`${this.apiUrl}/stats`);
+  }
+
   /** GET /api/v1/purchase-orders/:id */
   getById(id: string): Observable<ApiResponse<PurchaseOrderResponse>> {
     return this.http.get<ApiResponse<PurchaseOrderResponse>>(`${this.apiUrl}/${id}`);

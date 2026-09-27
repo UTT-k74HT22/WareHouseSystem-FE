@@ -86,25 +86,35 @@ export class OutboundComponent implements OnInit {
     return this.createForm.get('lines') as FormArray;
   }
 
-  loadShipments(): void {
-    this.loading = true;
+  private loadSeq = 0;
+
+  loadShipments(silent = false): void {
+    if (!silent) {
+      this.loading = true;
+      this.loadStats();
+    }
+    const seq = ++this.loadSeq;
     const filters = {
       shipmentNumber: this.searchKeyword.trim() || undefined,
-      status: this.selectedStatus || undefined,
-      sort: 'updatedAt,desc'
+      status: this.selectedStatus || undefined
     };
 
     this.outboundService.getAll(filters, this.currentPage, this.pageSize).subscribe({
       next: (res) => {
+        if (seq !== this.loadSeq) {
+          return;
+        }
         if (res.success) {
           this.shipments = res.data.content || [];
           this.totalElements = res.data.total_elements;
           this.totalPages = res.data.total_pages;
-          this.calculateStats();
         }
         this.loading = false;
       },
       error: (error) => {
+        if (seq !== this.loadSeq) {
+          return;
+        }
         this.shipments = [];
         this.totalElements = 0;
         this.totalPages = 0;
@@ -154,11 +164,9 @@ export class OutboundComponent implements OnInit {
   }
 
   loadProducts(): void {
-    this.productService.getAll(0, 300).subscribe({
-      next: (res) => {
-        if (res.success) {
-          this.products = res.data.content || [];
-        }
+    this.productService.getFullList().subscribe({
+      next: (products) => {
+        this.products = products || [];
       },
       error: () => {
         this.products = [];
@@ -166,13 +174,17 @@ export class OutboundComponent implements OnInit {
     });
   }
 
-  calculateStats(): void {
-    this.draftCount = this.shipments.filter((shipment) => this.getShipmentStatus(shipment) === OutboundShipmentStatus.DRAFT).length;
-    this.pickingCount = this.shipments.filter((shipment) => {
-      const status = this.getShipmentStatus(shipment);
-      return status === OutboundShipmentStatus.PICKING || status === OutboundShipmentStatus.PACKED || status === OutboundShipmentStatus.STAGING;
-    }).length;
-    this.shippedCount = this.shipments.filter((shipment) => this.getShipmentStatus(shipment) === OutboundShipmentStatus.SHIPPED).length;
+  private loadStats(): void {
+    this.outboundService.getStats().subscribe({
+      next: (res) => {
+        if (res.success && res.data) {
+          this.draftCount = res.data['draft'] ?? 0;
+          this.pickingCount = (res.data['picking'] ?? 0) + (res.data['packed'] ?? 0) + (res.data['staging'] ?? 0);
+          this.shippedCount = res.data['shipped'] ?? 0;
+        }
+      },
+      error: () => { /* giữ số cũ khi lỗi */ }
+    });
   }
 
   onOrderSelect(orderId: string): void {
@@ -231,14 +243,14 @@ export class OutboundComponent implements OnInit {
 
   onSearch(): void {
     this.currentPage = 0;
-    this.loadShipments();
+    this.loadShipments(true);
   }
 
   onResetFilter(): void {
     this.searchKeyword = '';
     this.selectedStatus = '';
     this.currentPage = 0;
-    this.loadShipments();
+    this.loadShipments(true);
   }
 
   onPageChange(page: number): void {
@@ -310,8 +322,20 @@ export class OutboundComponent implements OnInit {
             this.openDetailModal(res.data);
           },
           error: (error) => {
-            this.loading = false;
-            this.toastr.error('Xuất kho', error?.error?.message || 'Tạo dòng phiếu xuất thất bại.');
+            // Bù non-atomic: hủy phiếu DRAFT vừa tạo để không mồ côi dòng lỗi
+            const shipmentId = res.data.id;
+            this.outboundService.cancel(shipmentId).subscribe({
+              next: () => {
+                this.loading = false;
+                this.toastr.error('Xuất kho', 'Tạo dòng thất bại, đã hủy phiếu vừa tạo.');
+                this.showCreateModal = false;
+                this.loadShipments();
+              },
+              error: () => {
+                this.loading = false;
+                this.toastr.error('Xuất kho', 'Tạo dòng thất bại và không hủy được phiếu. Vui lòng hủy tay phiếu vừa tạo.');
+              }
+            });
           }
         });
       },
@@ -327,7 +351,7 @@ export class OutboundComponent implements OnInit {
     this.detailTab = 'header';
 
     const shipmentId = shipment.id;
-    const salesOrderId = shipment.sales_order_id || shipment.salesOrderId || '';
+    const salesOrderId = shipment.sales_order_id || '';
 
     const requests: any = {
       shipment: this.outboundService.getById(shipmentId),
@@ -512,23 +536,23 @@ export class OutboundComponent implements OnInit {
   }
 
   getShipmentNumber(shipment: OutboundShipmentsResponse | null | undefined): string {
-    return shipment?.shipment_number || shipment?.shipmentNumber || 'N/A';
+    return shipment?.shipment_number || 'N/A';
   }
 
   getSalesOrderId(shipment: OutboundShipmentsResponse | null | undefined): string {
-    return shipment?.sales_order_id || shipment?.salesOrderId || '';
+    return shipment?.sales_order_id || '';
   }
 
   getWarehouseId(shipment: OutboundShipmentsResponse | null | undefined): string {
-    return shipment?.warehouse_id || shipment?.warehouseId || '';
+    return shipment?.warehouse_id || '';
   }
 
   getShipmentDate(shipment: OutboundShipmentsResponse | null | undefined): string {
-    return shipment?.shipment_date || shipment?.shipmentDate || '';
+    return shipment?.shipment_date || '';
   }
 
   getTrackingNumber(shipment: OutboundShipmentsResponse | null | undefined): string | null {
-    return shipment?.tracking_number || shipment?.trackingNumber || null;
+    return shipment?.tracking_number || null;
   }
 
   getShipmentStatus(shipment: OutboundShipmentsResponse | null | undefined): string {
@@ -536,34 +560,33 @@ export class OutboundComponent implements OnInit {
   }
 
   getLineProductName(line: OutboundShipmentLinesResponse): string {
-    if (line.product_name || line.productName) return line.product_name || line.productName || '';
-    
-    const productId = line.product_id || line.productId;
+    if (line.product_name) return line.product_name;
+
+    const productId = line.product_id;
     if (productId) {
       const product = this.products.find(p => p.id === productId);
       if (product) return product.name;
     }
-    
+
     return 'Không rõ sản phẩm';
   }
 
   getLineBatchNumber(line: OutboundShipmentLinesResponse): string | null {
-    return line.batch_number || line.batchNumber || null;
+    return line.batch_number || null;
   }
 
   getLineLocationName(line: OutboundShipmentLinesResponse): string {
-    const locName = line.location_name || line.locationName;
-    if (locName) return locName;
+    if (line.location_name) return line.location_name;
 
     return 'Thông tin kho chưa cập nhật';
   }
 
   getLineQuantity(line: OutboundShipmentLinesResponse): number {
-    return Number(line.quantity_shipped ?? line.quantityShipped ?? 0);
+    return Number(line.quantity_shipped ?? 0);
   }
 
   getLinePickedAt(line: OutboundShipmentLinesResponse): string | null {
-    return line.picked_at || line.pickedAt || null;
+    return line.picked_at || null;
   }
 
   getStatusLabel(status: string): string {
@@ -661,31 +684,31 @@ export class OutboundComponent implements OnInit {
   }
 
   getLinePickedBy(line: OutboundShipmentLinesResponse): string | null {
-    return line.picked_by || line.pickedBy || null;
+    return line.picked_by || null;
   }
 
   getCreatedBy(shipment: OutboundShipmentsResponse | null | undefined): string {
-    return shipment?.created_by || shipment?.createdBy || 'System';
+    return shipment?.created_by || 'System';
   }
 
   getCreatedAt(shipment: OutboundShipmentsResponse | null | undefined): string | null {
-    return shipment?.created_at || shipment?.createdAt || null;
+    return shipment?.created_at || null;
   }
 
   getUpdatedBy(shipment: OutboundShipmentsResponse | null | undefined): string | null {
-    return shipment?.updated_by || shipment?.updatedBy || null;
+    return shipment?.updated_by || null;
   }
 
   getUpdatedAt(shipment: OutboundShipmentsResponse | null | undefined): string | null {
-    return shipment?.updated_at || shipment?.updatedAt || null;
+    return shipment?.updated_at || null;
   }
 
   getConfirmedBy(shipment: OutboundShipmentsResponse | null | undefined): string | null {
-    return shipment?.confirmed_by || shipment?.confirmedBy || null;
+    return shipment?.confirmed_by || null;
   }
 
   getShippedAt(shipment: OutboundShipmentsResponse | null | undefined): string | null {
-    return shipment?.shipped_at || shipment?.shippedAt || null;
+    return shipment?.shipped_at || null;
   }
 
   getShipmentFlowLocationText(): string {

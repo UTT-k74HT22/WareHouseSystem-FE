@@ -93,6 +93,8 @@ export class InboundComponent implements OnInit {
   selectedReceipt: InboundReceiptResponse | null = null;
   receiptToDelete: InboundReceiptResponse | null = null;
   receiptToConfirm: InboundReceiptResponse | null = null;
+  showCancelConfirm = false;
+  receiptToCancel: InboundReceiptResponse | null = null;
   selectedLine: InboundReceiptLineResponse | null = null;
   lineToDelete: InboundReceiptLineResponse | null = null;
   lineEditorMode: InboundLineEditorMode = 'create';
@@ -125,8 +127,14 @@ export class InboundComponent implements OnInit {
     this.loadProductCatalog();
   }
 
-  loadReceipts(): void {
-    this.loading = true;
+  private loadSeq = 0;
+
+  loadReceipts(silent = false): void {
+    if (!silent) {
+      this.loading = true;
+      this.loadStats();
+    }
+    const seq = ++this.loadSeq;
     const filters: InboundReceiptFilters = {
       receiptNumber: this.searchReceiptNumber.trim() || undefined,
       warehouseId: this.selectedWarehouseId || undefined,
@@ -139,6 +147,9 @@ export class InboundComponent implements OnInit {
 
     this.inboundService.getAll(this.currentPage, this.pageSize, filters).subscribe({
       next: (res) => {
+        if (seq !== this.loadSeq) {
+          return;
+        }
         if (res.success) {
           this.receipts = res.data.content;
           this.totalElements = res.data.total_elements;
@@ -147,6 +158,9 @@ export class InboundComponent implements OnInit {
         this.loading = false;
       },
       error: (error) => {
+        if (seq !== this.loadSeq) {
+          return;
+        }
         this.receipts = [];
         this.totalElements = 0;
         this.totalPages = 0;
@@ -196,7 +210,7 @@ export class InboundComponent implements OnInit {
 
   onSearch(): void {
     this.currentPage = 0;
-    this.loadReceipts();
+    this.loadReceipts(true);
   }
 
   onResetFilter(): void {
@@ -206,7 +220,7 @@ export class InboundComponent implements OnInit {
     this.receiptDateFrom = '';
     this.receiptDateTo = '';
     this.currentPage = 0;
-    this.loadReceipts();
+    this.loadReceipts(true);
   }
 
   onPageChange(page: number): void {
@@ -495,6 +509,39 @@ export class InboundComponent implements OnInit {
     });
   }
 
+  canCancelReceipt(receipt: InboundReceiptResponse): boolean {
+    return receipt.status === InboundReceiptStatus.DRAFT;
+  }
+
+  openCancelConfirm(receipt: InboundReceiptResponse): void {
+    this.receiptToCancel = receipt;
+    this.showCancelConfirm = true;
+  }
+
+  onCancelReceipt(): void {
+    if (!this.receiptToCancel) {
+      return;
+    }
+
+    const receiptId = this.receiptToCancel.id;
+    this.inboundService.cancel(receiptId).subscribe({
+      next: (res) => {
+        if (res.success) {
+          this.toastr.success('Nhập kho', 'Hủy phiếu nhập thành công.');
+          this.showCancelConfirm = false;
+          this.receiptToCancel = null;
+          this.selectedReceipt = res.data;
+          this.loadReceipts();
+        }
+      },
+      error: (error) => {
+        this.toastr.error('Nhập kho', error?.error?.message || 'Hủy phiếu nhập thất bại.');
+        this.showCancelConfirm = false;
+        this.receiptToCancel = null;
+      }
+    });
+  }
+
   openDeleteLineConfirm(line: InboundReceiptLineResponse): void {
     if (!this.selectedReceipt || !this.canEditReceipt(this.selectedReceipt)) {
       return;
@@ -569,7 +616,7 @@ export class InboundComponent implements OnInit {
     this.loadReceipts();
   }
 
-  closeSubModal(modal: 'edit' | 'delete' | 'confirm' | 'lineEditor' | 'deleteLine'): void {
+  closeSubModal(modal: 'edit' | 'delete' | 'confirm' | 'cancel' | 'lineEditor' | 'deleteLine'): void {
     if (modal === 'edit') {
       this.showEditModal = false;
       return;
@@ -584,6 +631,12 @@ export class InboundComponent implements OnInit {
     if (modal === 'confirm') {
       this.showConfirmConfirm = false;
       this.receiptToConfirm = null;
+      return;
+    }
+
+    if (modal === 'cancel') {
+      this.showCancelConfirm = false;
+      this.receiptToCancel = null;
       return;
     }
 
@@ -696,16 +749,33 @@ export class InboundComponent implements OnInit {
     return status === QualityStatus.QUARANTINE ? 'badge-quarantine' : 'badge-pass';
   }
 
+  statsDraft = 0;
+  statsConfirmed = 0;
+  statsCancelled = 0;
+
+  private loadStats(): void {
+    this.inboundService.getStats().subscribe({
+      next: (res) => {
+        if (res.success && res.data) {
+          this.statsDraft = res.data['draft'] ?? 0;
+          this.statsConfirmed = res.data['confirmed'] ?? 0;
+          this.statsCancelled = res.data['cancelled'] ?? 0;
+        }
+      },
+      error: () => { /* giữ số cũ khi lỗi */ }
+    });
+  }
+
   getDraftCount(): number {
-    return this.receipts.filter((receipt) => receipt.status === InboundReceiptStatus.DRAFT).length;
+    return this.statsDraft;
   }
 
   getConfirmedCount(): number {
-    return this.receipts.filter((receipt) => receipt.status === InboundReceiptStatus.CONFIRMED).length;
+    return this.statsConfirmed;
   }
 
   getCancelledCount(): number {
-    return this.receipts.filter((receipt) => receipt.status === InboundReceiptStatus.CANCELLED).length;
+    return this.statsCancelled;
   }
 
   getPurchaseOrderLine(lineId: string): PurchaseOrderLineResponse | undefined {

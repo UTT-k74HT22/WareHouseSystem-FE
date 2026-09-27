@@ -35,6 +35,10 @@ export class SalesOrderComponent implements OnInit {
 
   searchKeyword = '';
   selectedStatus: '' | OrderStatus = '';
+  selectedCustomerId = '';
+  selectedWarehouseId = '';
+  orderDateFrom = '';
+  orderDateTo = '';
 
   showCreateModal = false;
   showDetailModal = false;
@@ -97,32 +101,61 @@ export class SalesOrderComponent implements OnInit {
     this.lines.removeAt(index);
   }
 
-  loadOrders(): void {
-    this.loading = true;
+  private loadSeq = 0;
+
+  loadOrders(silent = false): void {
+    if (!silent) {
+      this.loading = true;
+      this.loadStats();
+    }
+    const seq = ++this.loadSeq;
     const filters = {
       soNumber: this.searchKeyword.trim() || undefined,
       status: this.selectedStatus || undefined,
+      customerId: this.selectedCustomerId || undefined,
+      warehouseId: this.selectedWarehouseId || undefined,
+      orderDateFrom: this.orderDateFrom || undefined,
+      orderDateTo: this.orderDateTo || undefined,
       sortBy: 'updatedAt',
       direction: 'DESC'
     };
 
     this.soService.getAll(filters, this.currentPage, this.pageSize).subscribe({
       next: (res) => {
+        if (seq !== this.loadSeq) {
+          return;
+        }
         if (res.success) {
           this.orders = res.data.content;
           this.totalElements = res.data.total_elements;
           this.totalPages = res.data.total_pages;
-          this.calculateStats();
         }
         this.loading = false;
       },
       error: (error) => {
+        if (seq !== this.loadSeq) {
+          return;
+        }
         this.orders = [];
         this.totalElements = 0;
         this.totalPages = 0;
         this.loading = false;
         this.toastr.error(error?.error?.message || 'Không thể tải danh sách đơn bán hàng.');
       }
+    });
+  }
+
+  private loadStats(): void {
+    this.soService.getStats().subscribe({
+      next: (res) => {
+        if (res.success && res.data) {
+          this.draftCount = res.data['draft'] ?? 0;
+          this.confirmedCount = (res.data['confirmed'] ?? 0) + (res.data['partially_shipped'] ?? 0);
+          this.completedCount = res.data['completed'] ?? 0;
+          this.cancelledCount = res.data['cancelled'] ?? 0;
+        }
+      },
+      error: () => { /* giữ số cũ khi lỗi */ }
     });
   }
 
@@ -157,26 +190,15 @@ export class SalesOrderComponent implements OnInit {
   }
 
   loadProducts(): void {
-    this.productService.getAll(0, 200).subscribe({
-      next: (res) => {
-        if (res.success) {
-          this.products = res.data.content.filter((product) => product.status === 'ACTIVE');
-        }
+    this.productService.getFullList().subscribe({
+      next: (products) => {
+        this.products = products.filter((product) => product.status === 'ACTIVE');
       },
       error: () => {
         this.products = [];
         this.toastr.error('Không thể tải danh sách sản phẩm.');
       }
     });
-  }
-
-  calculateStats(): void {
-    this.draftCount = this.orders.filter((order) => order.status === OrderStatus.DRAFT).length;
-    this.confirmedCount = this.orders.filter((order) =>
-      order.status === OrderStatus.CONFIRMED || order.status === OrderStatus.PARTIALLY_SHIPPED
-    ).length;
-    this.completedCount = this.orders.filter((order) => order.status === OrderStatus.COMPLETED).length;
-    this.cancelledCount = this.orders.filter((order) => order.status === OrderStatus.CANCELLED).length;
   }
 
   getDraftCount(): number { return this.draftCount; }
@@ -198,14 +220,18 @@ export class SalesOrderComponent implements OnInit {
 
   onSearch(): void {
     this.currentPage = 0;
-    this.loadOrders();
+    this.loadOrders(true);
   }
 
   onResetFilter(): void {
     this.searchKeyword = '';
     this.selectedStatus = '';
+    this.selectedCustomerId = '';
+    this.selectedWarehouseId = '';
+    this.orderDateFrom = '';
+    this.orderDateTo = '';
     this.currentPage = 0;
-    this.loadOrders();
+    this.loadOrders(true);
   }
 
   onPageChange(page: number): void {

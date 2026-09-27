@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, catchError, forkJoin, map, of, switchMap } from 'rxjs';
 import { BaseURL } from '../../../environments/BaseURL';
 import { LocationResponse } from '../../dto/response/Location/LocationResponse';
 import { LocationStats } from '../../dto/response/Location/LocationStats';
@@ -59,6 +59,32 @@ export class LocationService {
    */
   getById(id: string): Observable<ApiResponse<LocationResponse>> {
     return this.http.get<ApiResponse<LocationResponse>>(`${this.apiUrl}/${id}`);
+  }
+
+  /**
+   * Lấy toàn bộ vị trí cho dropdown/danh sách tham chiếu.
+   * Tự phân trang theo size tối đa BE cho phép (100) rồi gộp lại.
+   */
+  getFullList(filter: SearchLocationRequest = {}): Observable<LocationResponse[]> {
+    const pageSize = 100;
+    return this.getAll(0, pageSize, filter).pipe(
+      switchMap((response) => {
+        if (!response.success) {
+          return of([]);
+        }
+        const firstPage = response.data.content || [];
+        if (response.data.total_pages <= 1) {
+          return of(firstPage);
+        }
+        const remaining = Array.from({ length: response.data.total_pages - 1 }, (_, index) =>
+          this.getAll(index + 1, pageSize, filter).pipe(
+            map((page) => page.success ? page.data.content : []),
+            catchError(() => of([]))
+          )
+        );
+        return forkJoin(remaining).pipe(map((pages) => firstPage.concat(...pages)));
+      })
+    );
   }
 
   /**

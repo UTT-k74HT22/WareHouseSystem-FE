@@ -39,14 +39,14 @@ export class InboundService {
       .set('size', size);
 
     if (filters) {
-      params = this.setParamWithAliases(params, 'receiptNumber', filters.receiptNumber, ['receipt_number']);
-      params = this.setParamWithAliases(params, 'purchaseOrderId', filters.purchaseOrderId, ['purchase_order_id']);
-      params = this.setParamWithAliases(params, 'warehouseId', filters.warehouseId, ['warehouse_id']);
-      params = this.setParamWithAliases(params, 'status', filters.status);
-      params = this.setParamWithAliases(params, 'receiptDateFrom', filters.receiptDateFrom, ['receipt_date_from']);
-      params = this.setParamWithAliases(params, 'receiptDateTo', filters.receiptDateTo, ['receipt_date_to']);
-      params = this.setParamWithAliases(params, 'sortBy', filters.sortBy);
-      params = this.setParamWithAliases(params, 'direction', filters.direction);
+      params = this.setParam(params, 'receiptNumber', filters.receiptNumber);
+      params = this.setParam(params, 'purchaseOrderId', filters.purchaseOrderId);
+      params = this.setParam(params, 'warehouseId', filters.warehouseId);
+      params = this.setParam(params, 'status', filters.status);
+      params = this.setParam(params, 'receiptDateFrom', filters.receiptDateFrom);
+      params = this.setParam(params, 'receiptDateTo', filters.receiptDateTo);
+      params = this.setParam(params, 'sortBy', filters.sortBy);
+      params = this.setParam(params, 'direction', filters.direction);
     }
 
     return this.http.get<ApiResponse<PageResponse<InboundReceiptResponse>>>(this.apiUrl, { params });
@@ -82,23 +82,25 @@ export class InboundService {
     return this.http.put<ApiResponse<InboundReceiptResponse>>(`${this.apiUrl}/${id}/confirm`, {});
   }
 
-  private setParamWithAliases(
+  /** PUT /api/v1/inbound-receipts/:id/cancel */
+  cancel(id: string): Observable<ApiResponse<InboundReceiptResponse>> {
+    return this.http.put<ApiResponse<InboundReceiptResponse>>(`${this.apiUrl}/${id}/cancel`, {});
+  }
+
+  /** GET /api/v1/inbound-receipts/stats */
+  getStats(): Observable<ApiResponse<Record<string, number>>> {
+    return this.http.get<ApiResponse<Record<string, number>>>(`${this.apiUrl}/stats`);
+  }
+
+  private setParam(
     params: HttpParams,
     key: string,
-    value?: string | number | boolean | null,
-    aliases: string[] = []
+    value?: string | number | boolean | null
   ): HttpParams {
     if (value === undefined || value === null || value === '') {
       return params;
     }
 
-    const normalizedValue = String(value);
-    let nextParams = params.set(key, normalizedValue);
-
-    for (const alias of aliases) {
-      nextParams = nextParams.set(alias, normalizedValue);
-    }
-
-    return nextParams;
+    return params.set(key, String(value));
   }
 }

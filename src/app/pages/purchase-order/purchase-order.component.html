@@ -38,7 +38,7 @@
   <!-- ══════════ FILTER ══════════ -->
   <div class="filter-section">
     <input class="search-input" type="text" [(ngModel)]="searchKeyword" placeholder="Tìm theo số đơn mua hàng..." (keyup.enter)="onSearch()" />
-    <select class="filter-select" [(ngModel)]="selectedStatus">
+    <select class="filter-select" [(ngModel)]="selectedStatus" (change)="onSearch()">
       <option value="">-- Tất cả trạng thái --</option>
       <option value="DRAFT">Nháp</option>
       <option value="CONFIRMED">Đã xác nhận</option>
@@ -46,6 +46,16 @@
       <option value="COMPLETED">Hoàn thành</option>
       <option value="CANCELLED">Đã huỷ</option>
     </select>
+    <select class="filter-select" [(ngModel)]="selectedSupplierId" (change)="onSearch()">
+      <option value="">-- Tất cả NCC --</option>
+      <option *ngFor="let s of suppliers" [value]="s.id">{{ s.name }}</option>
+    </select>
+    <select class="filter-select" [(ngModel)]="selectedWarehouseId" (change)="onSearch()">
+      <option value="">-- Tất cả kho --</option>
+      <option *ngFor="let w of warehouses" [value]="w.id">{{ w.code }} - {{ w.name }}</option>
+    </select>
+    <input class="filter-select" type="date" [(ngModel)]="orderDateFrom" (change)="onSearch()" />
+    <input class="filter-select" type="date" [(ngModel)]="orderDateTo" (change)="onSearch()" />
     <button class="btn btn-primary" (click)="onSearch()"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i> Tìm kiếm</button>
     <button class="btn btn-ghost" (click)="onResetFilter()"><i class="fa-solid fa-rotate-right" aria-hidden="true"></i> Reset</button>
     <div class="view-toggle">

@@ -26,7 +26,7 @@
   <div class="filter-section">
     <input class="search-input" type="text" [(ngModel)]="searchKeyword"
            placeholder="Tìm theo tên, mã..." (keyup.enter)="onSearch()" />
-    <select class="filter-select" [(ngModel)]="selectedStatus">
+    <select class="filter-select" [(ngModel)]="selectedStatus" (change)="onSearch()">
       <option value="">-- Tất cả trạng thái --</option>
       <option value="ACTIVE">Đang hoạt động</option>
       <option value="INACTIVE">Ngừng hoạt động</option>

@@ -42,20 +42,20 @@
       placeholder="Tìm theo số phiếu nhập..."
       (keyup.enter)="onSearch()" />
 
-    <select class="filter-select" [(ngModel)]="selectedWarehouseId">
+    <select class="filter-select" [(ngModel)]="selectedWarehouseId" (change)="onSearch()">
       <option value="">-- Tất cả kho --</option>
       <option *ngFor="let warehouse of warehouses" [value]="warehouse.id">{{ warehouse.name }}</option>
     </select>
 
-    <select class="filter-select" [(ngModel)]="selectedStatus">
+    <select class="filter-select" [(ngModel)]="selectedStatus" (change)="onSearch()">
       <option value="">-- Tất cả trạng thái --</option>
       <option value="DRAFT">Nháp</option>
       <option value="CONFIRMED">Đã xác nhận</option>
       <option value="CANCELLED">Đã hủy</option>
     </select>
 
-    <input class="filter-date" type="date" [(ngModel)]="receiptDateFrom" title="Từ ngày nhập" />
-    <input class="filter-date" type="date" [(ngModel)]="receiptDateTo" title="Đến ngày nhập" />
+    <input class="filter-date" type="date" [(ngModel)]="receiptDateFrom" (change)="onSearch()" title="Từ ngày nhập" />
+    <input class="filter-date" type="date" [(ngModel)]="receiptDateTo" (change)="onSearch()" title="Đến ngày nhập" />
 
     <button class="btn btn-primary" (click)="onSearch()">
       <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i> Tìm kiếm
@@ -77,7 +77,6 @@
   <div class="info-box">
     Phiếu nhập chỉ được tạo từ đơn mua hàng ở trạng thái <strong>Đã xác nhận</strong> hoặc <strong>Nhận một phần</strong>.
     Thông tin chung và các dòng của phiếu nhập chỉ được sửa khi phiếu còn ở trạng thái <strong>Nháp</strong>.
-    FE hiện đã đồng bộ CRUD cho <strong>Inbound Receipt Lines</strong>, gồm kiểm soát vị trí, batch, trạng thái chất lượng và phần số lượng còn có thể nhận.
   </div>
 
   <div class="loading-state" *ngIf="loading"><span>Đang tải danh sách phiếu nhập...</span></div>
@@ -262,6 +261,11 @@
       <ng-container *appHasAnyPermission="deletePermissions">
         <button class="btn btn-danger-outline" (click)="openDeleteConfirm(selectedReceipt)" *ngIf="canDeleteReceipt(selectedReceipt)">
           <i class="fa-regular fa-trash-can" aria-hidden="true"></i> Xóa phiếu nhập
+        </button>
+      </ng-container>
+      <ng-container *appHasAnyPermission="updatePermissions">
+        <button class="btn btn-ghost" (click)="openCancelConfirm(selectedReceipt)" *ngIf="canCancelReceipt(selectedReceipt)">
+          <i class="fa-solid fa-ban" aria-hidden="true"></i> Hủy phiếu nhập
         </button>
       </ng-container>
     </div>
@@ -571,6 +575,20 @@
     <div class="modal-footer">
       <button class="btn btn-ghost" (click)="closeSubModal('confirm')">Hủy</button>
       <button class="btn btn-primary" (click)="onConfirmReceipt()" *appHasAnyPermission="updatePermissions">Xác nhận</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" *ngIf="showCancelConfirm" (click)="closeSubModal('cancel')">
+  <div class="modal-box modal-sm" (click)="$event.stopPropagation()">
+    <div class="modal-header modal-header-danger"><h3>Hủy phiếu nhập</h3><button class="modal-close" (click)="closeSubModal('cancel')">✕</button></div>
+    <div class="modal-body">
+      <p>Hủy phiếu nhập <strong>{{ receiptToCancel?.receipt_number }}</strong>?</p>
+      <p class="text-muted">Phiếu đã hủy không thể xác nhận hay sửa tiếp.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" (click)="closeSubModal('cancel')">Đóng</button>
+      <button class="btn btn-danger" (click)="onCancelReceipt()" *appHasAnyPermission="updatePermissions">Hủy phiếu</button>
     </div>
   </div>
 </div>
