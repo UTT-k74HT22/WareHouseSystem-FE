@@ -8,8 +8,9 @@ import { BatchResponse } from '../../dto/response/Batch/BatchResponse';
 import { BatchByProductResponse } from '../../dto/response/Batch/BatchByProductResponse';
 import { BatchFifoRecommendationResponse } from '../../dto/response/Batch/BatchFifoRecommendationResponse';
 import {
-  ChangeBatchStatusRequest,
   CreateBatchRequest,
+  QuarantineBatchRequest,
+  ReleaseBatchRequest,
   UpdateBatchRequest
 } from '../../dto/request/Batch/BatchRequest';
 
@@ -35,24 +36,19 @@ export class BatchService {
     return this.http.post<ApiResponse<BatchResponse>>(this.apiUrl, request);
   }
 
-  /** PATCH /api/v1/batches/:id/status */
-  changeStatus(id: string, request: ChangeBatchStatusRequest): Observable<ApiResponse<BatchResponse>> {
-    return this.http.patch<ApiResponse<BatchResponse>>(`${this.apiUrl}/${id}/status`, request);
-  }
-
   /** PUT /api/v1/batches/:id */
   update(id: string, request: UpdateBatchRequest): Observable<ApiResponse<BatchResponse>> {
     return this.http.put<ApiResponse<BatchResponse>>(`${this.apiUrl}/${id}`, request);
   }
 
   /** PUT /api/v1/batches/:id/quarantine */
-  quarantine(id: string): Observable<BatchResponse> {
-    return this.http.put<BatchResponse>(`${this.apiUrl}/${id}/quarantine`, {});
+  quarantine(id: string, request: QuarantineBatchRequest): Observable<ApiResponse<BatchResponse>> {
+    return this.http.put<ApiResponse<BatchResponse>>(`${this.apiUrl}/${id}/quarantine`, request);
   }
 
   /** PUT /api/v1/batches/:id/release */
-  release(id: string): Observable<BatchResponse> {
-    return this.http.put<BatchResponse>(`${this.apiUrl}/${id}/release`, {});
+  release(id: string, request: ReleaseBatchRequest): Observable<ApiResponse<BatchResponse>> {
+    return this.http.put<ApiResponse<BatchResponse>>(`${this.apiUrl}/${id}/release`, request);
   }
 
   /** GET /api/v1/batches/fifo-recommendations */

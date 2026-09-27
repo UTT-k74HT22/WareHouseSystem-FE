@@ -96,6 +96,9 @@ export class BusinessPartnerComponent implements OnInit {
     this.showCreateModal = true;
   }
 
+  private readonly emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  private readonly phoneRegex = /^(0\d{9}|\+84\d{9})$/;
+
   onCreateSubmit(): void {
     if (!this.createForm.name.trim()) {
       this.toastr.error('Đối tác', 'Vui lòng nhập tên đối tác.');
@@ -105,13 +108,34 @@ export class BusinessPartnerComponent implements OnInit {
       this.toastr.error('Đối tác', 'Vui lòng chọn loại đối tác.');
       return;
     }
-    this.bpService.create(this.createForm).subscribe({
+    if (this.createForm.email?.trim() && !this.emailRegex.test(this.createForm.email.trim())) {
+      this.toastr.error('Đối tác', 'Email không đúng định dạng.');
+      return;
+    }
+    if (this.createForm.phone?.trim() && !this.phoneRegex.test(this.createForm.phone.trim())) {
+      this.toastr.error('Đối tác', 'Số điện thoại phải 10 số bắt đầu bằng 0 hoặc +84 kèm 9 số.');
+      return;
+    }
+    if (this.createForm.credit_limit != null && Number(this.createForm.credit_limit) < 0) {
+      this.toastr.error('Đối tác', 'Hạn mức tín dụng không được âm.');
+      return;
+    }
+    const payload: CreateBusinessPartnerRequest = {
+      ...this.createForm,
+      name: this.createForm.name.trim(),
+      email: this.createForm.email?.trim() || undefined,
+      phone: this.createForm.phone?.trim() || undefined
+    };
+    this.bpService.create(payload).subscribe({
       next: (res) => {
         if (res.success) {
           this.toastr.success('Đối tác', 'Tạo đối tác thành công!');
           this.showCreateModal = false;
           this.loadPartners();
         }
+      },
+      error: (error) => {
+        this.toastr.error('Đối tác', error?.error?.message || 'Có lỗi khi tạo đối tác.');
       }
     });
   }
@@ -138,13 +162,38 @@ export class BusinessPartnerComponent implements OnInit {
 
   onEditSubmit(): void {
     if (!this.selectedPartner) return;
-    this.bpService.update(this.selectedPartner.id, this.editForm).subscribe({
+    if (this.editForm.name != null && !this.editForm.name.trim()) {
+      this.toastr.error('Đối tác', 'Tên đối tác không được để trống.');
+      return;
+    }
+    if (this.editForm.email?.trim() && !this.emailRegex.test(this.editForm.email.trim())) {
+      this.toastr.error('Đối tác', 'Email không đúng định dạng.');
+      return;
+    }
+    if (this.editForm.phone?.trim() && !this.phoneRegex.test(this.editForm.phone.trim())) {
+      this.toastr.error('Đối tác', 'Số điện thoại phải 10 số bắt đầu bằng 0 hoặc +84 kèm 9 số.');
+      return;
+    }
+    if (this.editForm.credit_limit != null && Number(this.editForm.credit_limit) < 0) {
+      this.toastr.error('Đối tác', 'Hạn mức tín dụng không được âm.');
+      return;
+    }
+    const payload: UpdateBusinessPartnerRequest = {
+      ...this.editForm,
+      name: this.editForm.name?.trim() || undefined,
+      email: this.editForm.email?.trim() || undefined,
+      phone: this.editForm.phone?.trim() || undefined
+    };
+    this.bpService.update(this.selectedPartner.id, payload).subscribe({
       next: (res) => {
         if (res.success) {
           this.toastr.success('Cập nhật đối tác thành công!');
           this.showEditModal = false;
           this.loadPartners();
         }
+      },
+      error: (error) => {
+        this.toastr.error('Đối tác', error?.error?.message || 'Có lỗi khi cập nhật đối tác.');
       }
     });
   }
@@ -163,6 +212,9 @@ export class BusinessPartnerComponent implements OnInit {
           this.showDeleteConfirm = false;
           this.loadPartners();
         }
+      },
+      error: (error) => {
+        this.toastr.error('Đối tác', error?.error?.message || 'Có lỗi khi xoá đối tác.');
       }
     });
   }
@@ -204,7 +256,20 @@ export class BusinessPartnerComponent implements OnInit {
   }
 
   getStatusLabel(status: BusinessPartnerStatus): string {
-    return status === BusinessPartnerStatus.ACTIVE ? 'Đang hoạt động' : 'Ngừng hoạt động';
+    switch (status) {
+      case BusinessPartnerStatus.ACTIVE: return 'Đang hoạt động';
+      case BusinessPartnerStatus.INACTIVE: return 'Ngừng hoạt động';
+      case BusinessPartnerStatus.BLACKLISTED: return 'Danh sách đen';
+      default: return 'Không xác định';
+    }
+  }
+
+  getStatusClass(status: BusinessPartnerStatus): string {
+    switch (status) {
+      case BusinessPartnerStatus.ACTIVE: return 'badge-active';
+      case BusinessPartnerStatus.BLACKLISTED: return 'badge-expired';
+      default: return 'badge-inactive';
+    }
   }
 
   get supplierCount(): number {

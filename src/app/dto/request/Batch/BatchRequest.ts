@@ -5,19 +5,20 @@ export interface CreateBatchRequest {
   manufacturing_date: string;
   expiry_date?: string;
   supplier_batch_number?: string;
-  status: BatchStatus;
   notes?: string;
 }
 
-export interface ChangeBatchStatusRequest {
-  status: BatchStatus;
-}
-
 export interface UpdateBatchRequest {
-  id: string;
-  batch_number?: string;
   manufacturing_date?: string;
   expiry_date?: string;
   supplier_batch_number?: string;
   notes?: string;
+}
+
+export interface QuarantineBatchRequest {
+  reason: string;
+}
+
+export interface ReleaseBatchRequest {
+  release_notes: string;
 }

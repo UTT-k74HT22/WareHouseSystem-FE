@@ -42,6 +42,7 @@
       <option value="">-- Tất cả trạng thái --</option>
       <option value="ACTIVE">Đang hoạt động</option>
       <option value="INACTIVE">Ngừng hoạt động</option>
+      <option value="BLACKLISTED">Danh sách đen</option>
     </select>
     <button class="btn btn-primary" (click)="onSearch()"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i> Tìm kiếm</button>
     <button class="btn btn-ghost" (click)="onResetFilter()"><i class="fa-solid fa-rotate-right" aria-hidden="true"></i> Reset</button>
@@ -85,7 +86,7 @@
           <td>{{ p.phone ?? '—' }}</td>
           <td>{{ p.contact_person ?? '—' }}</td>
           <td>
-            <span class="badge" [ngClass]="p.status === 'ACTIVE' ? 'badge-active' : 'badge-inactive'">
+            <span class="badge" [ngClass]="getStatusClass(p.status)">
               {{ getStatusLabel(p.status) }}
             </span>
           </td>
@@ -108,7 +109,7 @@
       <div class="entity-card__meta">
         <div class="entity-card__row">
           <span class="badge" [ngClass]="getTypeClass(p.type)">{{ getTypeLabel(p.type) }}</span>
-          <span class="badge" [ngClass]="p.status === 'ACTIVE' ? 'badge-active' : 'badge-inactive'">{{ getStatusLabel(p.status) }}</span>
+            <span class="badge" [ngClass]="getStatusClass(p.status)">{{ getStatusLabel(p.status) }}</span>
         </div>
         <div class="entity-card__row">Email: {{ p.email ?? '—' }}</div>
         <div class="entity-card__row">SĐT: {{ p.phone ?? '—' }}</div>
@@ -209,7 +210,7 @@
         </div>
         <div class="form-group"><label>Trạng thái</label>
           <select [(ngModel)]="editForm.status">
-            <option value="ACTIVE">Đang hoạt động</option><option value="INACTIVE">Ngừng hoạt động</option>
+            <option value="ACTIVE">Đang hoạt động</option><option value="INACTIVE">Ngừng hoạt động</option><option value="BLACKLISTED">Danh sách đen</option>
           </select>
         </div>
       </div>

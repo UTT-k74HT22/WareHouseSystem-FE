@@ -170,13 +170,16 @@ export class ProductComponent implements OnInit {
       this.toastr.error('Sản phẩm', 'Vui lòng chọn đơn vị tính.');
       return;
     }
-    this.productService.create(this.createForm).subscribe({
+    this.productService.create({ ...this.createForm, name: this.createForm.name.trim() }).subscribe({
       next: (res) => {
         if (res.success) {
           this.toastr.success('Sản phẩm', 'Tạo sản phẩm thành công!');
           this.showCreateModal = false;
           this.loadProducts();
         }
+      },
+      error: (error) => {
+        this.toastr.error('Sản phẩm', error?.error?.message || 'Có lỗi khi tạo sản phẩm.');
       }
     });
   }
@@ -205,6 +208,9 @@ export class ProductComponent implements OnInit {
           this.showEditModal = false;
           this.loadProducts();
         }
+      },
+      error: (error) => {
+        this.toastr.error('Sản phẩm', error?.error?.message || 'Có lỗi khi cập nhật sản phẩm.');
       }
     });
   }
@@ -223,6 +229,9 @@ export class ProductComponent implements OnInit {
           this.showDeleteConfirm = false;
           this.loadProducts();
         }
+      },
+      error: (error) => {
+        this.toastr.error('Sản phẩm', error?.error?.message || 'Có lỗi khi xoá sản phẩm.');
       }
     });
   }

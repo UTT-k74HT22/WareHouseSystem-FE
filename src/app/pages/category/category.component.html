@@ -144,7 +144,7 @@
     <div class="modal-body">
       <div class="form-group">
         <label>Mã danh mục</label>
-        <input type="text" [(ngModel)]="editForm.code" />
+        <input type="text" [value]="selectedCategory?.code" disabled />
       </div>
       <div class="form-group">
         <label>Tên danh mục</label>

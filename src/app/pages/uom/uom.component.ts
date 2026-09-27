@@ -92,13 +92,16 @@ export class UomComponent implements OnInit {
       this.toastr.error('Đơn vị tính', 'Vui lòng chọn loại đơn vị tính.');
       return;
     }
-    this.uomService.create(this.createForm).subscribe({
+    this.uomService.create({ ...this.createForm, name: this.createForm.name.trim() }).subscribe({
       next: (res) => {
         if (res.success) {
           this.toastr.success('Đơn vị tính', 'Tạo đơn vị tính thành công!');
           this.showCreateModal = false;
           this.loadUOMs();
         }
+      },
+      error: (error) => {
+        this.toastr.error('Đơn vị tính', error?.error?.message || 'Có lỗi khi tạo đơn vị tính.');
       }
     });
   }
@@ -111,13 +114,23 @@ export class UomComponent implements OnInit {
 
   onEditSubmit(): void {
     if (!this.selectedUOM) return;
-    this.uomService.update(this.selectedUOM.id, this.editForm).subscribe({
+    if (this.editForm.name != null && !this.editForm.name.trim()) {
+      this.toastr.error('Đơn vị tính', 'Tên đơn vị tính không được để trống.');
+      return;
+    }
+    this.uomService.update(this.selectedUOM.id, {
+      ...this.editForm,
+      name: this.editForm.name?.trim() || undefined
+    }).subscribe({
       next: (res) => {
         if (res.success) {
           this.toastr.success('Cập nhật đơn vị tính thành công!');
           this.showEditModal = false;
           this.loadUOMs();
         }
+      },
+      error: (error) => {
+        this.toastr.error('Đơn vị tính', error?.error?.message || 'Có lỗi khi cập nhật đơn vị tính.');
       }
     });
   }
@@ -136,6 +149,9 @@ export class UomComponent implements OnInit {
           this.showDeleteConfirm = false;
           this.loadUOMs();
         }
+      },
+      error: (error) => {
+        this.toastr.error('Đơn vị tính', error?.error?.message || 'Có lỗi khi xoá đơn vị tính.');
       }
     });
   }
