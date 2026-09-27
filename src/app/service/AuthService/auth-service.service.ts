@@ -1,6 +1,16 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from "@angular/common/http";
-import { BehaviorSubject, Observable, map, tap } from "rxjs";
+import {
+  BehaviorSubject,
+  catchError,
+  finalize,
+  map,
+  Observable,
+  of,
+  shareReplay,
+  tap,
+  throwError
+} from 'rxjs';
 import { BaseURL } from "../../../environments/BaseURL";
 import { LoginRequest } from "../../dto/request/Auth/LoginRequest";
 import { RegisterRequest } from "../../dto/request/Auth/RegisterRequest";
@@ -19,7 +29,6 @@ import { AuthStorageService } from "./AuthStorage/auth-storage.service";
 import { AuthTokens } from "../../dto/response/Auth/AuthTokens";
 import { ApiResponse } from "../../dto/response/ApiResponse";
 import { CheckPermissionResponse, MyPermissionsResponse } from "../../dto/response/Permission/PermissionResponse";
-import { catchError, finalize, of, shareReplay, throwError } from "rxjs";
 
 @Injectable({
   providedIn: 'root'
@@ -31,6 +40,7 @@ export class AuthService {
   authState$ = this.authStateSubject.asObservable();
   private permissionsRequest$: Observable<string[]> | null = null;
   private permissionsLoaded = false;
+  private sessionVersion = 0;
 
   constructor(
     private http: HttpClient,
@@ -92,6 +102,7 @@ export class AuthService {
   // ==================== SESSION MANAGEMENT ====================
 
   setSession(tokens: AuthTokens): void {
+    this.sessionVersion++;
     this.storage.saveTokens(tokens);
     this.permissionsLoaded = false;
     const newState = {
@@ -107,18 +118,17 @@ export class AuthService {
   private restoreSession(): void {
     const tokens = this.storage.getTokens();
     if (tokens) {
+      this.sessionVersion++;
       this.permissionsLoaded = false;
       this.authStateSubject.next({
         ...this.mapper.mapToState(tokens),
         permissions: []
       });
-      this.ensurePermissionsLoaded().subscribe({
-        error: () => void 0
-      });
     }
   }
 
   logout(): void {
+    this.sessionVersion++;
     this.storage.clear();
     this.permissionsLoaded = false;
     this.permissionsRequest$ = null;
@@ -131,6 +141,14 @@ export class AuthService {
 
   getTokens(): AuthTokens | null {
     return this.authStateSubject.value.tokens;
+  }
+
+  getSessionVersion(): number {
+    return this.sessionVersion;
+  }
+
+  isCurrentSession(version: number): boolean {
+    return this.sessionVersion === version;
   }
 
   isAuthenticated(): boolean {
@@ -185,14 +203,19 @@ export class AuthService {
       return this.permissionsRequest$;
     }
 
+    const requestSessionVersion = this.sessionVersion;
     const request$ = this.getMyPermissions().pipe(
       map((res) => res.success ? (res.data?.permissions ?? []) : []),
       tap((permissions) => {
-        this.permissionsLoaded = true;
-        this.updatePermissions(permissions);
+        if (this.isCurrentSession(requestSessionVersion)) {
+          this.permissionsLoaded = true;
+          this.updatePermissions(permissions);
+        }
       }),
       catchError((error) => {
-        this.permissionsLoaded = false;
+        if (this.isCurrentSession(requestSessionVersion)) {
+          this.permissionsLoaded = false;
+        }
         return throwError(() => error);
       }),
       finalize(() => {

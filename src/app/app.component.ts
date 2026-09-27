@@ -33,6 +33,15 @@ export class AppComponent implements OnInit {
   ) {}
 
   ngOnInit() {
+    // AuthService restores tokens synchronously. Starting an HTTP request from
+    // its constructor would create a circular dependency while Angular is still
+    // constructing the HTTP interceptors on a page reload.
+    if (this.authService.isAuthenticated()) {
+      this.authService.ensurePermissionsLoaded().subscribe({
+        error: () => void 0
+      });
+    }
+
     // Check route changes to determine if layout should be shown
     this.router.events.pipe(
       filter(event => event instanceof NavigationEnd)
