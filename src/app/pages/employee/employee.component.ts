@@ -45,6 +45,7 @@ export class EmployeeComponent implements OnInit {
   // Form models
   createForm: CreateEmployeeRequest = this.initCreateForm();
   editForm: UpdateEmployeeRequest = this.initEditForm();
+  editStatus: EmployeeStatus = EmployeeStatus.ACTIVE;
 
   // Enums for templates
   EmployeeStatus = EmployeeStatus;
@@ -59,6 +60,7 @@ export class EmployeeComponent implements OnInit {
   ngOnInit(): void {
     this.loadEmployees();
     this.loadWarehouses();
+    this.loadStats();
   }
 
   private initCreateForm(): CreateEmployeeRequest {
@@ -89,6 +91,7 @@ export class EmployeeComponent implements OnInit {
 
   loadEmployees(): void {
     this.loading = true;
+    this.loadStats();
     const keyword = this.searchTerm.trim() || undefined;
     const status = this.selectedStatus || undefined;
     const warehouseId = this.selectedWarehouse || undefined;
@@ -134,17 +137,34 @@ export class EmployeeComponent implements OnInit {
     this.loadEmployees();
   }
 
-  // Statistics
+  // Statistics (global counts from /employees/stats)
+  statsActive = 0;
+  statsOnLeave = 0;
+  statsTerminated = 0;
+
+  private loadStats(): void {
+    this.employeeService.getStats().subscribe({
+      next: (response) => {
+        if (response.success && response.data) {
+          this.statsActive = response.data['active'] ?? 0;
+          this.statsOnLeave = response.data['on_leave'] ?? 0;
+          this.statsTerminated = response.data['terminated'] ?? 0;
+        }
+      },
+      error: () => { /* giữ số cũ khi lỗi */ }
+    });
+  }
+
   getActiveCount(): number {
-    return this.employees.filter(e => e.status === EmployeeStatus.ACTIVE).length;
+    return this.statsActive;
   }
 
   getOnLeaveCount(): number {
-    return this.employees.filter(e => e.status === EmployeeStatus.ON_LEAVE).length;
+    return this.statsOnLeave;
   }
 
   getTerminatedCount(): number {
-    return this.employees.filter(e => e.status === EmployeeStatus.TERMINATED).length;
+    return this.statsTerminated;
   }
 
   // Label helpers
@@ -203,7 +223,14 @@ export class EmployeeComponent implements OnInit {
     if (!this.validateCreateForm()) return;
 
     this.loading = true;
-    this.employeeService.create(this.createForm).subscribe({
+    const payload = {
+      ...this.createForm,
+      username: this.createForm.username.trim(),
+      first_name: this.createForm.first_name.trim(),
+      last_name: this.createForm.last_name.trim(),
+      email: this.createForm.email.trim()
+    };
+    this.employeeService.create(payload).subscribe({
       next: (response) => {
         if (response.success) {
           this.toastr.success('Thành công', 'Tạo nhân viên mới thành công!');
@@ -234,6 +261,7 @@ export class EmployeeComponent implements OnInit {
       salary_grade: employee.salary_grade || '',
       warehouse_id: employee.warehouse_id || ''
     };
+    this.editStatus = employee.status;
     this.showEditModal = true;
   }
 
@@ -241,22 +269,49 @@ export class EmployeeComponent implements OnInit {
     this.showEditModal = false;
     this.employeeToEdit = null;
     this.editForm = this.initEditForm();
+    this.editStatus = EmployeeStatus.ACTIVE;
   }
 
   submitEdit(): void {
     if (!this.employeeToEdit) return;
+    if (!this.validateEditForm()) return;
 
+    const payload = {
+      ...this.editForm,
+      department: this.editForm.department?.trim() || undefined,
+      position: this.editForm.position?.trim() || undefined
+    };
     this.loading = true;
-    this.employeeService.update(this.employeeToEdit.id, this.editForm).subscribe({
+    this.employeeService.update(this.employeeToEdit.id, payload).subscribe({
       next: (response) => {
-        if (response.success) {
-          this.toastr.success('Thành công', 'Cập nhật nhân viên thành công!');
-          this.closeEditModal();
-          this.loadEmployees();
-        } else {
+        if (!response.success) {
           this.toastr.error('Lỗi', response.message || 'Có lỗi khi cập nhật nhân viên');
           this.loading = false;
+          return;
         }
+        const edited = this.employeeToEdit!;
+        if (this.editStatus && this.editStatus !== edited.status) {
+          this.employeeService.changeStatus(edited.id, { status: this.editStatus }).subscribe({
+            next: (statusRes) => {
+              if (statusRes.success) {
+                this.toastr.success('Thành công', 'Cập nhật nhân viên thành công!');
+                this.closeEditModal();
+                this.loadEmployees();
+              } else {
+                this.toastr.error('Lỗi', statusRes.message || 'Có lỗi khi đổi trạng thái.');
+                this.loading = false;
+              }
+            },
+            error: (error) => {
+              this.toastr.error('Lỗi', error.error?.message || 'Có lỗi khi đổi trạng thái.');
+              this.loading = false;
+            }
+          });
+          return;
+        }
+        this.toastr.success('Thành công', 'Cập nhật nhân viên thành công!');
+        this.closeEditModal();
+        this.loadEmployees();
       },
       error: (error) => {
         console.error('Error updating employee:', error);
@@ -343,6 +398,36 @@ export class EmployeeComponent implements OnInit {
     }
     if (this.createForm.phone_number && !/^\d{10,15}$/.test(this.createForm.phone_number)) {
       this.toastr.warning('SĐT không hợp lệ', 'Số điện thoại phải từ 10-15 chữ số');
+      return false;
+    }
+    if (this.createForm.username.trim().length > 50
+      || this.createForm.first_name.trim().length > 50
+      || this.createForm.last_name.trim().length > 50) {
+      this.toastr.warning('Quá dài', 'Tên đăng nhập, họ và tên không được vượt quá 50 ký tự');
+      return false;
+    }
+    if (this.createForm.email.trim().length > 100) {
+      this.toastr.warning('Quá dài', 'Email không được vượt quá 100 ký tự');
+      return false;
+    }
+    if ((this.createForm.department?.length || 0) > 100 || (this.createForm.position?.length || 0) > 100) {
+      this.toastr.warning('Quá dài', 'Phòng ban và chức vụ không được vượt quá 100 ký tự');
+      return false;
+    }
+    if (!this.createForm.role) {
+      this.toastr.warning('Thiếu thông tin', 'Vui lòng chọn vai trò');
+      return false;
+    }
+    return true;
+  }
+
+  private validateEditForm(): boolean {
+    if ((this.editForm.department?.length || 0) > 100 || (this.editForm.position?.length || 0) > 100) {
+      this.toastr.warning('Quá dài', 'Phòng ban và chức vụ không được vượt quá 100 ký tự');
+      return false;
+    }
+    if ((this.editForm.salary_grade?.length || 0) > 20) {
+      this.toastr.warning('Quá dài', 'Bậc lương không được vượt quá 20 ký tự');
       return false;
     }
     return true;

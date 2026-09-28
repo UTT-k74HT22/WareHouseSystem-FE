@@ -69,7 +69,7 @@
           </td>
           <td>{{ user.created_at ? (user.created_at | date:'dd/MM/yyyy') : '-' }}</td>
           <td class="actions">
-            <button *appHasAnyPermission="userRoleReadPermissions" class="btn-icon btn-view" (click)="openAssignRoleModal(user)" title="Quản lý roles">
+            <button *appHasAnyPermission="userRoleManagePermissions" class="btn-icon btn-view" (click)="openAssignRoleModal(user)" title="Quản lý roles">
               <i class="fa-solid fa-user-shield" aria-hidden="true"></i>
             </button>
           </td>

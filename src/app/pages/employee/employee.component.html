@@ -635,6 +635,18 @@
                 </option>
               </select>
             </div>
+            <div class="form-group">
+              <label for="edit-status">Trạng thái</label>
+              <select
+                id="edit-status"
+                class="form-control"
+                [(ngModel)]="editStatus"
+                name="edit_status"
+              >
+                <option [ngValue]="EmployeeStatus.ACTIVE">Đang hoạt động</option>
+                <option [ngValue]="EmployeeStatus.ON_LEAVE">Nghỉ phép</option>
+              </select>
+            </div>
           </div>
         </form>
       </div>

@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { forkJoin, of, switchMap } from 'rxjs';
+import { forkJoin } from 'rxjs';
 import { AccountService } from '../../service/Account/account.service';
 import { UserRoleService } from '../../service/UserRoleService/user-role.service';
 import { RoleService } from '../../service/RoleService/role.service';
@@ -149,20 +149,9 @@ export class UserManagementComponent implements OnInit {
 
     this.savingRoles = true;
 
-    const removeOperation = roleIdsToRemove.length > 0
-      ? forkJoin(roleIdsToRemove.map((roleId) => this.userRoleService.removeRoleFromUser(userId, roleId)))
-      : of([]);
-
-    removeOperation.pipe(
-      switchMap(() => {
-        if (!hasAddedRoles) {
-          return of(null);
-        }
-
-        const request: AssignRolesRequest = { role_ids: this.selectedRolesForUser };
-        return this.userRoleService.assignRolesToUser(userId, request);
-      })
-    ).subscribe({
+    // BE POST đã sync/replace toàn bộ: chỉ cần 1 call, tránh dở dang giữa DELETE và POST
+    const request: AssignRolesRequest = { role_ids: this.selectedRolesForUser };
+    this.userRoleService.assignRolesToUser(userId, request).subscribe({
       next: () => {
         this.toastr.success('Quản lý user', 'Cập nhật roles thành công!');
         this.showAssignRoleModal = false;

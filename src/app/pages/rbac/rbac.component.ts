@@ -8,9 +8,7 @@ import { PermissionResponse } from '../../dto/response/Permission/PermissionResp
 import { RoleResponse } from '../../dto/response/Role/RoleResponse';
 import { AccountResponse } from '../../dto/response/Account/AccountResponse';
 import {
-  ActionType,
-  CreatePermissionRequest,
-  UpdatePermissionRequest
+  ActionType
 } from '../../dto/request/Permission/PermissionRequest';
 import {
   AssignPermissionsRequest,
@@ -37,9 +35,7 @@ export class RbacComponent implements OnInit {
   activeTab: 'permissions' | 'roles' = 'permissions';
 
   permissions: PermissionResponse[] = [];
-  allPermissions: PermissionResponse[] = [];
   roles: RoleResponse[] = [];
-  allRoles: RoleResponse[] = [];
 
   currentPage = 0;
   pageSize = 10;
@@ -51,11 +47,6 @@ export class RbacComponent implements OnInit {
   selectedResource = '';
   selectedAction: ActionType | '' = '';
 
-  showCreatePermModal = false;
-  showEditPermModal = false;
-  showDeletePermConfirm = false;
-  selectedPermission: PermissionResponse | null = null;
-  permissionToDelete: PermissionResponse | null = null;
 
   showCreateRoleModal = false;
   showEditRoleModal = false;
@@ -76,8 +67,6 @@ export class RbacComponent implements OnInit {
   roleUsersTotalPages = 0;
   roleUsersTotalElements = 0;
 
-  createPermForm: CreatePermissionRequest = this.initCreatePermForm();
-  editPermForm: UpdatePermissionRequest = {};
   createRoleForm: CreateRoleRequest = this.initCreateRoleForm();
   editRoleForm: UpdateRoleRequest = {};
 
@@ -85,9 +74,6 @@ export class RbacComponent implements OnInit {
   actionOptions = Object.values(ActionType);
   resourceOptions: ResourceOption[] = [];
   readonly permissionReadPermissions = ['PERM_PERMISSION_READ'];
-  readonly permissionCreatePermissions = ['PERM_PERMISSION_CREATE'];
-  readonly permissionUpdatePermissions = ['PERM_PERMISSION_UPDATE'];
-  readonly permissionDeletePermissions = ['PERM_PERMISSION_DELETE'];
   readonly roleReadPermissions = ['PERM_ROLE_READ'];
   readonly roleCreatePermissions = ['PERM_ROLE_CREATE'];
   readonly roleUpdatePermissions = ['PERM_ROLE_UPDATE'];
@@ -120,7 +106,9 @@ export class RbacComponent implements OnInit {
     this.loadRoles();
   }
 
-  loadPermissions(): void {
+  private loadSeq = 0;
+
+  loadPermissions(silent = false): void {
     if (!this.canReadPermissions()) {
       this.loading = false;
       if (this.canReadRoles()) {
@@ -130,23 +118,33 @@ export class RbacComponent implements OnInit {
       return;
     }
 
+    if (!silent) {
+      this.loading = true;
+    }
+    const seq = ++this.loadSeq;
     this.permissionService.getAll(
-      0,
-      200,
+      this.currentPage,
+      this.pageSize,
       this.selectedResource || undefined,
       this.selectedAction || undefined,
       this.searchKeyword || undefined
     ).subscribe({
       next: (res) => {
+        if (seq !== this.loadSeq) {
+          return;
+        }
         if (res.success) {
-          this.allPermissions = res.data.content;
-          this.syncResourceOptionsFromPermissions(this.allPermissions);
-          this.applyPermFilter();
+          this.permissions = res.data.content;
+          this.totalElements = res.data.total_elements;
+          this.totalPages = res.data.total_pages;
+          this.syncResourceOptionsFromPermissions(this.permissions);
         }
         this.loading = false;
       },
       error: (error) => {
-        this.allPermissions = [];
+        if (seq !== this.loadSeq) {
+          return;
+        }
         this.permissions = [];
         this.totalElements = 0;
         this.totalPages = 0;
@@ -164,7 +162,7 @@ export class RbacComponent implements OnInit {
     });
   }
 
-  loadRoles(): void {
+  loadRoles(silent = false): void {
     if (!this.canReadRoles()) {
       this.loading = false;
       if (this.canReadPermissions()) {
@@ -174,16 +172,26 @@ export class RbacComponent implements OnInit {
       return;
     }
 
-    this.roleService.getAll(0, 200, undefined, this.searchKeyword || undefined).subscribe({
+    if (!silent) {
+      this.loading = true;
+    }
+    const seq = ++this.loadSeq;
+    this.roleService.getAll(this.currentPage, this.pageSize, undefined, this.searchKeyword || undefined).subscribe({
       next: (res) => {
+        if (seq !== this.loadSeq) {
+          return;
+        }
         if (res.success) {
-          this.allRoles = res.data.content;
-          this.applyRoleFilter();
+          this.roles = res.data.content;
+          this.totalElements = res.data.total_elements;
+          this.totalPages = res.data.total_pages;
         }
         this.loading = false;
       },
       error: (error) => {
-        this.allRoles = [];
+        if (seq !== this.loadSeq) {
+          return;
+        }
         this.roles = [];
         this.totalElements = 0;
         this.totalPages = 0;
@@ -212,11 +220,11 @@ export class RbacComponent implements OnInit {
     this.currentPage = page;
 
     if (this.activeTab === 'permissions') {
-      this.applyPermFilter();
+      this.loadPermissions();
       return;
     }
 
-    this.applyRoleFilter();
+    this.loadRoles();
   }
 
   switchTab(tab: 'permissions' | 'roles'): void {
@@ -231,88 +239,6 @@ export class RbacComponent implements OnInit {
     this.selectedResource = '';
     this.selectedAction = '';
     this.loadData();
-  }
-
-  openCreatePermModal(): void {
-    if (!this.canCreatePermission()) {
-      this.showPermissionDeniedToast();
-      return;
-    }
-
-    this.loadPermissionResources();
-    this.createPermForm = this.initCreatePermForm();
-    this.showCreatePermModal = true;
-  }
-
-  onCreatePermSubmit(): void {
-    this.permissionService.create(this.createPermForm).subscribe({
-      next: (res) => {
-        if (!res.success) return;
-
-        this.toastr.success('Phân quyền', 'Tạo permission thành công!');
-        this.showCreatePermModal = false;
-        this.loadPermissionResources(true);
-        this.loadPermissions();
-      }
-    });
-  }
-
-  openEditPermModal(perm: PermissionResponse): void {
-    if (!this.canUpdatePermission()) {
-      this.showPermissionDeniedToast();
-      return;
-    }
-
-    this.setEditPermissionState(perm);
-
-    this.permissionService.getById(perm.id).subscribe({
-      next: (res) => {
-        if (!res.success) {
-          return;
-        }
-
-        this.setEditPermissionState(res.data);
-      }
-    });
-  }
-
-  onEditPermSubmit(): void {
-    if (!this.selectedPermission) return;
-
-    this.permissionService.update(this.selectedPermission.id, this.editPermForm).subscribe({
-      next: (res) => {
-        if (!res.success) return;
-
-        this.toastr.success('Phân quyền', 'Cập nhật permission thành công!');
-        this.showEditPermModal = false;
-        this.loadPermissions();
-      }
-    });
-  }
-
-  openDeletePermConfirm(perm: PermissionResponse): void {
-    if (!this.canDeletePermission()) {
-      this.showPermissionDeniedToast();
-      return;
-    }
-
-    this.permissionToDelete = perm;
-    this.showDeletePermConfirm = true;
-  }
-
-  onDeletePermConfirm(): void {
-    if (!this.permissionToDelete) return;
-
-    this.permissionService.delete(this.permissionToDelete.id).subscribe({
-      next: (res) => {
-        if (!res.success) return;
-
-        this.toastr.success('Phân quyền', 'Xóa permission thành công!');
-        this.showDeletePermConfirm = false;
-        this.loadPermissionResources(true);
-        this.loadPermissions();
-      }
-    });
   }
 
   openCreateRoleModal(): void {
@@ -430,6 +356,10 @@ export class RbacComponent implements OnInit {
 
   onAssignPermSubmit(): void {
     if (!this.selectedRole) return;
+    if (this.isSystemAdminRole(this.selectedRole)) {
+      this.toastr.warning('Role ADMIN được bảo vệ', 'Không thể thay đổi permission của role quản trị hệ thống.');
+      return;
+    }
 
     const roleId = this.selectedRole.id;
     const initialPermissionSet = new Set(this.initialPermissionsForRole);
@@ -558,7 +488,7 @@ export class RbacComponent implements OnInit {
         this.resourceOptions = this.toResourceOptions(res.data ?? []);
       },
       error: () => {
-        this.syncResourceOptionsFromPermissions(this.allPermissions);
+        this.syncResourceOptionsFromPermissions(this.permissions);
       }
     });
   }
@@ -600,9 +530,6 @@ export class RbacComponent implements OnInit {
   }
 
   closeAllModals(): void {
-    this.showCreatePermModal = false;
-    this.showEditPermModal = false;
-    this.showDeletePermConfirm = false;
     this.showCreateRoleModal = false;
     this.showEditRoleModal = false;
     this.showDeleteRoleConfirm = false;
@@ -614,56 +541,8 @@ export class RbacComponent implements OnInit {
     this.initialPermissionsForRole = [];
     this.usersOfRole = [];
 
-    this.selectedPermission = null;
-    this.permissionToDelete = null;
     this.selectedRole = null;
     this.roleToDelete = null;
-  }
-
-  private applyPermFilter(): void {
-    let filtered = [...this.allPermissions];
-    const keyword = this.searchKeyword.trim().toLowerCase();
-
-    if (keyword) {
-      filtered = filtered.filter((permission) =>
-        (permission.name || '').toLowerCase().includes(keyword) ||
-        (permission.resource || '').toLowerCase().includes(keyword) ||
-        (permission.code || '').toLowerCase().includes(keyword)
-      );
-    }
-
-    this.totalElements = filtered.length;
-    this.totalPages = this.totalElements === 0 ? 0 : Math.ceil(this.totalElements / this.pageSize);
-
-    const start = this.currentPage * this.pageSize;
-    this.permissions = filtered.slice(start, start + this.pageSize);
-  }
-
-  private applyRoleFilter(): void {
-    let filtered = [...this.allRoles];
-    const keyword = this.searchKeyword.trim().toLowerCase();
-
-    if (keyword) {
-      filtered = filtered.filter((role) =>
-        role.name.toLowerCase().includes(keyword) ||
-        role.code.toLowerCase().includes(keyword) ||
-        (role.description || '').toLowerCase().includes(keyword)
-      );
-    }
-
-    this.totalElements = filtered.length;
-    this.totalPages = this.totalElements === 0 ? 0 : Math.ceil(this.totalElements / this.pageSize);
-
-    const start = this.currentPage * this.pageSize;
-    this.roles = filtered.slice(start, start + this.pageSize);
-  }
-
-  private initCreatePermForm(): CreatePermissionRequest {
-    return {
-      name: '',
-      resource: '',
-      action: ActionType.READ
-    };
   }
 
   private initCreateRoleForm(): CreateRoleRequest {
@@ -672,15 +551,6 @@ export class RbacComponent implements OnInit {
       description: '',
       is_default: false
     };
-  }
-
-  private setEditPermissionState(permission: PermissionResponse): void {
-    this.selectedPermission = permission;
-    this.editPermForm = {
-      name: permission.name,
-      description: permission.description ?? undefined
-    };
-    this.showEditPermModal = true;
   }
 
   private setEditRoleState(role: RoleResponse): void {
@@ -790,17 +660,8 @@ export class RbacComponent implements OnInit {
     return this.authService.hasAnyPermission(this.permissionReadPermissions);
   }
 
-  private canCreatePermission(): boolean {
-    return this.authService.hasAnyPermission(this.permissionCreatePermissions);
-  }
 
-  private canUpdatePermission(): boolean {
-    return this.authService.hasAnyPermission(this.permissionUpdatePermissions);
-  }
 
-  private canDeletePermission(): boolean {
-    return this.authService.hasAnyPermission(this.permissionDeletePermissions);
-  }
 
   private canReadRoles(): boolean {
     return this.authService.hasAnyPermission(this.roleReadPermissions);
@@ -821,6 +682,11 @@ export class RbacComponent implements OnInit {
   private canManageRolePermissions(): boolean {
     return this.authService.hasAnyPermission(this.rolePermissionReadPermissions)
       && this.authService.hasAnyPermission(this.rolePermissionManagePermissions);
+  }
+
+  isSystemAdminRole(role: RoleResponse | null | undefined): boolean {
+    if (!role) return false;
+    return role.name?.toUpperCase() === 'ADMIN' || role.code?.toUpperCase() === 'ROLE_ADMIN';
   }
 
   private syncAccessibleTab(): void {
