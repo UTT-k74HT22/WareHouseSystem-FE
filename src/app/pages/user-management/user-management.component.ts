@@ -130,7 +130,7 @@ export class UserManagementComponent implements OnInit {
     }
 
     if (this.selectedRolesForUser.length === 0) {
-      this.toastr.warning('Quan ly user', 'Moi user phai co it nhat mot role.');
+      this.toastr.warning('Quản lý người dùng', 'Mỗi người dùng phải có ít nhất một vai trò.');
       return;
     }
 

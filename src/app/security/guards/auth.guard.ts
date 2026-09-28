@@ -23,7 +23,7 @@ export class AuthGuard implements CanActivate {
       take(1),
       switchMap((authState) => {
         if (!authState.isAuthenticated) {
-          this.toastr.warning('Chua dang nhap', 'Vui long dang nhap de tiep tuc');
+          this.toastr.warning('Chưa đăng nhập', 'Vui lòng đăng nhập để tiếp tục');
           this.router.navigate(['/login'], {
             queryParams: { returnUrl: state.url }
           });
@@ -37,7 +37,7 @@ export class AuthGuard implements CanActivate {
               const hasPermission = requiredPermissions.some((permission) => permissions.includes(permission));
 
               if (!hasPermission) {
-                this.toastr.error('Khong co quyen', 'Ban khong co quyen truy cap trang nay');
+                this.toastr.error('Không có quyền', 'Bạn không có quyền truy cập trang này');
                 this.router.navigate(['/dashboard']);
                 return false;
               }
@@ -68,7 +68,7 @@ export class AuthGuard implements CanActivate {
       return true;
     }
 
-    this.toastr.error('Khong co quyen', 'Ban khong co quyen truy cap trang nay');
+    this.toastr.error('Không có quyền', 'Bạn không có quyền truy cập trang này');
     this.router.navigate(['/dashboard']);
     return false;
   }

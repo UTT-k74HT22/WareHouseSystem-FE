@@ -317,21 +317,21 @@ export class StockMovementsComponent implements OnInit {
   getTypeLabel(type: StockMovementType): string {
     switch (type) {
       case StockMovementType.INBOUND:
-        return 'Nhap kho';
+        return 'Nhập kho';
       case StockMovementType.OUTBOUND:
-        return 'Xuat kho';
+        return 'Xuất kho';
       case StockMovementType.ADJUSTMENT_INCREASE:
-        return 'Dieu chinh tang';
+        return 'Điều chỉnh tăng';
       case StockMovementType.ADJUSTMENT_DECREASE:
-        return 'Dieu chinh giam';
+        return 'Điều chỉnh giảm';
       case StockMovementType.TRANSFER_OUT:
-        return 'Chuyen ra';
+        return 'Chuyển ra';
       case StockMovementType.TRANSFER_IN:
-        return 'Chuyen vao';
+        return 'Chuyển vào';
       case StockMovementType.RESERVE:
-        return 'Dat truoc';
+        return 'Đặt trước';
       case StockMovementType.UNRESERVE:
-        return 'Bo dat truoc';
+        return 'Bỏ đặt trước';
       default:
         return type;
     }
@@ -611,7 +611,7 @@ export class StockAdjustmentsComponent implements OnInit, OnDestroy {
       const createdFrom = new Date(this.filters.created_from).getTime();
       const createdTo = new Date(this.filters.created_to).getTime();
       if (createdFrom > createdTo) {
-        this.toastr.error('Stock Adjustment', 'createdFrom khong duoc lon hon createdTo.');
+        this.toastr.error('Điều chỉnh kho', 'Ngày bắt đầu không được lớn hơn ngày kết thúc.');
         return;
       }
     }
@@ -988,19 +988,19 @@ export class StockAdjustmentsComponent implements OnInit, OnDestroy {
   getReasonLabel(reason: ReasonType): string {
     switch (reason) {
       case ReasonType.DAMAGE:
-        return 'Hu hong';
+        return 'Hư hỏng';
       case ReasonType.THEFT:
-        return 'That thoat / mat cap';
+        return 'Thất thoát / mất cắp';
       case ReasonType.COUNT_ERROR:
-        return 'Sai lech kiem dem';
+        return 'Sai lệch kiểm đếm';
       case ReasonType.EXPIRED:
-        return 'Het han';
+        return 'Hết hạn';
       case ReasonType.QUALITY_ISSUE:
-        return 'Van de chat luong';
+        return 'Vấn đề chất lượng';
       case ReasonType.SYSTEM_ERROR:
-        return 'Loi he thong';
+        return 'Lỗi hệ thống';
       case ReasonType.OTHER:
-        return 'Khac';
+        return 'Khác';
       default:
         return reason;
     }
@@ -1009,11 +1009,11 @@ export class StockAdjustmentsComponent implements OnInit, OnDestroy {
   getStatusLabel(status: StockAdjustmentsStatus): string {
     switch (status) {
       case StockAdjustmentsStatus.PENDING_APPROVAL:
-        return 'Cho duyet';
+        return 'Chờ duyệt';
       case StockAdjustmentsStatus.APPROVED:
-        return 'Da duyet';
+        return 'Đã duyệt';
       case StockAdjustmentsStatus.REJECTED:
-        return 'Da tu choi';
+        return 'Đã từ chối';
       default:
         return status;
     }
@@ -1523,15 +1523,15 @@ export class StockTransfersComponent implements OnInit {
   getReasonLabel(reason: StockTransferReason): string {
     switch (reason) {
       case StockTransferReason.REORG:
-        return 'Sap xep lai kho';
+        return 'Sắp xếp lại kho';
       case StockTransferReason.PICKING_PREP:
-        return 'Chuan bi lay hang';
+        return 'Chuẩn bị lấy hàng';
       case StockTransferReason.OVERFLOW:
-        return 'Qua tai vi tri';
+        return 'Quá tải vị trí';
       case StockTransferReason.CONSOLIDATION:
-        return 'Gop ton';
+        return 'Gộp tồn';
       case StockTransferReason.OTHER:
-        return 'Khac';
+        return 'Khác';
       default:
         return reason;
     }
@@ -1542,9 +1542,9 @@ export class StockTransfersComponent implements OnInit {
       case StockTransferStatus.DRAFT:
         return 'Nháp';
       case StockTransferStatus.COMPLETED:
-        return 'Hoan tat';
+        return 'Hoàn tất';
       case StockTransferStatus.CANCELLED:
-        return 'Da huy';
+        return 'Đã hủy';
       default:
         return status;
     }
