@@ -354,7 +354,7 @@ export class ChatBubbleComponent implements OnInit, AfterViewChecked, OnDestroy 
     }
 
     if (error.status === 401 || error.status === 403) {
-      return 'Ban chua duoc cap quyen de su dung chatbot nay. Hay dang nhap lai hoac kiem tra token.';
+      return 'Bạn chưa được cấp quyền để sử dụng chatbot này. Hãy đăng nhập lại hoặc kiểm tra token.';
     }
 
     return CHATBOT_CONNECTION_ERROR;
@@ -369,8 +369,8 @@ export class ChatBubbleComponent implements OnInit, AfterViewChecked, OnDestroy 
     const lastBullet = truncated.lastIndexOf('•');
     const cutPoint = Math.max(lastNewline, lastBullet);
     return cutPoint > this.MAX_MESSAGE_LENGTH - 100
-      ? truncated.substring(0, cutPoint) + '\n\n... (phan hoi qua dai, vui long xem chi tiet trong trang day du)'
-      : truncated + '\n\n... (phan hoi qua dai)';
+      ? truncated.substring(0, cutPoint) + '\n\n... (phản hồi quá dài, vui lòng xem chi tiết trong trang đầy đủ)'
+      : truncated + '\n\n... (phản hồi quá dài)';
   }
 
   private scrollToBottom(): void {

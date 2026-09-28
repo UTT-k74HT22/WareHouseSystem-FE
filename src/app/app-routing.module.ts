@@ -93,7 +93,7 @@ const routes: Routes = [
     canActivate: [AuthGuard],
     data: {
       title: 'Dashboard',
-      subtitle: 'Tong quan hoat dong kho hom nay'
+      subtitle: 'Tổng quan hoạt động kho hôm nay'
     }
   },
   {
@@ -101,8 +101,8 @@ const routes: Routes = [
     component: JobTrackerComponent,
     canActivate: [AuthGuard],
     data: {
-      title: 'Theo doi tien trinh',
-      subtitle: 'Tien trinh export, import va background jobs'
+      title: 'Theo dõi tiến trình',
+      subtitle: 'Tiến trình xuất, nhập và tác vụ nền'
     }
   },
   {
@@ -110,8 +110,8 @@ const routes: Routes = [
     component: ChatBotComponent,
     canActivate: [AuthGuard],
     data: {
-      title: 'Tro ly AI',
-      subtitle: 'Tro ly ao ho tro van hanh kho hang'
+      title: 'Trợ lý AI',
+      subtitle: 'Trợ lý ảo hỗ trợ vận hành kho hàng'
     }
   },
   {
@@ -119,8 +119,8 @@ const routes: Routes = [
     component: WarehouseComponent,
     canActivate: [AuthGuard],
     data: {
-      title: 'Quan ly kho',
-      subtitle: 'Danh sach va thong tin cac kho hang',
+      title: 'Quản lý kho',
+      subtitle: 'Danh sách và thông tin các kho hàng',
       permissions: routePermissions.warehouse
     }
   },
@@ -129,8 +129,8 @@ const routes: Routes = [
     component: LocationComponent,
     canActivate: [AuthGuard],
     data: {
-      title: 'Quan ly vi tri',
-      subtitle: 'Danh sach va thong tin cac vi tri trong kho',
+      title: 'Quản lý vị trí',
+      subtitle: 'Danh sách và thông tin các vị trí trong kho',
       permissions: routePermissions.location
     }
   },
@@ -139,8 +139,8 @@ const routes: Routes = [
     component: ProductComponent,
     canActivate: [AuthGuard],
     data: {
-      title: 'San pham',
-      subtitle: 'Danh muc san pham',
+      title: 'Sản phẩm',
+      subtitle: 'Danh mục sản phẩm',
       permissions: routePermissions.product
     }
   },
@@ -149,8 +149,8 @@ const routes: Routes = [
     component: CategoryComponent,
     canActivate: [AuthGuard],
     data: {
-      title: 'Danh muc',
-      subtitle: 'Quan ly danh muc san pham',
+      title: 'Danh mục',
+      subtitle: 'Quản lý danh mục sản phẩm',
       permissions: routePermissions.category
     }
   },
@@ -159,8 +159,8 @@ const routes: Routes = [
     component: BusinessPartnerComponent,
     canActivate: [AuthGuard],
     data: {
-      title: 'Doi tac',
-      subtitle: 'Nha cung cap va khach hang',
+      title: 'Đối tác',
+      subtitle: 'Nhà cung cấp và khách hàng',
       permissions: routePermissions.businessPartner
     }
   },
@@ -169,8 +169,8 @@ const routes: Routes = [
     component: UomComponent,
     canActivate: [AuthGuard],
     data: {
-      title: 'Don vi tinh',
-      subtitle: 'Don vi do luong',
+      title: 'Đơn vị tính',
+      subtitle: 'Đơn vị đo lường',
       permissions: routePermissions.unitOfMeasure
     }
   },
@@ -179,8 +179,8 @@ const routes: Routes = [
     component: BatchComponent,
     canActivate: [AuthGuard],
     data: {
-      title: 'Lo hang',
-      subtitle: 'Quan ly lo hang va han su dung',
+      title: 'Lô hàng',
+      subtitle: 'Quản lý lô hàng và hạn sử dụng',
       permissions: routePermissions.batch
     }
   },
@@ -189,8 +189,8 @@ const routes: Routes = [
     component: PurchaseOrderComponent,
     canActivate: [AuthGuard],
     data: {
-      title: 'Don mua hang',
-      subtitle: 'Quan ly don dat hang nha cung cap',
+      title: 'Đơn mua hàng',
+      subtitle: 'Quản lý đơn đặt hàng nhà cung cấp',
       permissions: routePermissions.purchaseOrder
     }
   },
@@ -199,8 +199,8 @@ const routes: Routes = [
     component: SalesOrderComponent,
     canActivate: [AuthGuard],
     data: {
-      title: 'Don ban hang',
-      subtitle: 'Quan ly don ban hang khach hang',
+      title: 'Đơn bán hàng',
+      subtitle: 'Quản lý đơn bán hàng khách hàng',
       permissions: routePermissions.salesOrder
     }
   },
@@ -209,8 +209,8 @@ const routes: Routes = [
     component: InboundComponent,
     canActivate: [AuthGuard],
     data: {
-      title: 'Nhap kho',
-      subtitle: 'Phieu nhap kho tu nha cung cap',
+      title: 'Nhập kho',
+      subtitle: 'Phiếu nhập kho từ nhà cung cấp',
       permissions: routePermissions.inboundReceipt
     }
   },
@@ -219,8 +219,8 @@ const routes: Routes = [
     component: OutboundComponent,
     canActivate: [AuthGuard],
     data: {
-      title: 'Xuat kho',
-      subtitle: 'Phieu xuat kho giao khach hang',
+      title: 'Xuất kho',
+      subtitle: 'Phiếu xuất kho giao khách hàng',
       permissions: routePermissions.outboundShipment
     }
   },
@@ -229,8 +229,8 @@ const routes: Routes = [
     component: InventoryComponent,
     canActivate: [AuthGuard],
     data: {
-      title: 'Ton kho',
-      subtitle: 'Theo doi ton kho theo vi tri',
+      title: 'Tồn kho',
+      subtitle: 'Theo dõi tồn kho theo vị trí',
       permissions: routePermissions.inventory
     }
   },
@@ -239,8 +239,8 @@ const routes: Routes = [
     component: StockMovementsComponent,
     canActivate: [AuthGuard],
     data: {
-      title: 'Lich su kho',
-      subtitle: 'Toan bo giao dich kho',
+      title: 'Lịch sử kho',
+      subtitle: 'Toàn bộ giao dịch kho',
       permissions: routePermissions.stockMovement
     }
   },
@@ -249,8 +249,8 @@ const routes: Routes = [
     component: StockAdjustmentsComponent,
     canActivate: [AuthGuard],
     data: {
-      title: 'Dieu chinh kho',
-      subtitle: 'Phieu dieu chinh ton kho',
+      title: 'Điều chỉnh kho',
+      subtitle: 'Phiếu điều chỉnh tồn kho',
       permissions: routePermissions.stockAdjustment
     }
   },
@@ -259,8 +259,8 @@ const routes: Routes = [
     component: StockTransfersComponent,
     canActivate: [AuthGuard],
     data: {
-      title: 'Chuyen kho',
-      subtitle: 'Chuyen hang giua cac vi tri',
+      title: 'Chuyển kho',
+      subtitle: 'Chuyển hàng giữa các vị trí',
       permissions: routePermissions.stockTransfer
     }
   },
@@ -269,8 +269,8 @@ const routes: Routes = [
     component: EmployeeComponent,
     canActivate: [AuthGuard],
     data: {
-      title: 'Nhan vien',
-      subtitle: 'Quan ly thong tin nhan vien',
+      title: 'Nhân viên',
+      subtitle: 'Quản lý thông tin nhân viên',
       permissions: routePermissions.employee
     }
   },
@@ -279,8 +279,8 @@ const routes: Routes = [
     component: RbacComponent,
     canActivate: [AuthGuard],
     data: {
-      title: 'Phan quyen',
-      subtitle: 'Quan ly quyen va vai tro',
+      title: 'Phân quyền',
+      subtitle: 'Quản lý quyền và vai trò',
       permissions: routePermissions.rbac
     }
   },
@@ -289,8 +289,8 @@ const routes: Routes = [
     component: UserManagementComponent,
     canActivate: [AuthGuard],
     data: {
-      title: 'Quan ly nguoi dung',
-      subtitle: 'Quan ly tai khoan va phan quyen',
+      title: 'Quản lý người dùng',
+      subtitle: 'Quản lý tài khoản và phân quyền',
       permissions: routePermissions.user
     }
   },
@@ -299,8 +299,8 @@ const routes: Routes = [
     component: ProfileComponent,
     canActivate: [AuthGuard],
     data: {
-      title: 'Thong tin ca nhan',
-      subtitle: 'Quan ly ho so tai khoan'
+      title: 'Thông tin cá nhân',
+      subtitle: 'Quản lý hồ sơ tài khoản'
     }
   },
   {
@@ -308,8 +308,8 @@ const routes: Routes = [
     component: ChangePasswordComponent,
     canActivate: [AuthGuard],
     data: {
-      title: 'Doi mat khau',
-      subtitle: 'Cap nhat mat khau tai khoan'
+      title: 'Đổi mật khẩu',
+      subtitle: 'Cập nhật mật khẩu tài khoản'
     }
   },
   {
@@ -317,8 +317,8 @@ const routes: Routes = [
     component: SettingsComponent,
     canActivate: [AuthGuard],
     data: {
-      title: 'Cai dat',
-      subtitle: 'Tuy chinh trai nghiem su dung'
+      title: 'Cài đặt',
+      subtitle: 'Tùy chỉnh trải nghiệm sử dụng'
     }
   },
   {
