@@ -838,7 +838,7 @@ export class InboundComponent implements OnInit {
     }
 
     const productName = this.normalizeText(this.products.find((item) => item.id === line.product_id)?.name);
-    return productName || 'Khong ro san pham';
+    return productName || 'Không rõ sản phẩm';
   }
 
   getLineProductSkuDisplay(line: InboundReceiptLineResponse): string | null {
@@ -861,12 +861,12 @@ export class InboundComponent implements OnInit {
 
     return this.normalizeText(line.location_code)
       || this.normalizeText(location?.code)
-      || 'Khong ro vi tri';
+      || 'Không rõ vị trí';
   }
 
   getLineBatchDisplay(line: InboundReceiptLineResponse): string {
     if (!line.batch_id) {
-      return 'Khong theo doi lo';
+      return 'Không theo dõi lô';
     }
 
     const directBatch = this.normalizeText(line.batch_number);
@@ -875,7 +875,7 @@ export class InboundComponent implements OnInit {
     }
 
     return this.normalizeText(this.batchCatalog.find((item) => item.id === line.batch_id)?.batch_number)
-      || 'Chua xac dinh lo';
+      || 'Chưa xác định lô';
   }
 
   getLinePoSummary(line: InboundReceiptLineResponse): string {
@@ -888,7 +888,7 @@ export class InboundComponent implements OnInit {
     const received = this.formatQuantity(purchaseOrderLine.quantity_received);
     const remaining = this.getReceiptLineRemaining(line);
 
-    return `Dat ${ordered} | Da nhan ${received} | Con ${remaining === null ? '—' : this.formatQuantity(remaining)}`;
+    return `Đặt ${ordered} | Đã nhận ${received} | Còn ${remaining === null ? '—' : this.formatQuantity(remaining)}`;
   }
 
   getLineNotesDisplay(line: InboundReceiptLineResponse): string {
@@ -908,7 +908,7 @@ export class InboundComponent implements OnInit {
 
     if (this.looksLikeAccountId(rawConfirmedBy)) {
       this.resolveConfirmedByDisplay(rawConfirmedBy);
-      return 'Dang tai...';
+    return 'Đang tải...';
     }
 
     return rawConfirmedBy;
