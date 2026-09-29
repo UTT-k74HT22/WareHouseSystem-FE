@@ -45,6 +45,13 @@ export class PurchaseOrderComponent implements OnInit {
   // ─── Bộ lọc ─────────────────────────────────────────────────────
   searchKeyword = '';
   selectedStatus: '' | OrderStatus = '';
+  selectedSupplierId = '';
+  selectedWarehouseId = '';
+  orderDateFrom = '';
+  orderDateTo = '';
+  statsDraft = 0;
+  statsConfirmed = 0;
+  statsCompleted = 0;
 
   // ─── Trạng thái Modal ────────────────────────────────────────────
   showCreateModal = false;
@@ -95,17 +102,30 @@ export class PurchaseOrderComponent implements OnInit {
   // ══════════════════════════════════════════════════
   // LOAD DỮ LIỆU
   // ══════════════════════════════════════════════════
-  loadOrders(): void {
-    this.loading = true;
+  private loadSeq = 0;
+
+  loadOrders(silent = false): void {
+    if (!silent) {
+      this.loading = true;
+      this.loadStats();
+    }
+    const seq = ++this.loadSeq;
     const filters: PurchaseOrderFilters = {
       purchaseOrderNumber: this.searchKeyword.trim() || undefined,
       status: this.selectedStatus || undefined,
+      supplierId: this.selectedSupplierId || undefined,
+      warehouseId: this.selectedWarehouseId || undefined,
+      orderDateFrom: this.orderDateFrom || undefined,
+      orderDateTo: this.orderDateTo || undefined,
       sortBy: 'updatedAt',
       direction: 'DESC',
     };
 
     this.poService.getAll(this.currentPage, this.pageSize, filters).subscribe({
       next: (res) => {
+        if (seq !== this.loadSeq) {
+          return;
+        }
         if (res.success) {
           this.orders = res.data.content.map((order) => this.enrichOrder(order));
           this.totalElements = res.data.total_elements;
@@ -114,6 +134,9 @@ export class PurchaseOrderComponent implements OnInit {
         this.loading = false;
       },
       error: (error) => {
+        if (seq !== this.loadSeq) {
+          return;
+        }
         this.orders = [];
         this.totalElements = 0;
         this.totalPages = 0;
@@ -156,11 +179,9 @@ export class PurchaseOrderComponent implements OnInit {
   }
 
   loadProducts(): void {
-    this.productService.getAll(0, 200).subscribe({
-      next: (res) => {
-        if (res.success) {
-          this.products = res.data.content.filter(p => p.status === 'ACTIVE');
-        }
+    this.productService.getFullList().subscribe({
+      next: (products) => {
+        this.products = products.filter(p => p.status === 'ACTIVE');
       },
       error: () => {
         this.products = [];
@@ -172,8 +193,8 @@ export class PurchaseOrderComponent implements OnInit {
   // ══════════════════════════════════════════════════
   // TÌM KIẾM & LỌC
   // ══════════════════════════════════════════════════
-  onSearch(): void { this.currentPage = 0; this.loadOrders(); }
-  onResetFilter(): void { this.searchKeyword = ''; this.selectedStatus = ''; this.currentPage = 0; this.loadOrders(); }
+  onSearch(): void { this.currentPage = 0; this.loadOrders(true); }
+  onResetFilter(): void { this.searchKeyword = ''; this.selectedStatus = ''; this.selectedSupplierId = ''; this.selectedWarehouseId = ''; this.orderDateFrom = ''; this.orderDateTo = ''; this.currentPage = 0; this.loadOrders(true); }
 
   onPageChange(page: number): void {
     if (page < 0 || page >= this.totalPages) return;
@@ -615,9 +636,22 @@ export class PurchaseOrderComponent implements OnInit {
     return classes[status] || '';
   }
 
-  getDraftCount(): number { return this.orders.filter(o => o.status === OrderStatus.DRAFT).length; }
-  getConfirmedCount(): number { return this.orders.filter(o => o.status === OrderStatus.CONFIRMED || o.status === OrderStatus.PARTIALLY_RECEIVED).length; }
-  getCompletedCount(): number { return this.orders.filter(o => o.status === OrderStatus.COMPLETED).length; }
+  private loadStats(): void {
+    this.poService.getStats().subscribe({
+      next: (res) => {
+        if (res.success && res.data) {
+          this.statsDraft = res.data['draft'] ?? 0;
+          this.statsConfirmed = (res.data['confirmed'] ?? 0) + (res.data['partially_received'] ?? 0);
+          this.statsCompleted = res.data['completed'] ?? 0;
+        }
+      },
+      error: () => { /* giữ số cũ khi lỗi */ }
+    });
+  }
+
+  getDraftCount(): number { return this.statsDraft; }
+  getConfirmedCount(): number { return this.statsConfirmed; }
+  getCompletedCount(): number { return this.statsCompleted; }
 
   getLinesSubTotal(): number {
     return this.orderLines.reduce((sum, l) => sum + (l.line_total || 0), 0);

@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Subscription, catchError, forkJoin, map, of } from 'rxjs';
+import { Subject, Subscription, catchError, debounceTime, forkJoin, map, of } from 'rxjs';
 import { ToastrService } from '../../service/SystemService/toastr.service';
 
 import { ApiResponse } from '../../dto/response/ApiResponse';
@@ -151,8 +151,7 @@ export class StockMovementsComponent implements OnInit {
 
   private loadLookupData(): void {
     forkJoin({
-      products: this.productService.getAll(0, 200).pipe(
-        map((response) => response.data.content),
+      products: this.productService.getFullList().pipe(
         catchError(() => of([]))
       ),
       warehouses: this.warehouseService.getList().pipe(
@@ -320,6 +319,8 @@ export class StockMovementsComponent implements OnInit {
         return 'Nhập kho';
       case StockMovementType.OUTBOUND:
         return 'Xuất kho';
+      case StockMovementType.INTERNAL_MOVE:
+        return 'Chuyển kho nội bộ';
       case StockMovementType.ADJUSTMENT_INCREASE:
         return 'Điều chỉnh tăng';
       case StockMovementType.ADJUSTMENT_DECREASE:
@@ -342,15 +343,18 @@ export class StockMovementsComponent implements OnInit {
       case StockMovementType.INBOUND:
       case StockMovementType.TRANSFER_IN:
       case StockMovementType.ADJUSTMENT_INCREASE:
-      case StockMovementType.UNRESERVE:
-        return 'status-active';
+        return 'badge-active';
       case StockMovementType.OUTBOUND:
       case StockMovementType.TRANSFER_OUT:
       case StockMovementType.ADJUSTMENT_DECREASE:
+        return 'badge-inactive';
       case StockMovementType.RESERVE:
-        return 'status-pending';
+      case StockMovementType.INTERNAL_MOVE:
+        return 'badge-quarantine';
+      case StockMovementType.UNRESERVE:
+        return 'badge-disposed';
       default:
-        return 'status-inactive';
+        return 'badge-disposed';
     }
   }
 }
@@ -394,6 +398,8 @@ export class StockAdjustmentsComponent implements OnInit, OnDestroy {
   roles: string[] = [];
   isAdminReviewer = false;
   private readonly subscriptions = new Subscription();
+  private readonly filterChange$ = new Subject<void>();
+  private loadSeq = 0;
 
   filters: StockAdjustmentFilters = this.createEmptyFilters();
 
@@ -436,6 +442,17 @@ export class StockAdjustmentsComponent implements OnInit, OnDestroy {
       this.authService.authState$.subscribe((state) => {
         this.roles = state.roles || [];
         this.isAdminReviewer = this.roles.some((role) => (role || '').trim().toUpperCase() === 'ADMIN');
+      })
+    );
+
+    this.subscriptions.add(
+      this.filterChange$.pipe(debounceTime(500)).subscribe(() => {
+        if (!this.isDateRangeValid()) {
+          this.toastr.error('Stock Adjustment', 'createdFrom khong duoc lon hon createdTo.');
+          return;
+        }
+        this.currentPage = 0;
+        this.loadAdjustments(0, true);
       })
     );
 
@@ -542,8 +559,11 @@ export class StockAdjustmentsComponent implements OnInit, OnDestroy {
     };
   }
 
-  loadAdjustments(page = this.currentPage): void {
-    this.loading = true;
+  loadAdjustments(page = this.currentPage, silent = false): void {
+    if (!silent) {
+      this.loading = true;
+    }
+    const seq = ++this.loadSeq;
 
     this.stockAdjustmentService
       .getAll(page, this.pageSize, this.buildSearchParams())
@@ -558,6 +578,9 @@ export class StockAdjustmentsComponent implements OnInit, OnDestroy {
         })
       )
       .subscribe((pageResponse) => {
+        if (seq !== this.loadSeq) {
+          return;
+        }
         this.currentPage = pageResponse.page;
         this.totalPages = pageResponse.total_pages;
         this.totalElements = pageResponse.total_elements;
@@ -607,23 +630,39 @@ export class StockAdjustmentsComponent implements OnInit, OnDestroy {
   }
 
   onSearch(): void {
-    if (this.filters.created_from && this.filters.created_to) {
-      const createdFrom = new Date(this.filters.created_from).getTime();
-      const createdTo = new Date(this.filters.created_to).getTime();
-      if (createdFrom > createdTo) {
-        this.toastr.error('Điều chỉnh kho', 'Ngày bắt đầu không được lớn hơn ngày kết thúc.');
-        return;
-      }
+    if (!this.isDateRangeValid()) {
+      this.toastr.error('Điều chỉnh kho', 'Ngày bắt đầu không được lớn hơn ngày kết thúc.');
+      return;
     }
 
     this.currentPage = 0;
-    this.loadAdjustments(0);
+    this.loadAdjustments(0, true);
+  }
+
+  onFilterInputChange(): void {
+    this.filterChange$.next();
+  }
+
+  onFilterSelectChange(): void {
+    if (!this.isDateRangeValid()) {
+      this.toastr.error('Stock Adjustment', 'createdFrom khong duoc lon hon createdTo.');
+      return;
+    }
+    this.currentPage = 0;
+    this.loadAdjustments(0, true);
+  }
+
+  private isDateRangeValid(): boolean {
+    if (this.filters.created_from && this.filters.created_to) {
+      return new Date(this.filters.created_from).getTime() <= new Date(this.filters.created_to).getTime();
+    }
+    return true;
   }
 
   onResetFilters(): void {
     this.filters = this.createEmptyFilters();
     this.currentPage = 0;
-    this.loadAdjustments(0);
+    this.loadAdjustments(0, true);
   }
 
   onPageChange(page: number): void {
@@ -631,7 +670,7 @@ export class StockAdjustmentsComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.loadAdjustments(page);
+    this.loadAdjustments(page, true);
   }
 
   openCreateModal(): void {
@@ -1022,13 +1061,13 @@ export class StockAdjustmentsComponent implements OnInit, OnDestroy {
   getStatusClass(status: StockAdjustmentsStatus): string {
     switch (status) {
       case StockAdjustmentsStatus.PENDING_APPROVAL:
-        return 'status-pending';
+        return 'badge-quarantine';
       case StockAdjustmentsStatus.APPROVED:
-        return 'status-active';
+        return 'badge-active';
       case StockAdjustmentsStatus.REJECTED:
-        return 'status-inactive';
+        return 'badge-inactive';
       default:
-        return 'status-inactive';
+        return 'badge-disposed';
     }
   }
 
@@ -1081,11 +1120,13 @@ export class StockTransfersComponent implements OnInit {
   totalElements = 0;
 
   draftCount = 0;
+  pendingCount = 0;
   completedCount = 0;
   cancelledCount = 0;
 
   showCreateModal = false;
   showDetailModal = false;
+  showSubmitModal = false;
   showCompleteModal = false;
   showCancelModal = false;
 
@@ -1097,6 +1138,7 @@ export class StockTransfersComponent implements OnInit {
   destinationLocations: LocationResponse[] = [];
   private warehouseLocations: LocationResponse[] = [];
   selectedSourceInventoryId = '';
+  private loadSeq = 0;
 
   transferReasons = Object.values(StockTransferReason) as StockTransferReason[];
 
@@ -1169,8 +1211,11 @@ export class StockTransfersComponent implements OnInit {
     };
   }
 
-  loadTransfers(page = this.currentPage): void {
-    this.loading = true;
+  loadTransfers(page = this.currentPage, silent = false): void {
+    if (!silent) {
+      this.loading = true;
+    }
+    const seq = ++this.loadSeq;
 
     this.stockTransferService
       .getAll(page, this.pageSize)
@@ -1185,11 +1230,17 @@ export class StockTransfersComponent implements OnInit {
         })
       )
       .subscribe((pageResponse) => {
+        if (seq !== this.loadSeq) {
+          return;
+        }
         this.currentPage = pageResponse.page;
         this.totalPages = pageResponse.total_pages;
         this.totalElements = pageResponse.total_elements;
         this.transfers = pageResponse.content.map((transfer) => this.enrichTransfer(transfer));
         this.draftCount = this.transfers.filter((transfer) => transfer.status === StockTransferStatus.DRAFT).length;
+        this.pendingCount = this.transfers.filter(
+          (transfer) => transfer.status === StockTransferStatus.PENDING
+        ).length;
         this.completedCount = this.transfers.filter(
           (transfer) => transfer.status === StockTransferStatus.COMPLETED
         ).length;
@@ -1238,7 +1289,7 @@ export class StockTransfersComponent implements OnInit {
       return;
     }
 
-    this.loadTransfers(page);
+    this.loadTransfers(page, true);
   }
 
   openCreateModal(): void {
@@ -1259,8 +1310,18 @@ export class StockTransfersComponent implements OnInit {
     this.refreshTransfer(transfer.id);
   }
 
+  openSubmitModal(transfer: StockTransferViewModel): void {
+    if (!this.canSubmitTransfer(transfer)) {
+      return;
+    }
+
+    this.closeAllModals();
+    this.actionTransfer = transfer;
+    this.showSubmitModal = true;
+  }
+
   openCompleteModal(transfer: StockTransferViewModel): void {
-    if (!this.canUpdateTransfer(transfer)) {
+    if (!this.canCompleteTransfer(transfer)) {
       return;
     }
 
@@ -1270,7 +1331,7 @@ export class StockTransfersComponent implements OnInit {
   }
 
   openCancelModal(transfer: StockTransferViewModel): void {
-    if (!this.canUpdateTransfer(transfer)) {
+    if (!this.canCancelTransfer(transfer)) {
       return;
     }
 
@@ -1282,6 +1343,7 @@ export class StockTransfersComponent implements OnInit {
   closeAllModals(): void {
     this.showCreateModal = false;
     this.showDetailModal = false;
+    this.showSubmitModal = false;
     this.showCompleteModal = false;
     this.showCancelModal = false;
     this.selectedTransfer = null;
@@ -1466,6 +1528,27 @@ export class StockTransfersComponent implements OnInit {
     });
   }
 
+  onSubmitConfirm(): void {
+    if (!this.actionTransfer) {
+      return;
+    }
+
+    this.submitting = true;
+
+    this.stockTransferService.submit(this.actionTransfer.id).subscribe({
+      next: () => {
+        this.toastr.success('Stock Transfer', 'Đã trình phiếu chuyển kho chờ thực hiện.');
+        this.submitting = false;
+        this.closeAllModals();
+        this.loadTransfers(this.currentPage);
+      },
+      error: (error) => {
+        this.submitting = false;
+        this.toastr.error('Stock Transfer', errorMessage(error, 'Trình phiếu chuyển kho thất bại.'));
+      },
+    });
+  }
+
   onCompleteConfirm(): void {
     if (!this.actionTransfer) {
       return;
@@ -1508,8 +1591,17 @@ export class StockTransfersComponent implements OnInit {
     });
   }
 
-  canUpdateTransfer(transfer: StockTransferViewModel | null): boolean {
+  canSubmitTransfer(transfer: StockTransferViewModel | null): boolean {
     return transfer?.status === StockTransferStatus.DRAFT;
+  }
+
+  canCompleteTransfer(transfer: StockTransferViewModel | null): boolean {
+    return transfer?.status === StockTransferStatus.PENDING;
+  }
+
+  canCancelTransfer(transfer: StockTransferViewModel | null): boolean {
+    return transfer?.status === StockTransferStatus.DRAFT
+      || transfer?.status === StockTransferStatus.PENDING;
   }
 
   getWarehouseLabel(warehouseId: string): string {
@@ -1541,6 +1633,8 @@ export class StockTransfersComponent implements OnInit {
     switch (status) {
       case StockTransferStatus.DRAFT:
         return 'Nháp';
+      case StockTransferStatus.PENDING:
+        return 'Chờ thực hiện';
       case StockTransferStatus.COMPLETED:
         return 'Hoàn tất';
       case StockTransferStatus.CANCELLED:
@@ -1553,13 +1647,15 @@ export class StockTransfersComponent implements OnInit {
   getStatusClass(status: StockTransferStatus): string {
     switch (status) {
       case StockTransferStatus.DRAFT:
-        return 'status-pending';
+        return 'badge-disposed';
+      case StockTransferStatus.PENDING:
+        return 'badge-quarantine';
       case StockTransferStatus.COMPLETED:
-        return 'status-active';
+        return 'badge-active';
       case StockTransferStatus.CANCELLED:
-        return 'status-inactive';
+        return 'badge-inactive';
       default:
-        return 'status-inactive';
+        return 'badge-disposed';
     }
   }
 

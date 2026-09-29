@@ -56,16 +56,17 @@
       class="search-input search-input--compact"
       type="text"
       [(ngModel)]="filters.adjustment_number"
+      (ngModelChange)="onFilterInputChange()"
       placeholder="Tìm theo mã phiếu..."
       (keyup.enter)="onSearch()"
     />
-    <select class="filter-select" [(ngModel)]="filters.status">
+    <select class="filter-select" [(ngModel)]="filters.status" (ngModelChange)="onFilterSelectChange()">
       <option value="">Tất cả trạng thái</option>
       <option [value]="StockAdjustmentsStatus.PENDING_APPROVAL">Chờ duyệt</option>
       <option [value]="StockAdjustmentsStatus.APPROVED">Đã duyệt</option>
       <option [value]="StockAdjustmentsStatus.REJECTED">Đã từ chối</option>
     </select>
-    <select class="filter-select" [(ngModel)]="filters.warehouse_id">
+    <select class="filter-select" [(ngModel)]="filters.warehouse_id" (ngModelChange)="onFilterSelectChange()">
       <option value="">Tất cả kho</option>
       <option *ngFor="let warehouse of warehouses" [value]="warehouse.id">{{ warehouse.code }} - {{ warehouse.name }}</option>
     </select>
@@ -73,11 +74,12 @@
       class="search-input search-input--compact"
       type="text"
       [(ngModel)]="filters.inventory_id"
+      (ngModelChange)="onFilterInputChange()"
       placeholder="Inventory ID"
       (keyup.enter)="onSearch()"
     />
-    <input class="search-input search-input--datetime" type="datetime-local" [(ngModel)]="filters.created_from" />
-    <input class="search-input search-input--datetime" type="datetime-local" [(ngModel)]="filters.created_to" />
+    <input class="search-input search-input--datetime" type="datetime-local" [(ngModel)]="filters.created_from" (ngModelChange)="onFilterInputChange()" />
+    <input class="search-input search-input--datetime" type="datetime-local" [(ngModel)]="filters.created_to" (ngModelChange)="onFilterInputChange()" />
     <button class="btn btn-primary" (click)="onSearch()">Lọc</button>
     <button class="btn btn-ghost" (click)="onResetFilters()">Xoá lọc</button>
   </div>

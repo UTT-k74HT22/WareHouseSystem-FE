@@ -1,9 +1,11 @@
+import { ActionType } from '../../request/Permission/PermissionRequest';
+
 export interface PermissionResponse {
   id: string;
   code: string;
   name: string;
   resource: string;
-  action: string;
+  action: ActionType;
   description: string | null;
   created_by: string | null;
   created_at: string;

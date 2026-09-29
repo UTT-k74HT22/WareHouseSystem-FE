@@ -31,6 +31,11 @@ export class OutboundService {
     return this.http.get<ApiResponse<PageResponse<OutboundShipmentsResponse>>>(this.apiUrl, { params });
   }
 
+  /** GET /api/v1/outbound-shipments/stats */
+  getStats(): Observable<ApiResponse<Record<string, number>>> {
+    return this.http.get<ApiResponse<Record<string, number>>>(`${this.apiUrl}/stats`);
+  }
+
   /** GET /api/v1/outbound-shipments/:id */
   getById(id: string): Observable<ApiResponse<OutboundShipmentsResponse>> {
     return this.http.get<ApiResponse<OutboundShipmentsResponse>>(`${this.apiUrl}/${id}`);

@@ -7,7 +7,6 @@ import { PageResponse } from '../../dto/response/PageResponse';
 import { CategoryResponse } from '../../dto/response/Category/CategoryResponse';
 import { CreateCategoryRequest } from '../../dto/request/Category/CreateCategoryRequest';
 import { UpdateCategoryRequest } from '../../dto/request/Category/UpdateCategoryRequest';
-import { UpdateCategoryStatusRequest } from '../../dto/request/Category/UpdateCategoryStatusRequest';
 import { CategoryStatus } from '../../helper/enums/CategoryStatus';
 
 @Injectable({ providedIn: 'root' })
@@ -17,8 +16,11 @@ export class CategoryService {
   constructor(private http: HttpClient) {}
 
   /** GET /api/v1/categories */
-  getAll(page = 0, size = 10, status?: CategoryStatus): Observable<ApiResponse<PageResponse<CategoryResponse>>> {
+  getAll(page = 0, size = 10, keyword?: string, status?: CategoryStatus): Observable<ApiResponse<PageResponse<CategoryResponse>>> {
     let params = new HttpParams().set('page', page).set('size', size);
+    if (keyword?.trim()) {
+      params = params.set('keyword', keyword.trim());
+    }
     if (status) {
       params = params.set('status', status);
     }
@@ -41,7 +43,7 @@ export class CategoryService {
   }
 
   /** PATCH /api/v1/categories/:id/status */
-  changeStatus(id: string, request: UpdateCategoryStatusRequest): Observable<ApiResponse<CategoryResponse>> {
+  changeStatus(id: string, request: UpdateCategoryRequest): Observable<ApiResponse<CategoryResponse>> {
     return this.http.patch<ApiResponse<CategoryResponse>>(`${this.apiUrl}/${id}/status`, request);
   }
 }

@@ -42,7 +42,7 @@
       placeholder="Tìm theo số phiếu xuất..."
       (keyup.enter)="onSearch()" />
 
-    <select class="filter-select" [(ngModel)]="selectedStatus">
+    <select class="filter-select" [(ngModel)]="selectedStatus" (change)="onSearch()">
       <option value="">-- Tất cả trạng thái --</option>
       <option value="DRAFT">Nháp</option>
       <option value="PICKING">Đang lấy hàng</option>

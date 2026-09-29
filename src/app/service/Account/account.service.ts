@@ -5,6 +5,7 @@ import {Observable} from "rxjs";
 import {ApiResponse} from "../../dto/response/ApiResponse";
 import {AccountResponse} from "../../dto/response/Account/AccountResponse";
 import {PageResponse} from "../../dto/response/PageResponse";
+import {ResetUserPasswordRequest, UpdateUserRequest} from "../../dto/request/User/UserRequest";
 
 @Injectable({
   providedIn: 'root'
@@ -35,5 +36,25 @@ export class AccountService {
 
   getUserById(id: string): Observable<ApiResponse<AccountResponse>> {
     return this.http.get<ApiResponse<AccountResponse>>(`${this.apiUrl}/${id}`);
+  }
+
+  update(
+    id: string,
+    request: UpdateUserRequest
+  ): Observable<ApiResponse<AccountResponse>> {
+    return this.http.put<ApiResponse<AccountResponse>>(
+      `${this.apiUrl}/${id}`,
+      request
+    );
+  }
+
+  resetPassword(
+    id: string,
+    request: ResetUserPasswordRequest
+  ): Observable<ApiResponse<AccountResponse>> {
+    return this.http.post<ApiResponse<AccountResponse>>(
+      `${this.apiUrl}/${id}/reset-password`,
+      request
+    );
   }
 }

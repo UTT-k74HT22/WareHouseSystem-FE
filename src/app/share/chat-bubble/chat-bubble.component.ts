@@ -60,6 +60,8 @@ export class ChatBubbleComponent implements OnInit, AfterViewChecked, OnDestroy 
   private shouldScroll = false;
   private destroy$ = new Subject<void>();
   private readonly MAX_MESSAGE_LENGTH = 500;
+  private readonly MAX_SEND_LENGTH = 1000;
+  private readonly CHAT_SCOPE = 'bubble';
 
   get showSuggestions(): boolean {
     if (this.isWelcomeState) {
@@ -148,7 +150,7 @@ export class ChatBubbleComponent implements OnInit, AfterViewChecked, OnDestroy 
     const requestMessage = suggestion.sku ? undefined : (suggestion.query ?? suggestion.label);
     const payload = suggestion.sku ? { sku: suggestion.sku } : undefined;
 
-    this.chatBotService.sendMessage(requestMessage, suggestion.intent, payload).subscribe({
+    this.chatBotService.sendMessage(requestMessage, suggestion.intent, payload, this.CHAT_SCOPE).subscribe({
       next: (res: ChatBotResponse) => {
         this.handleBotResponse(res);
         this.isLoading = false;
@@ -163,7 +165,7 @@ export class ChatBubbleComponent implements OnInit, AfterViewChecked, OnDestroy 
   }
 
   sendMessage(): void {
-    const trimmedMessage = this.newMessage.trim();
+    const trimmedMessage = this.newMessage.trim().slice(0, this.MAX_SEND_LENGTH);
     if (!trimmedMessage || this.isLoading) {
       return;
     }
@@ -189,7 +191,7 @@ export class ChatBubbleComponent implements OnInit, AfterViewChecked, OnDestroy 
     this.isLoading = true;
     this.shouldScroll = true;
 
-    this.chatBotService.sendMessage(trimmedMessage).subscribe({
+    this.chatBotService.sendMessage(trimmedMessage, undefined, undefined, this.CHAT_SCOPE).subscribe({
       next: (res: ChatBotResponse) => {
         this.handleBotResponse(res);
         this.isLoading = false;
@@ -211,7 +213,7 @@ export class ChatBubbleComponent implements OnInit, AfterViewChecked, OnDestroy 
   }
 
   clearChat(): void {
-    this.chatBotService.resetConversation();
+    this.chatBotService.resetConversation(this.CHAT_SCOPE);
     this.messages = [];
     this.backendSuggestions = [];
     this.addWelcomeMessage();

@@ -36,6 +36,13 @@
       </div>
     </div>
     <div class="stat-item">
+      <div class="stat-bar stat-bar--pending"></div>
+      <div class="stat-body">
+        <div class="stat-label">Chờ thực hiện</div>
+        <div class="stat-value">{{ pendingCount }}</div>
+      </div>
+    </div>
+    <div class="stat-item">
       <div class="stat-bar stat-bar--success"></div>
       <div class="stat-body">
         <div class="stat-label">Hoàn tất</div>
@@ -94,13 +101,22 @@
             <span class="badge" [ngClass]="getStatusClass(transfer.status)">{{ getStatusLabel(transfer.status) }}</span>
           </td>
           <td>
-            <div class="table-actions" [class.single-action]="!canUpdateTransfer(transfer)">
+            <div class="table-actions" [class.single-action]="!canSubmitTransfer(transfer) && !canCompleteTransfer(transfer) && !canCancelTransfer(transfer)">
               <button class="btn-icon" title="Chi tiết" (click)="openDetailModal(transfer)">
                 <i class="fa-regular fa-eye" aria-hidden="true"></i>
               </button>
               <ng-container *appHasAnyPermission="updatePermissions">
                 <button
-                  *ngIf="canUpdateTransfer(transfer)"
+                  *ngIf="canSubmitTransfer(transfer)"
+                  class="btn-icon btn-submit"
+                  title="Trình duyệt"
+                  (click)="openSubmitModal(transfer)">
+                  <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
+                </button>
+              </ng-container>
+              <ng-container *appHasAnyPermission="updatePermissions">
+                <button
+                  *ngIf="canCompleteTransfer(transfer)"
                   class="btn-icon btn-complete"
                   title="Hoàn tất"
                   (click)="openCompleteModal(transfer)">
@@ -109,7 +125,7 @@
               </ng-container>
               <ng-container *appHasAnyPermission="updatePermissions">
                 <button
-                  *ngIf="canUpdateTransfer(transfer)"
+                  *ngIf="canCancelTransfer(transfer)"
                   class="btn-icon btn-delete"
                   title="Huỷ"
                   (click)="openCancelModal(transfer)">
@@ -145,7 +161,16 @@
         </button>
         <ng-container *appHasAnyPermission="updatePermissions">
           <button
-            *ngIf="canUpdateTransfer(transfer)"
+            *ngIf="canSubmitTransfer(transfer)"
+            class="btn-icon btn-submit"
+            title="Trình duyệt"
+            (click)="openSubmitModal(transfer)">
+            <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
+          </button>
+        </ng-container>
+        <ng-container *appHasAnyPermission="updatePermissions">
+          <button
+            *ngIf="canCompleteTransfer(transfer)"
             class="btn-icon btn-complete"
             title="Hoàn tất"
             (click)="openCompleteModal(transfer)">
@@ -154,7 +179,7 @@
         </ng-container>
         <ng-container *appHasAnyPermission="updatePermissions">
           <button
-            *ngIf="canUpdateTransfer(transfer)"
+            *ngIf="canCancelTransfer(transfer)"
             class="btn-icon btn-delete"
             title="Huỷ"
             (click)="openCancelModal(transfer)">
@@ -359,11 +384,39 @@
     <div class="modal-footer">
       <button class="btn btn-ghost" (click)="closeAllModals()">Đóng</button>
       <ng-container *appHasAnyPermission="updatePermissions">
-        <button *ngIf="canUpdateTransfer(selectedTransfer)" class="btn btn-danger" (click)="openCancelModal(selectedTransfer)">Huỷ phiếu</button>
+        <button *ngIf="canSubmitTransfer(selectedTransfer)" class="btn btn-primary" (click)="openSubmitModal(selectedTransfer)">Trình duyệt</button>
       </ng-container>
       <ng-container *appHasAnyPermission="updatePermissions">
-        <button *ngIf="canUpdateTransfer(selectedTransfer)" class="btn btn-primary" (click)="openCompleteModal(selectedTransfer)">Hoàn tất phiếu</button>
+        <button *ngIf="canCancelTransfer(selectedTransfer)" class="btn btn-danger" (click)="openCancelModal(selectedTransfer)">Huỷ phiếu</button>
       </ng-container>
+      <ng-container *appHasAnyPermission="updatePermissions">
+        <button *ngIf="canCompleteTransfer(selectedTransfer)" class="btn btn-primary" (click)="openCompleteModal(selectedTransfer)">Hoàn tất phiếu</button>
+      </ng-container>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" *ngIf="showSubmitModal && actionTransfer" (click)="closeAllModals()">
+  <div class="modal-box modal-sm" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Trình duyệt phiếu chuyển</h3>
+      <button class="modal-close" (click)="closeAllModals()">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="callout callout-info">
+        Phiếu chuyển sang trạng thái chờ thực hiện. Tồn kho chỉ thay đổi khi thực hiện hành động hoàn tất.
+      </div>
+      <p><strong>{{ actionTransfer.transfer_number }}</strong></p>
+      <p>{{ actionTransfer.product_name }} | {{ actionTransfer.quantity }} {{ actionTransfer.uom_code }}</p>
+      <p>{{ actionTransfer.from_location_code }} → {{ actionTransfer.to_location_code }}</p>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-ghost" (click)="closeAllModals()" [disabled]="submitting">Đóng</button>
+      <button class="btn btn-primary" (click)="onSubmitConfirm()" *appHasAnyPermission="updatePermissions" [disabled]="submitting">
+        {{ submitting ? 'Đang xử lý...' : 'Xác nhận trình duyệt' }}
+      </button>
     </div>
   </div>
 </div>

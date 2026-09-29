@@ -1,85 +1,143 @@
-<div class="job-tracker-page">
-  <div class="job-tracker-header">
-    <div>
-      <h1 class="job-tracker-title">Theo dõi tiến trình</h1>
-      <p class="job-tracker-subtitle">Danh sách export, import và các background jobs gần đây</p>
+<div class="page-container">
+  <div class="page-hero">
+    <div class="hero-left">
+      <div class="hero-accent"></div>
+      <div class="hero-text">
+        <h1 class="hero-title"><i class="fa-solid fa-list-check" aria-hidden="true"></i> Theo dõi tiến trình</h1>
+        <p class="hero-subtitle">Danh sách export, import và các background jobs gần đây</p>
+      </div>
     </div>
-    <button type="button" class="refresh-btn" (click)="refresh()">Làm mới</button>
-  </div>
-
-  <div class="job-summary-card">
-    <div class="summary-item">
-      <span class="summary-label">Tổng bản ghi</span>
-      <span class="summary-value">{{ totalElements }}</span>
-    </div>
-    <div class="summary-item">
-      <span class="summary-label">Trang hiện tại</span>
-      <span class="summary-value">{{ page + 1 }}/{{ totalPages || 1 }}</span>
-    </div>
-    <div class="summary-item">
-      <span class="summary-label">Tự động cập nhật</span>
-      <span class="summary-value">15 giây</span>
+    <div class="hero-actions">
+      <button class="btn btn-ghost" type="button" (click)="refresh()">
+        <i class="fa-solid fa-rotate-right" aria-hidden="true"></i> Làm mới
+      </button>
     </div>
   </div>
 
-  <div class="job-table-card">
-    <div class="table-wrap">
-      <table class="job-table">
-        <thead>
-          <tr>
-            <th>STT</th>
-            <th>Action</th>
-            <th>Status</th>
-            <th>Time start</th>
-            <th>Time end</th>
-            <th>File</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngIf="loading">
-            <td colspan="6" class="empty-state">Đang tải dữ liệu...</td>
-          </tr>
-          <tr *ngIf="!loading && jobs.length === 0">
-            <td colspan="6" class="empty-state">Chưa có background job nào.</td>
-          </tr>
-          <tr *ngFor="let job of jobs; let i = index">
-            <td>{{ getRowNumber(i) }}</td>
-            <td>
-              <div class="action-cell">
-                <div class="action-main">{{ getActionLabel(job) }}</div>
-                <div class="action-sub">{{ job.job_code }}</div>
-              </div>
-            </td>
-            <td>
-              <div class="status-cell">
-                <span class="status-badge" [ngClass]="getStatusClass(job)">{{ job.status }}</span>
-                <span class="status-step">{{ job.current_step || '--' }}</span>
-              </div>
-            </td>
-            <td>{{ formatDateTime(job.started_at || job.created_at) }}</td>
-            <td>{{ formatDateTime(job.finished_at) }}</td>
-            <td>
-              <div class="file-cell">
-                <span class="file-name">{{ getFileLabel(job) }}</span>
-                <button
-                  *ngIf="canDownload(job)"
-                  type="button"
-                  class="download-btn"
-                  [disabled]="downloadingJobId === job.id"
-                  (click)="download(job)">
-                  {{ downloadingJobId === job.id ? 'Đang tải...' : 'Tải file' }}
-                </button>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+  <div class="stats-grid" *ngIf="!loading">
+    <div class="stat-item stat-total">
+      <div class="stat-bar"></div>
+      <div class="stat-body">
+        <div class="stat-label">Tổng bản ghi</div>
+        <div class="stat-value">{{ totalElements }}</div>
+      </div>
     </div>
+    <div class="stat-item stat-info">
+      <div class="stat-bar"></div>
+      <div class="stat-body">
+        <div class="stat-label">Trang hiện tại</div>
+        <div class="stat-value">{{ page + 1 }}/{{ totalPages || 1 }}</div>
+      </div>
+    </div>
+    <div class="stat-item stat-purple">
+      <div class="stat-bar"></div>
+      <div class="stat-body">
+        <div class="stat-label">Tự động cập nhật</div>
+        <div class="stat-value">15 giây</div>
+      </div>
+    </div>
+  </div>
 
-    <div class="pagination" *ngIf="!loading && totalPages > 1">
-      <button type="button" (click)="onPageChange(page - 1)" [disabled]="page === 0">Trước</button>
-      <span>Trang {{ page + 1 }} / {{ totalPages }}</span>
-      <button type="button" (click)="onPageChange(page + 1)" [disabled]="page + 1 >= totalPages">Sau</button>
-    </div>
+  <div class="filter-section">
+    <input
+      class="search-input"
+      type="text"
+      placeholder="Mã job..."
+      [(ngModel)]="filterJobCode"
+      (input)="onFilterChange()" />
+    <input
+      class="search-input"
+      type="text"
+      placeholder="Loại nghiệp vụ..."
+      [(ngModel)]="filterBusinessType"
+      (input)="onFilterChange()" />
+    <select class="filter-select" [(ngModel)]="filterStatus" (change)="onFilterChange()">
+      <option value="">-- Tất cả trạng thái --</option>
+      <option value="PENDING">PENDING</option>
+      <option value="VALIDATING">VALIDATING</option>
+      <option value="PROCESSING">PROCESSING</option>
+      <option value="GENERATING_FILE">GENERATING_FILE</option>
+      <option value="UPLOADING">UPLOADING</option>
+      <option value="COMPLETED">COMPLETED</option>
+      <option value="FAILED">FAILED</option>
+      <option value="CANCELLED">CANCELLED</option>
+    </select>
+    <select class="filter-select" [(ngModel)]="filterJobType" (change)="onFilterChange()">
+      <option value="">-- Tất cả loại job --</option>
+      <option value="REPORT_EXPORT">REPORT_EXPORT</option>
+      <option value="DATA_IMPORT">DATA_IMPORT</option>
+      <option value="SCHEDULED_REPORT">SCHEDULED_REPORT</option>
+    </select>
+    <button class="btn btn-ghost" type="button" (click)="clearFilter()">
+      <i class="fa-solid fa-rotate-right" aria-hidden="true"></i> Đặt lại
+    </button>
+  </div>
+
+  <div class="loading-state" *ngIf="loading"><span>Đang tải dữ liệu...</span></div>
+
+  <div class="table-container" *ngIf="!loading">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>STT</th>
+          <th>Action</th>
+          <th>Status</th>
+          <th>Time start</th>
+          <th>Time end</th>
+          <th>File</th>
+          <th class="text-center">Thao tác</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngIf="jobs.length === 0">
+          <td colspan="7" class="empty-state">Chưa có background job nào.</td>
+        </tr>
+        <tr *ngFor="let job of jobs; let i = index">
+          <td>{{ getRowNumber(i) }}</td>
+          <td>
+            <div class="cell-main">{{ getActionLabel(job) }}</div>
+            <div class="cell-sub">{{ job.job_code }}</div>
+          </td>
+          <td>
+            <span class="badge" [ngClass]="getStatusClass(job)">{{ job.status }}</span>
+            <div class="cell-sub">{{ job.current_step || '--' }}</div>
+          </td>
+          <td>{{ formatDateTime(job.started_at || job.created_at) }}</td>
+          <td>{{ formatDateTime(job.finished_at) }}</td>
+          <td>
+            <div class="cell-main">{{ getFileLabel(job) }}</div>
+            <button
+              *ngIf="canDownload(job)"
+              type="button"
+              class="btn btn-primary btn-sm job-action-btn"
+              [disabled]="downloadingJobId === job.id"
+              (click)="download(job)">
+              {{ downloadingJobId === job.id ? 'Đang tải...' : 'Tải file' }}
+            </button>
+          </td>
+          <td class="actions">
+            <button
+              *ngIf="canRetry(job)"
+              type="button"
+              class="btn btn-warning btn-sm job-action-btn"
+              [disabled]="actingJobId === job.id"
+              (click)="retry(job)">Chạy lại</button>
+            <button
+              *ngIf="canCancel(job)"
+              type="button"
+              class="btn btn-danger btn-sm job-action-btn"
+              [disabled]="actingJobId === job.id"
+              (click)="cancel(job)">Hủy</button>
+            <span class="text-muted" *ngIf="!canRetry(job) && !canCancel(job)">--</span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="pagination" *ngIf="!loading && totalPages > 1">
+    <button type="button" (click)="onPageChange(page - 1)" [disabled]="page === 0">Trước</button>
+    <span class="page-info">Trang {{ page + 1 }} / {{ totalPages }}</span>
+    <button type="button" (click)="onPageChange(page + 1)" [disabled]="page + 1 >= totalPages">Sau</button>
   </div>
 </div>

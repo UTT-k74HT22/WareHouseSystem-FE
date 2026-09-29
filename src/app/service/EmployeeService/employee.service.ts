@@ -7,6 +7,7 @@ import { PageResponse } from '../../dto/response/PageResponse';
 import { EmployeeResponse } from '../../dto/response/Employee/EmployeeResponse';
 import { CreateEmployeeRequest } from '../../dto/request/Employee/CreateEmployeeRequest';
 import { UpdateEmployeeRequest } from '../../dto/request/Employee/UpdateEmployeeRequest';
+import { UpdateEmployeeStatusRequest } from '../../dto/request/Employee/UpdateEmployeeStatusRequest';
 
 @Injectable({ providedIn: 'root' })
 export class EmployeeService {
@@ -42,12 +43,22 @@ export class EmployeeService {
     return this.http.get<ApiResponse<EmployeeResponse>>(`${this.apiUrl}/${id}`);
   }
 
+  /** GET /api/v1/employees/stats */
+  getStats(): Observable<ApiResponse<Record<string, number>>> {
+    return this.http.get<ApiResponse<Record<string, number>>>(`${this.apiUrl}/stats`);
+  }
+
   create(request: CreateEmployeeRequest): Observable<ApiResponse<EmployeeResponse>> {
     return this.http.post<ApiResponse<EmployeeResponse>>(this.apiUrl, request);
   }
 
   update(id: string, request: UpdateEmployeeRequest): Observable<ApiResponse<EmployeeResponse>> {
     return this.http.put<ApiResponse<EmployeeResponse>>(`${this.apiUrl}/${id}`, request);
+  }
+
+  /** PATCH /api/v1/employees/:id/status */
+  changeStatus(id: string, request: UpdateEmployeeStatusRequest): Observable<ApiResponse<EmployeeResponse>> {
+    return this.http.patch<ApiResponse<EmployeeResponse>>(`${this.apiUrl}/${id}/status`, request);
   }
 
   delete(id: string): Observable<ApiResponse<void>> {

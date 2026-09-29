@@ -1,5 +1,5 @@
-import { Component, OnInit } from '@angular/core';
-import { catchError, forkJoin, map, of } from 'rxjs';
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Subject, Subscription, catchError, debounceTime, forkJoin, map, of } from 'rxjs';
 import { InventoryResponse } from '../../dto/response/Inventory/InventoryResponse';
 import { InventoryService } from '../../service/InventoryService/inventory.service';
 import { ToastrService } from '../../service/SystemService/toastr.service';
@@ -21,7 +21,10 @@ import { InventorySummaryResponse } from '../../dto/response/Inventory/Inventory
   templateUrl: './inventory.component.html',
   styleUrls: ['./inventory.component.css']
 })
-export class InventoryComponent implements OnInit {
+export class InventoryComponent implements OnInit, OnDestroy {
+  private readonly filterChange$ = new Subject<void>();
+  private filterSubscription?: Subscription;
+
   items: InventoryResponse[] = [];
   locationGroups: InventoryByLocationResponse[] = [];
   warehouses: WareHouseResponse[] = [];
@@ -57,8 +60,18 @@ export class InventoryComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.filterSubscription = this.filterChange$
+      .pipe(debounceTime(400))
+      .subscribe(() => {
+        this.currentPage = 0;
+        this.loadInventory(true);
+      });
     this.loadLookupData();
     this.loadInventory();
+  }
+
+  ngOnDestroy(): void {
+    this.filterSubscription?.unsubscribe();
   }
 
   get availableLocations(): LocationResponse[] {
@@ -100,12 +113,10 @@ export class InventoryComponent implements OnInit {
         map((response) => response.data),
         catchError(() => of([] as WareHouseResponse[]))
       ),
-      locations: this.locationService.getAll(0, 200).pipe(
-        map((response) => response.data.content),
+      locations: this.locationService.getFullList().pipe(
         catchError(() => of([] as LocationResponse[]))
       ),
-      products: this.productService.getAll(0, 200).pipe(
-        map((response) => response.data.content),
+      products: this.productService.getFullList().pipe(
         catchError(() => of([] as ProductResponse[]))
       )
     }).subscribe((result) => {
@@ -117,8 +128,13 @@ export class InventoryComponent implements OnInit {
     });
   }
 
-  loadInventory(): void {
-    this.loading = true;
+  private loadSeq = 0;
+
+  loadInventory(silent = false): void {
+    if (!silent) {
+      this.loading = true;
+    }
+    const seq = ++this.loadSeq;
     const filters = this.buildFilters();
 
     forkJoin({
@@ -129,6 +145,9 @@ export class InventoryComponent implements OnInit {
       )
     }).subscribe({
       next: ({ page, byLocation }) => {
+        if (seq !== this.loadSeq) {
+          return;
+        }
         if (page.success) {
           this.items = page.data.content.map((item) => this.enrichInventory(item));
           this.totalElements = page.data.total_elements;
@@ -139,6 +158,9 @@ export class InventoryComponent implements OnInit {
         this.loading = false;
       },
       error: (error) => {
+        if (seq !== this.loadSeq) {
+          return;
+        }
         this.items = [];
         this.locationGroups = [];
         this.totalElements = 0;
@@ -151,7 +173,7 @@ export class InventoryComponent implements OnInit {
 
   onSearch(): void {
     this.currentPage = 0;
-    this.loadInventory();
+    this.loadInventory(true);
   }
 
   onResetFilter(): void {
@@ -161,7 +183,11 @@ export class InventoryComponent implements OnInit {
     this.selectedWarehouseId = '';
     this.selectedLocationId = '';
     this.currentPage = 0;
-    this.loadInventory();
+    this.loadInventory(true);
+  }
+
+  onTextFilterChange(): void {
+    this.filterChange$.next();
   }
 
   onWarehouseChange(warehouseId: string): void {
@@ -173,6 +199,15 @@ export class InventoryComponent implements OnInit {
         this.selectedLocationId = '';
       }
     }
+
+    this.currentPage = 0;
+    this.loadInventory(true);
+  }
+
+  onLocationChange(locationId: string): void {
+    this.selectedLocationId = locationId;
+    this.currentPage = 0;
+    this.loadInventory(true);
   }
 
   onPageChange(page: number): void {
@@ -181,7 +216,7 @@ export class InventoryComponent implements OnInit {
     }
 
     this.currentPage = page;
-    this.loadInventory();
+    this.loadInventory(true);
   }
 
   openDetailModal(item: InventoryResponse): void {

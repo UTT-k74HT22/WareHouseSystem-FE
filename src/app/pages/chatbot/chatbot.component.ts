@@ -88,6 +88,8 @@ export class ChatBotComponent implements OnInit, AfterViewChecked {
 
   private shouldScroll = false;
   private readonly MAX_MESSAGE_LENGTH = 500;
+  private readonly MAX_SEND_LENGTH = 1000;
+  private readonly CHAT_SCOPE = 'page';
 
   constructor(
     private chatBotService: ChatBotService,
@@ -106,7 +108,7 @@ export class ChatBotComponent implements OnInit, AfterViewChecked {
   }
 
   sendMessage(): void {
-    const trimmedMessage = this.newMessage.trim();
+    const trimmedMessage = this.newMessage.trim().slice(0, this.MAX_SEND_LENGTH);
     if (!trimmedMessage || this.isLoading) {
       return;
     }
@@ -134,7 +136,7 @@ export class ChatBotComponent implements OnInit, AfterViewChecked {
 
     // If sending a suggestion, use the structured request
     // For now, only send message if it's a new input from user
-    this.chatBotService.sendMessage(trimmedMessage).subscribe({
+    this.chatBotService.sendMessage(trimmedMessage, undefined, undefined, this.CHAT_SCOPE).subscribe({
       next: (res: ChatBotResponse) => {
         this.handleBotResponse(res);
         this.isLoading = false;
@@ -156,7 +158,7 @@ export class ChatBotComponent implements OnInit, AfterViewChecked {
   }
 
   clearChat(): void {
-    this.chatBotService.resetConversation();
+    this.chatBotService.resetConversation(this.CHAT_SCOPE);
     this.messages = [];
     this.backendSuggestions = []; // Clear backend suggestions
     this.addWelcomeMessage();
@@ -195,7 +197,7 @@ export class ChatBotComponent implements OnInit, AfterViewChecked {
     const payload = suggestion.sku ? { sku: suggestion.sku } : undefined;
 
     // Send structured request: include intent, and a message fallback when no sku is available.
-    this.chatBotService.sendMessage(requestMessage, suggestion.intent, payload).subscribe({
+    this.chatBotService.sendMessage(requestMessage, suggestion.intent, payload, this.CHAT_SCOPE).subscribe({
       next: (res: ChatBotResponse) => {
         this.handleBotResponse(res);
         this.isLoading = false;

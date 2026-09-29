@@ -18,6 +18,13 @@ export class JobTrackerComponent implements OnInit, OnDestroy {
   totalPages = 0;
   totalElements = 0;
   downloadingJobId: string | null = null;
+  actingJobId: string | null = null;
+
+  // Server-side filter state (BE: BackgroundJobFilterRequest)
+  filterJobCode = '';
+  filterBusinessType = '';
+  filterStatus = '';
+  filterJobType = '';
   private readonly destroy$ = new Subject<void>();
 
   constructor(
@@ -43,6 +50,29 @@ export class JobTrackerComponent implements OnInit, OnDestroy {
     this.loadJobs();
   }
 
+  onFilterChange(): void {
+    this.page = 0;
+    this.loadJobs();
+  }
+
+  clearFilter(): void {
+    this.filterJobCode = '';
+    this.filterBusinessType = '';
+    this.filterStatus = '';
+    this.filterJobType = '';
+    this.page = 0;
+    this.loadJobs();
+  }
+
+  private buildFilter(): { jobTypes?: string[]; statuses?: string[]; businessType?: string; jobCode?: string } {
+    return {
+      jobTypes: this.filterJobType ? [this.filterJobType] : [],
+      statuses: this.filterStatus ? [this.filterStatus] : [],
+      businessType: this.filterBusinessType?.trim() || undefined,
+      jobCode: this.filterJobCode?.trim() || undefined
+    };
+  }
+
   refresh(): void {
     this.loadJobs();
   }
@@ -57,12 +87,12 @@ export class JobTrackerComponent implements OnInit, OnDestroy {
 
   getStatusClass(job: BackgroundJobSummaryResponse): string {
     if (job.status === 'COMPLETED') {
-      return 'status-success';
+      return 'badge-completed';
     }
     if (job.status === 'FAILED' || job.status === 'CANCELLED') {
-      return 'status-error';
+      return 'badge-cancelled';
     }
-    return 'status-running';
+    return 'badge-progress';
   }
 
   formatDateTime(value: string | null): string {
@@ -81,6 +111,51 @@ export class JobTrackerComponent implements OnInit, OnDestroy {
 
   canDownload(job: BackgroundJobSummaryResponse): boolean {
     return job.status === 'COMPLETED' && !!job.result_file_name;
+  }
+
+  canRetry(job: BackgroundJobSummaryResponse): boolean {
+    return job.status === 'FAILED' || job.status === 'CANCELLED';
+  }
+
+  canCancel(job: BackgroundJobSummaryResponse): boolean {
+    return job.status === 'PENDING' || job.status === 'VALIDATING'
+      || job.status === 'PROCESSING' || job.status === 'GENERATING_FILE';
+  }
+
+  retry(job: BackgroundJobSummaryResponse): void {
+    if (!this.canRetry(job) || this.actingJobId) {
+      return;
+    }
+    this.actingJobId = job.id;
+    this.backgroundJobService.retryJob(job.id).subscribe({
+      next: () => {
+        this.actingJobId = null;
+        this.toastr.success('Đã gửi yêu cầu chạy lại job.');
+        this.loadJobs();
+      },
+      error: (error) => {
+        this.actingJobId = null;
+        this.toastr.error(error?.error?.message || 'Chạy lại job thất bại.');
+      }
+    });
+  }
+
+  cancel(job: BackgroundJobSummaryResponse): void {
+    if (!this.canCancel(job) || this.actingJobId) {
+      return;
+    }
+    this.actingJobId = job.id;
+    this.backgroundJobService.cancelJob(job.id).subscribe({
+      next: () => {
+        this.actingJobId = null;
+        this.toastr.success('Đã hủy job.');
+        this.loadJobs();
+      },
+      error: (error) => {
+        this.actingJobId = null;
+        this.toastr.error(error?.error?.message || 'Hủy job thất bại.');
+      }
+    });
   }
 
   download(job: BackgroundJobSummaryResponse): void {
@@ -109,7 +184,7 @@ export class JobTrackerComponent implements OnInit, OnDestroy {
   private startPolling(): void {
     interval(15000).pipe(
       startWith(0),
-      switchMap(() => this.backgroundJobService.getMyJobs(this.page, this.size)),
+      switchMap(() => this.backgroundJobService.getMyJobs(this.page, this.size, this.buildFilter())),
       takeUntil(this.destroy$)
     ).subscribe({
       next: (response) => {
@@ -129,7 +204,7 @@ export class JobTrackerComponent implements OnInit, OnDestroy {
 
   private loadJobs(): void {
     this.loading = true;
-    this.backgroundJobService.getMyJobs(this.page, this.size).subscribe({
+    this.backgroundJobService.getMyJobs(this.page, this.size, this.buildFilter()).subscribe({
       next: (response) => {
         this.jobs = response.data.content;
         this.page = response.data.page;

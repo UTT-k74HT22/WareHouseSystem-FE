@@ -42,7 +42,7 @@
       placeholder="Tìm theo mã đơn hàng..."
       (keyup.enter)="onSearch()" />
 
-    <select class="filter-select" [(ngModel)]="selectedStatus">
+    <select class="filter-select" [(ngModel)]="selectedStatus" (change)="onSearch()">
       <option value="">-- Tất cả trạng thái --</option>
       <option value="DRAFT">Nháp</option>
       <option value="CONFIRMED">Đã xác nhận</option>
@@ -50,6 +50,17 @@
       <option value="COMPLETED">Hoàn thành</option>
       <option value="CANCELLED">Đã huỷ</option>
     </select>
+
+    <select class="filter-select" [(ngModel)]="selectedCustomerId" (change)="onSearch()">
+      <option value="">-- Tất cả khách hàng --</option>
+      <option *ngFor="let c of customers" [value]="c.id">{{ c.name }}</option>
+    </select>
+    <select class="filter-select" [(ngModel)]="selectedWarehouseId" (change)="onSearch()">
+      <option value="">-- Tất cả kho --</option>
+      <option *ngFor="let w of warehouses" [value]="w.id">{{ w.code }} - {{ w.name }}</option>
+    </select>
+    <input class="filter-select" type="date" [(ngModel)]="orderDateFrom" (change)="onSearch()" />
+    <input class="filter-select" type="date" [(ngModel)]="orderDateTo" (change)="onSearch()" />
 
     <button class="btn btn-primary" (click)="onSearch()">
       <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i> Tìm kiếm

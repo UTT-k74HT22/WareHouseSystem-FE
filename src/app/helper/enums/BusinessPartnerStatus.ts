@@ -1,4 +1,5 @@
 export enum BusinessPartnerStatus {
   ACTIVE = 'ACTIVE',
-  INACTIVE = 'INACTIVE'
+  INACTIVE = 'INACTIVE',
+  BLACKLISTED = 'BLACKLISTED'
 }

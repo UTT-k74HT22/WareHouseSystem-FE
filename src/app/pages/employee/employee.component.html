@@ -421,18 +421,19 @@
 
           <div class="form-row">
             <div class="form-group">
-              <label for="create-role">Vai trò <span class="required">*</span></label>
-              <select
-                id="create-role"
-                class="form-control"
-                [(ngModel)]="createForm.role"
-                name="role"
-                required
-              >
-                <option *ngFor="let r of getRoleOptions()" [ngValue]="r">
-                  {{ getRoleLabel(r) }}
-                </option>
-              </select>
+              <label>Vai trò <span class="required">*</span></label>
+              <div class="role-checkbox-list">
+                <label class="role-checkbox-item" *ngFor="let r of getRoleOptions()">
+                  <input
+                    type="checkbox"
+                    [checked]="isRoleSelected(r)"
+                    (change)="toggleRoleSelection(r)"
+                  />
+                  <span>{{ getRoleLabel(r) }}</span>
+                </label>
+              </div>
+              <small *ngIf="rolesLoading">Đang tải danh sách vai trò từ hệ thống...</small>
+              <small *ngIf="!rolesLoading && getRoleOptions().length === 0">Chưa có vai trò nào trong hệ thống.</small>
             </div>
           </div>
 
@@ -634,6 +635,39 @@
                   {{ wh.name }} ({{ wh.code }})
                 </option>
               </select>
+            </div>
+            <div class="form-group">
+              <label for="edit-status">Trạng thái</label>
+              <select
+                id="edit-status"
+                class="form-control"
+                [(ngModel)]="editStatus"
+                name="edit_status"
+              >
+                <option [ngValue]="EmployeeStatus.ACTIVE">Đang hoạt động</option>
+                <option [ngValue]="EmployeeStatus.ON_LEAVE">Nghỉ phép</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Vai trò <span class="required">*</span></label>
+              <div class="role-checkbox-list">
+                <label class="role-checkbox-item" *ngFor="let r of getRoleOptions()">
+                  <input
+                    type="checkbox"
+                    [checked]="isEditRoleSelected(r)"
+                    (change)="toggleEditRoleSelection(r)"
+                  />
+                  <span>{{ getRoleLabel(r) }}</span>
+                </label>
+              </div>
+              <small *ngIf="editRolesLoading">Đang tải vai trò hiện tại...</small>
+              <small *ngIf="!editRolesLoading && getRoleOptions().length === 0">Chưa có vai trò nào trong hệ thống.</small>
+            </div>
+            <div class="form-group">
+              <!-- Spacer -->
             </div>
           </div>
         </form>

@@ -42,6 +42,7 @@
       class="search-input filter-input"
       type="text"
       [(ngModel)]="searchProductName"
+      (ngModelChange)="onTextFilterChange()"
       placeholder="Tên sản phẩm"
       (keyup.enter)="onSearch()" />
 
@@ -49,6 +50,7 @@
       class="search-input filter-input"
       type="text"
       [(ngModel)]="searchProductSku"
+      (ngModelChange)="onTextFilterChange()"
       placeholder="SKU"
       (keyup.enter)="onSearch()" />
 
@@ -56,6 +58,7 @@
       class="search-input filter-input"
       type="text"
       [(ngModel)]="searchBatchNumber"
+      (ngModelChange)="onTextFilterChange()"
       placeholder="Mã lô"
       (keyup.enter)="onSearch()" />
 
@@ -64,7 +67,7 @@
       <option *ngFor="let warehouse of warehouses" [value]="warehouse.id">{{ warehouse.name }}</option>
     </select>
 
-    <select class="filter-select" [(ngModel)]="selectedLocationId">
+    <select class="filter-select" [(ngModel)]="selectedLocationId" (ngModelChange)="onLocationChange($event)">
       <option value="">-- Tất cả vị trí --</option>
       <option *ngFor="let location of availableLocations" [value]="location.id">{{ location.code }} - {{ location.name }}</option>
     </select>

@@ -6,6 +6,7 @@ export interface SearchLocationRequest {
   code?: string;
   name?: string;
   zone?: string;
+  keyword?: string;
   type?: LocationType;
   status?: LocationStatus;
 }

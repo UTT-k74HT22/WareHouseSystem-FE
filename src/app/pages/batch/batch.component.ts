@@ -1,11 +1,10 @@
 import { Component, OnInit } from '@angular/core';
-import { catchError, forkJoin, map, Observable, of, switchMap } from 'rxjs';
+import { catchError, forkJoin, map, Observable, of, switchMap, throwError } from 'rxjs';
 import { BatchResponse } from '../../dto/response/Batch/BatchResponse';
 import { BatchService } from '../../service/BatchService/batch.service';
 import { ToastrService } from '../../service/SystemService/toastr.service';
 import { BatchStatus } from '../../helper/enums/BatchStatus';
 import {
-  ChangeBatchStatusRequest,
   CreateBatchRequest,
   UpdateBatchRequest
 } from '../../dto/request/Batch/BatchRequest';
@@ -52,7 +51,8 @@ export class BatchComponent implements OnInit {
 
   createForm: CreateBatchRequest = this.initCreateForm();
   editForm: UpdateBatchRequest = this.initEditForm();
-  statusForm: ChangeBatchStatusRequest = { status: BatchStatus.AVAILABLE };
+  statusForm: { status: BatchStatus } = { status: BatchStatus.AVAILABLE };
+  statusNote = '';
 
   readonly BatchStatus = BatchStatus;
 
@@ -249,6 +249,7 @@ export class BatchComponent implements OnInit {
       status: this.selectedStatusOptions.find((status) => status !== this.selectedBatch?.status)
         || this.selectedBatch.status
     };
+    this.statusNote = '';
     this.showStatusModal = true;
   }
 
@@ -267,9 +268,19 @@ export class BatchComponent implements OnInit {
       return;
     }
 
+    const note = this.statusNote.trim();
+    if (!note) {
+      this.toastr.warning('Vui lòng nhập lý do/ghi chú cho thao tác trạng thái.');
+      return;
+    }
+    if (note.length > 1000) {
+      this.toastr.warning('Ghi chú không được vượt quá 1000 ký tự.');
+      return;
+    }
+
     this.savingStatus = true;
 
-    this.resolveStatusRequest(this.selectedBatch, this.statusForm.status).subscribe({
+    this.resolveStatusRequest(this.selectedBatch, this.statusForm.status, note).subscribe({
       next: (updatedBatch) => {
         const normalizedBatch = this.enrichBatch(updatedBatch);
         this.toastr.success(this.getStatusSuccessMessage(this.selectedBatch!.status, this.statusForm.status));
@@ -310,6 +321,7 @@ export class BatchComponent implements OnInit {
     this.showStatusModal = false;
     this.selectedStatusOptions = [];
     this.statusForm = { status: BatchStatus.AVAILABLE };
+    this.statusNote = '';
     this.savingStatus = false;
   }
 
@@ -370,7 +382,7 @@ export class BatchComponent implements OnInit {
       return 'Hệ thống sẽ gọi API giải cách ly chuyên biệt. Backend chỉ cho phép khi lô chưa hết hạn.';
     }
 
-    return 'Hệ thống sẽ dùng API cập nhật trạng thái chung cho lô.';
+    return 'Màn hiện tại chỉ hỗ trợ Cách ly / Giải cách ly qua API chuyên biệt.';
   }
 
   getStatusSubmitLabel(): string {
@@ -417,18 +429,18 @@ export class BatchComponent implements OnInit {
     }
 
     if (batch.status === BatchStatus.RECALLED) {
-      return 'Lô đã ở trạng thái thu hồi. Màn hình này không mở lại lô đã thu hồi.';
+      return 'Lô đã ở trạng thái thu hồi. Màn quản lý lô hiện tại không hỗ trợ chuyển trạng thái cho lô này.';
     }
 
     if (batch.status === BatchStatus.EXPIRED || this.isPastExpiryDate(batch)) {
-      return 'Lô đã quá hạn theo ngày hoặc đang ở trạng thái hết hạn. Chỉ nên chuyển sang Hết hạn hoặc Thu hồi.';
+      return 'Lô đã quá hạn. Màn quản lý lô hiện tại không hỗ trợ chuyển trạng thái cho lô này.';
     }
 
     if (batch.status === BatchStatus.QUARANTINE) {
       return 'Lô đang bị cách ly. Chỉ chuyển về Sẵn dùng khi đã hoàn tất đánh giá chất lượng và backend xác nhận lô chưa hết hạn.';
     }
 
-    return 'Lô đang sẵn dùng. Có thể chuyển sang Cách ly bằng nghiệp vụ chuyên biệt, hoặc sang Hết hạn / Thu hồi theo tình huống thực tế.';
+    return 'Lô đang sẵn dùng. Chỉ có thể chuyển sang Cách ly bằng nghiệp vụ chuyên biệt.';
   }
 
   private fetchAllBatches(): Observable<BatchResponse[]> {
@@ -493,15 +505,12 @@ export class BatchComponent implements OnInit {
       manufacturing_date: new Date().toISOString().slice(0, 10),
       expiry_date: '',
       supplier_batch_number: '',
-      status: BatchStatus.AVAILABLE,
       notes: ''
     };
   }
 
   private initEditForm(batch?: BatchResponse): UpdateBatchRequest {
     return {
-      id: batch?.id || '',
-      batch_number: batch?.batch_number || '',
       manufacturing_date: batch?.manufacturing_date || '',
       expiry_date: batch?.expiry_date || undefined,
       supplier_batch_number: batch?.supplier_batch_number || '',
@@ -515,15 +524,12 @@ export class BatchComponent implements OnInit {
       manufacturing_date: this.createForm.manufacturing_date,
       expiry_date: this.createForm.expiry_date || undefined,
       supplier_batch_number: this.createForm.supplier_batch_number?.trim() || undefined,
-      status: BatchStatus.AVAILABLE,
       notes: this.createForm.notes?.trim() || undefined
     };
   }
 
   private normalizeUpdateRequest(): UpdateBatchRequest {
     return {
-      id: this.selectedBatch?.id || this.editForm.id,
-      batch_number: this.editForm.batch_number?.trim(),
       manufacturing_date: this.editForm.manufacturing_date || undefined,
       expiry_date: this.editForm.expiry_date || undefined,
       supplier_batch_number: this.editForm.supplier_batch_number?.trim() ?? '',
@@ -579,16 +585,6 @@ export class BatchComponent implements OnInit {
       return false;
     }
 
-    if (!request.batch_number) {
-      this.toastr.warning('Mã lô không được để trống.');
-      return false;
-    }
-
-    if (request.batch_number.length > 50) {
-      this.toastr.warning('Mã lô không được vượt quá 50 ký tự.');
-      return false;
-    }
-
     if ((request.supplier_batch_number || '').length > 50) {
       this.toastr.warning('Mã lô của nhà cung cấp không được vượt quá 50 ký tự.');
       return false;
@@ -615,39 +611,30 @@ export class BatchComponent implements OnInit {
   }
 
   private getAvailableStatusOptions(batch: BatchResponse): BatchStatus[] {
-    const options = new Set<BatchStatus>([batch.status]);
-    const expiredByDate = this.isPastExpiryDate(batch);
-
-    if (batch.status === BatchStatus.RECALLED) {
-      return Array.from(options);
+    // Backend chỉ hỗ trợ AVAILABLE <-> QUARANTINE qua API chuyên biệt.
+    if (batch.status === BatchStatus.AVAILABLE) {
+      return [BatchStatus.AVAILABLE, BatchStatus.QUARANTINE];
     }
-
-    if (batch.status === BatchStatus.EXPIRED || expiredByDate) {
-      options.add(BatchStatus.EXPIRED);
-      options.add(BatchStatus.RECALLED);
-      return Array.from(options);
+    if (batch.status === BatchStatus.QUARANTINE && !this.isPastExpiryDate(batch)) {
+      return [BatchStatus.QUARANTINE, BatchStatus.AVAILABLE];
     }
-
-    options.add(BatchStatus.AVAILABLE);
-    options.add(BatchStatus.QUARANTINE);
-    options.add(BatchStatus.EXPIRED);
-    options.add(BatchStatus.RECALLED);
-
-    return Array.from(options);
+    return [batch.status];
   }
 
-  private resolveStatusRequest(batch: BatchResponse, nextStatus: BatchStatus): Observable<BatchResponse> {
+  private resolveStatusRequest(batch: BatchResponse, nextStatus: BatchStatus, note: string): Observable<BatchResponse> {
     if (batch.status === BatchStatus.AVAILABLE && nextStatus === BatchStatus.QUARANTINE) {
-      return this.batchService.quarantine(batch.id);
+      return this.batchService.quarantine(batch.id, { reason: note }).pipe(
+        map((response) => response.data)
+      );
     }
 
     if (batch.status === BatchStatus.QUARANTINE && nextStatus === BatchStatus.AVAILABLE) {
-      return this.batchService.release(batch.id);
+      return this.batchService.release(batch.id, { release_notes: note }).pipe(
+        map((response) => response.data)
+      );
     }
 
-    return this.batchService.changeStatus(batch.id, { status: nextStatus }).pipe(
-      map((response) => response.data)
-    );
+    return throwError(() => new Error('Chuyển trạng thái này chưa được hỗ trợ.'));
   }
 
   private getStatusSuccessMessage(currentStatus: BatchStatus, nextStatus: BatchStatus): string {

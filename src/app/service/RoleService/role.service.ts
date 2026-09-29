@@ -26,10 +26,9 @@ export class RoleService {
       payload['description'] = request.description;
     }
 
-    const isDefault = request.is_default ?? request.isDefault;
+    const isDefault = request.is_default;
     if (isDefault !== undefined) {
       payload['is_default'] = isDefault;
-      payload['isDefault'] = isDefault;
     }
 
     return payload;

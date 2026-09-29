@@ -31,6 +31,11 @@ export class SalesOrderService {
     return this.http.get<ApiResponse<PageResponse<SalesOrderResponse>>>(this.apiUrl, { params });
   }
 
+  /** GET /api/v1/sales-orders/stats */
+  getStats(): Observable<ApiResponse<Record<string, number>>> {
+    return this.http.get<ApiResponse<Record<string, number>>>(`${this.apiUrl}/stats`);
+  }
+
   /** GET /api/v1/sales-orders/:id */
   getById(id: string): Observable<ApiResponse<SalesOrderResponse>> {
     return this.http.get<ApiResponse<SalesOrderResponse>>(`${this.apiUrl}/${id}`);

@@ -1,7 +1,6 @@
 import {AccountStatus} from "../../../helper/enums/AccountStatus";
 
 export interface AccountResponse {
-  id: string,
   account_id: string,
   username: string,
   status: AccountStatus | string,

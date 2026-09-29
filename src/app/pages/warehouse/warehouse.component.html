@@ -35,7 +35,7 @@
       <div class="stat-bar"></div>
       <div class="stat-body">
         <div class="stat-label">Đang hoạt động</div>
-        <div class="stat-value">{{ getActiveCount() }}</div>
+        <div class="stat-value">{{ statsActive }}</div>
       </div>
     </div>
 
@@ -43,7 +43,7 @@
       <div class="stat-bar"></div>
       <div class="stat-body">
         <div class="stat-label">Ngừng hoạt động</div>
-        <div class="stat-value">{{ getInactiveCount() }}</div>
+        <div class="stat-value">{{ statsInactive }}</div>
       </div>
     </div>
 
@@ -51,13 +51,13 @@
       <div class="stat-bar"></div>
       <div class="stat-body">
         <div class="stat-label">Đang bảo trì</div>
-        <div class="stat-value">{{ getMaintenanceCount() }}</div>
+        <div class="stat-value">{{ statsMaintenance }}</div>
       </div>
     </div>
   </div>
 
-  <!-- Search and Filter Section -->
-  <div class="filter-section" *ngIf="!loading && wareHouses.length > 0">
+  <!-- Search and Filter Section (luôn hiển thị để không mất focus khi gõ) -->
+  <div class="filter-section">
     <div class="search-box">
       <i class="fa-solid fa-magnifying-glass search-icon" aria-hidden="true"></i>
       <input
@@ -453,7 +453,7 @@
           </div>
 
           <div class="form-group">
-            <label for="create-manager">Manager ID</label>
+            <label for="create-manager">Người quản lí <span class="required">*</span></label>
             <select
               id="create-manager"
               class="form-control"
@@ -557,15 +557,18 @@
             </div>
 
             <div class="form-group">
-              <label for="edit-manager">Manager ID</label>
-              <input
-                type="text"
+              <label for="edit-manager">Người quản lí</label>
+              <select
                 id="edit-manager"
                 class="form-control"
                 [(ngModel)]="editForm.manager_id"
                 name="manager_id"
-                placeholder="Nhập Manager ID (tùy chọn)"
-              />
+              >
+                <option value="">Giữ nguyên quản lí hiện tại</option>
+                <option *ngFor="let acc of accountManagers" [value]="acc.account_id">
+                  {{ acc.first_name }} {{ acc.last_name }} (ID: {{ acc.account_id }})
+                </option>
+              </select>
             </div>
           </div>
         </form>

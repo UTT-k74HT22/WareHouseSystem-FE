@@ -1,9 +1,7 @@
-import { RoleType } from '../../../helper/enums/RoleType';
-
 export interface CreateEmployeeRequest {
   username: string;
   password: string;
-  role: RoleType;
+  roles: string[];
   first_name: string;
   last_name: string;
   email: string;
