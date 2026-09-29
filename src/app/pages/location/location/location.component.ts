@@ -210,13 +210,13 @@ export class LocationComponent implements OnInit {
   getStatusClass(status: LocationStatus): string {
     switch (status) {
       case LocationStatus.ACTIVE:
-        return 'status-active';
+        return 'badge-active';
       case LocationStatus.INACTIVE:
-        return 'status-inactive';
+        return 'badge-inactive';
       case LocationStatus.FULL:
-        return 'status-full';
+        return 'badge-quarantine';
       case LocationStatus.MAINTENANCE:
-        return 'status-maintenance';
+        return 'badge-disposed';
       default:
         return '';
     }

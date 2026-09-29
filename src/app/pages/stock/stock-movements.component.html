@@ -17,8 +17,8 @@
   </div>
 
   <div class="filter-section">
-    <input class="search-input" type="text" [(ngModel)]="searchKeyword" placeholder="Mã tham chiếu, sản phẩm..." (keyup.enter)="onSearch()" />
-    <select class="filter-select" [(ngModel)]="selectedType">
+    <input class="search-input" type="text" [(ngModel)]="searchKeyword" (ngModelChange)="onSearch()" placeholder="Mã tham chiếu, sản phẩm..." (keyup.enter)="onSearch()" />
+    <select class="filter-select" [(ngModel)]="selectedType" (ngModelChange)="onSearch()">
       <option value="">-- Tất cả loại --</option>
       <option *ngFor="let t of StockMovementType | keyvalue" [value]="t.value">{{ getTypeLabel(t.value) }}</option>
     </select>

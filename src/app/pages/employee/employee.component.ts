@@ -1,8 +1,13 @@
 import { Component, OnInit } from '@angular/core';
+import { catchError, map, of } from 'rxjs';
 import { EmployeeResponse } from '../../dto/response/Employee/EmployeeResponse';
 import { EmployeeService } from '../../service/EmployeeService/employee.service';
 import { WarehouseService } from '../../service/WarehouseService/warehouse.service';
+import { RoleService } from '../../service/RoleService/role.service';
+import { UserRoleService } from '../../service/UserRoleService/user-role.service';
+import { AssignRolesRequest } from '../../dto/request/Role/RoleRequest';
 import { WareHouseResponse } from '../../dto/response/WareHouse/WareHouseResponse';
+import { RoleResponse } from '../../dto/response/Role/RoleResponse';
 import { EmployeeStatus } from '../../helper/enums/EmployeeStatus';
 import { RoleType } from '../../helper/enums/RoleType';
 import { CreateEmployeeRequest } from '../../dto/request/Employee/CreateEmployeeRequest';
@@ -22,6 +27,8 @@ export class EmployeeComponent implements OnInit {
 
   employees: EmployeeResponse[] = [];
   warehouses: WareHouseResponse[] = [];
+  availableRoles: RoleResponse[] = [];
+  rolesLoading = false;
   selectedEmployee: EmployeeResponse | null = null;
   loading = false;
   viewMode: 'grid' | 'list' = 'list';
@@ -46,6 +53,9 @@ export class EmployeeComponent implements OnInit {
   createForm: CreateEmployeeRequest = this.initCreateForm();
   editForm: UpdateEmployeeRequest = this.initEditForm();
   editStatus: EmployeeStatus = EmployeeStatus.ACTIVE;
+  editRoles: string[] = [];
+  initialEditRoles: string[] = [];
+  editRolesLoading = false;
 
   // Enums for templates
   EmployeeStatus = EmployeeStatus;
@@ -54,12 +64,15 @@ export class EmployeeComponent implements OnInit {
   constructor(
     private employeeService: EmployeeService,
     private warehouseService: WarehouseService,
+    private roleService: RoleService,
+    private userRoleService: UserRoleService,
     private toastr: ToastrService
   ) {}
 
   ngOnInit(): void {
     this.loadEmployees();
     this.loadWarehouses();
+    this.loadRoles();
     this.loadStats();
   }
 
@@ -67,7 +80,7 @@ export class EmployeeComponent implements OnInit {
     return {
       username: '',
       password: '',
-      role: RoleType.USER,
+      roles: [],
       first_name: '',
       last_name: '',
       email: '',
@@ -126,6 +139,116 @@ export class EmployeeComponent implements OnInit {
     });
   }
 
+  private loadRoles(): void {
+    this.rolesLoading = true;
+    this.roleService.getAll(0, 200).pipe(
+      map((response) => response.success ? response.data.content : []),
+      catchError(() => of([] as RoleResponse[]))
+    ).subscribe((roles) => {
+      this.rolesLoading = false;
+      this.availableRoles = roles;
+      this.applyDefaultRole();
+    });
+  }
+
+  private applyDefaultRole(): void {
+    if (this.createForm.roles.length > 0) {
+      const options = new Set(this.getRoleOptions());
+      this.createForm.roles = this.createForm.roles.filter((role) => options.has(role));
+      if (this.createForm.roles.length > 0) {
+        return;
+      }
+    }
+    const options = this.getRoleOptions();
+    if (options.length === 0) {
+      return;
+    }
+    const defaultRole = this.availableRoles.find((role) => role.is_default)?.name
+      || (options.includes(RoleType.USER) ? RoleType.USER : options[0]);
+    this.createForm.roles = [defaultRole];
+  }
+
+  toggleRoleSelection(roleName: string): void {
+    const idx = this.createForm.roles.indexOf(roleName);
+    if (idx >= 0) {
+      this.createForm.roles.splice(idx, 1);
+      return;
+    }
+    this.createForm.roles.push(roleName);
+  }
+
+  isRoleSelected(roleName: string): boolean {
+    return this.createForm.roles.includes(roleName);
+  }
+
+  toggleEditRoleSelection(roleName: string): void {
+    const idx = this.editRoles.indexOf(roleName);
+    if (idx >= 0) {
+      if (this.editRoles.length === 1) {
+        this.toastr.warning('Cập nhật nhân viên', 'Mỗi tài khoản phải có ít nhất một vai trò.');
+        return;
+      }
+      this.editRoles.splice(idx, 1);
+      return;
+    }
+    this.editRoles.push(roleName);
+  }
+
+  isEditRoleSelected(roleName: string): boolean {
+    return this.editRoles.includes(roleName);
+  }
+
+  private loadEditRoles(accountId: string | undefined): void {
+    this.editRoles = [];
+    this.initialEditRoles = [];
+    if (!accountId) {
+      return;
+    }
+    this.editRolesLoading = true;
+    this.userRoleService.getUserRoles(accountId, 0, 200).pipe(
+      map((response) => response.success ? response.data.content : []),
+      catchError(() => of([] as RoleResponse[]))
+    ).subscribe((roles) => {
+      this.editRolesLoading = false;
+      const names = roles.map((role) => role.name).filter((name) => !!name);
+      this.editRoles = [...names];
+      this.initialEditRoles = [...names];
+    });
+  }
+
+  private persistEditRolesIfChanged(onDone: () => void): void {
+    const initial = new Set(this.initialEditRoles);
+    const current = new Set(this.editRoles);
+    const removed = this.initialEditRoles.filter((role) => !current.has(role));
+    const added = this.editRoles.some((role) => !initial.has(role));
+    if (removed.length === 0 && !added) {
+      onDone();
+      return;
+    }
+    const accountId = this.employeeToEdit?.account_id;
+    if (!accountId) {
+      onDone();
+      return;
+    }
+    const roleIds = this.availableRoles
+      .filter((role) => current.has(role.name))
+      .map((role) => role.id);
+    if (roleIds.length !== this.editRoles.length) {
+      this.loading = false;
+      this.toastr.error('Cập nhật nhân viên', 'Không tải được danh sách vai trò nên không thể lưu thay đổi vai trò.');
+      return;
+    }
+    const request: AssignRolesRequest = { role_ids: roleIds };
+    this.userRoleService.assignRolesToUser(accountId, request).subscribe({
+      next: () => onDone(),
+      error: (error) => {
+        console.error('Error updating user roles:', error);
+        this.loading = false;
+        this.toastr.error('Cập nhật nhân viên', error?.error?.message || 'Cập nhật vai trò thất bại.');
+      }
+    });
+  }
+
   // Search & filter
   onSearch(): void {
     this.currentPage = 0;
@@ -175,7 +298,11 @@ export class EmployeeComponent implements OnInit {
 
   getRoleLabel(role: RoleType | string | undefined): string {
     if (!role) return 'Không xác định';
-    return ROLE_TYPE_LABELS[role as RoleType] ?? 'Không xác định';
+    const dynamicRole = this.availableRoles.find((entry) => entry.name === role);
+    if (dynamicRole) {
+      return dynamicRole.name;
+    }
+    return ROLE_TYPE_LABELS[role as RoleType] ?? String(role);
   }
 
   getFullName(emp: EmployeeResponse): string {
@@ -211,6 +338,7 @@ export class EmployeeComponent implements OnInit {
   // CRUD - Create
   openCreateModal(): void {
     this.createForm = this.initCreateForm();
+    this.applyDefaultRole();
     this.showCreateModal = true;
   }
 
@@ -263,6 +391,7 @@ export class EmployeeComponent implements OnInit {
     };
     this.editStatus = employee.status;
     this.showEditModal = true;
+    this.loadEditRoles(employee.account_id);
   }
 
   closeEditModal(): void {
@@ -270,6 +399,9 @@ export class EmployeeComponent implements OnInit {
     this.employeeToEdit = null;
     this.editForm = this.initEditForm();
     this.editStatus = EmployeeStatus.ACTIVE;
+    this.editRoles = [];
+    this.initialEditRoles = [];
+    this.editRolesLoading = false;
   }
 
   submitEdit(): void {
@@ -294,9 +426,11 @@ export class EmployeeComponent implements OnInit {
           this.employeeService.changeStatus(edited.id, { status: this.editStatus }).subscribe({
             next: (statusRes) => {
               if (statusRes.success) {
-                this.toastr.success('Thành công', 'Cập nhật nhân viên thành công!');
-                this.closeEditModal();
-                this.loadEmployees();
+                this.persistEditRolesIfChanged(() => {
+                  this.toastr.success('Thành công', 'Cập nhật nhân viên thành công!');
+                  this.closeEditModal();
+                  this.loadEmployees();
+                });
               } else {
                 this.toastr.error('Lỗi', statusRes.message || 'Có lỗi khi đổi trạng thái.');
                 this.loading = false;
@@ -309,9 +443,11 @@ export class EmployeeComponent implements OnInit {
           });
           return;
         }
-        this.toastr.success('Thành công', 'Cập nhật nhân viên thành công!');
-        this.closeEditModal();
-        this.loadEmployees();
+        this.persistEditRolesIfChanged(() => {
+          this.toastr.success('Thành công', 'Cập nhật nhân viên thành công!');
+          this.closeEditModal();
+          this.loadEmployees();
+        });
       },
       error: (error) => {
         console.error('Error updating employee:', error);
@@ -414,8 +550,8 @@ export class EmployeeComponent implements OnInit {
       this.toastr.warning('Quá dài', 'Phòng ban và chức vụ không được vượt quá 100 ký tự');
       return false;
     }
-    if (!this.createForm.role) {
-      this.toastr.warning('Thiếu thông tin', 'Vui lòng chọn vai trò');
+    if (this.createForm.roles.length === 0) {
+      this.toastr.warning('Thiếu thông tin', 'Vui lòng chọn ít nhất một vai trò');
       return false;
     }
     return true;
@@ -458,7 +594,10 @@ export class EmployeeComponent implements OnInit {
     return Object.values(EmployeeStatus);
   }
 
-  getRoleOptions(): RoleType[] {
+  getRoleOptions(): string[] {
+    if (this.availableRoles.length > 0) {
+      return this.availableRoles.map((role) => role.name);
+    }
     return Object.values(RoleType);
   }
 }
