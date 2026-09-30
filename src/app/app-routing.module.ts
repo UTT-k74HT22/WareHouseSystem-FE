@@ -189,7 +189,7 @@ const routes: Routes = [
     component: PurchaseOrderComponent,
     canActivate: [AuthGuard],
     data: {
-      title: 'Đơn mua hàng',
+      title: 'Đơn nhập hàng',
       subtitle: 'Quản lý đơn đặt hàng nhà cung cấp',
       permissions: routePermissions.purchaseOrder
     }
@@ -199,8 +199,8 @@ const routes: Routes = [
     component: SalesOrderComponent,
     canActivate: [AuthGuard],
     data: {
-      title: 'Đơn bán hàng',
-      subtitle: 'Quản lý đơn bán hàng khách hàng',
+      title: 'Đơn xuất hàng',
+      subtitle: 'Quản lý đơn xuất hàng khách hàng',
       permissions: routePermissions.salesOrder
     }
   },

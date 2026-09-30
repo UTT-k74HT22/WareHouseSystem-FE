@@ -1,7 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { forkJoin } from 'rxjs';
 import { BusinessPartnerResponse } from '../../dto/response/BusinessPartner/BusinessPartnerResponse';
 import { ProductResponse } from '../../dto/response/Product/ProductResponse';
+import { SalesOrderLineResponse } from '../../dto/response/SalesOrderLine/SalesOrderLineResponse';
 import { SalesOrderResponse } from '../../dto/response/SalesOrder/SalesOrderResponse';
 import { WareHouseResponse } from '../../dto/response/WareHouse/WareHouseResponse';
 import { OrderStatus } from '../../helper/enums/OrderStatus';
@@ -10,6 +12,10 @@ import { ProductService } from '../../service/ProductService/product.service';
 import { SalesOrderService } from '../../service/SalesOrderService/sales-order.service';
 import { ToastrService } from '../../service/SystemService/toastr.service';
 import { WarehouseService } from '../../service/WarehouseService/warehouse.service';
+import {
+  CheckInventoryAvailabilityResponse,
+  InventoryService
+} from '../../service/InventoryService/inventory.service';
 
 @Component({
   selector: 'app-sales-order',
@@ -34,6 +40,8 @@ export class SalesOrderComponent implements OnInit {
   detailTab: 'header' | 'lines' = 'header';
 
   searchKeyword = '';
+  productSearchKeyword = '';
+  productSearchFocused = false;
   selectedStatus: '' | OrderStatus = '';
   selectedCustomerId = '';
   selectedWarehouseId = '';
@@ -58,8 +66,9 @@ export class SalesOrderComponent implements OnInit {
     private fb: FormBuilder,
     private soService: SalesOrderService,
     private bpService: BusinessPartnerService,
-    private warehouseService: WarehouseService,
-    private productService: ProductService,
+  private warehouseService: WarehouseService,
+  private productService: ProductService,
+    private inventoryService: InventoryService,
     private toastr: ToastrService
   ) {
     this.createForm = this.fb.group({
@@ -85,12 +94,7 @@ export class SalesOrderComponent implements OnInit {
   }
 
   addLine(): void {
-    this.lines.push(this.fb.group({
-      product_id: ['', Validators.required],
-      quantity_ordered: [1, [Validators.required, Validators.min(0.01)]],
-      unit_price: [0, [Validators.required, Validators.min(0)]],
-      notes: ['']
-    }));
+    this.addProductLine();
   }
 
   removeLine(index: number): void {
@@ -140,7 +144,7 @@ export class SalesOrderComponent implements OnInit {
         this.totalElements = 0;
         this.totalPages = 0;
         this.loading = false;
-        this.toastr.error(error?.error?.message || 'Không thể tải danh sách đơn bán hàng.');
+        this.toastr.error(error?.error?.message || 'Không thể tải danh sách đơn xuất hàng.');
       }
     });
   }
@@ -243,6 +247,7 @@ export class SalesOrderComponent implements OnInit {
   }
 
   openCreateModal(): void {
+    this.productSearchKeyword = '';
     this.createForm.reset({
       customer_id: '',
       warehouse_id: '',
@@ -257,28 +262,67 @@ export class SalesOrderComponent implements OnInit {
   }
 
   onCreateSubmit(): void {
-    if (this.createForm.invalid) {
-      this.toastr.warning('Đơn bán hàng', 'Vui lòng điền đầy đủ thông tin hợp lệ.');
+    const validationMessage = this.getCreateValidationMessage();
+    if (validationMessage) {
+      this.toastr.warning('Đơn xuất hàng', validationMessage);
       this.createForm.markAllAsTouched();
       return;
     }
 
-    if (this.lines.length === 0) {
-      this.toastr.warning('Đơn bán hàng', 'Đơn hàng phải có ít nhất một dòng sản phẩm.');
-      return;
-    }
+    this.checkAvailabilityBeforeCreate();
+  }
 
+  private checkAvailabilityBeforeCreate(): void {
+    const warehouseId = this.createForm.get('warehouse_id')?.value;
+    const quantitiesByProduct = new Map<string, number>();
+
+    this.lines.controls.forEach((line) => {
+      const productId = line.get('product_id')?.value;
+      const quantity = Number(line.get('quantity_ordered')?.value || 0);
+      quantitiesByProduct.set(productId, (quantitiesByProduct.get(productId) || 0) + quantity);
+    });
+
+    const checks = Array.from(quantitiesByProduct.entries()).map(([productId, quantity]) =>
+      this.inventoryService.checkAvailability({
+        product_id: productId,
+        warehouse_id: warehouseId,
+        quantity
+      })
+    );
+
+    forkJoin(checks).subscribe({
+      next: (responses) => {
+        const unavailable = responses.find((response) =>
+          !response.success || !this.isInventoryAvailable(response.data)
+        );
+        if (unavailable) {
+          this.showInsufficientStockMessage(unavailable.data);
+          return;
+        }
+
+        this.createSalesOrder();
+      },
+      error: () => {
+        this.toastr.error(
+          'Đơn xuất hàng',
+          'Không thể kiểm tra tồn kho khả dụng. Vui lòng thử lại trước khi lưu đơn.'
+        );
+      }
+    });
+  }
+
+  private createSalesOrder(): void {
     this.soService.create(this.createForm.value).subscribe({
       next: (res) => {
         if (res.success) {
-          this.toastr.success('Đơn bán hàng', 'Tạo đơn bán hàng thành công.');
+          this.toastr.success('Đơn xuất hàng', 'Tạo đơn xuất hàng thành công.');
           this.showCreateModal = false;
           this.loadOrders();
           this.openDetailModal(res.data);
         }
       },
       error: (error) => {
-        this.toastr.error('Đơn bán hàng', error?.error?.message || 'Có lỗi xảy ra khi tạo đơn bán hàng.');
+        this.toastr.error('Đơn xuất hàng', error?.error?.message || 'Có lỗi xảy ra khi tạo đơn xuất hàng.');
       }
     });
   }
@@ -304,13 +348,21 @@ export class SalesOrderComponent implements OnInit {
     this.soService.confirm(id).subscribe({
       next: (res) => {
         if (res.success) {
-          this.toastr.success('Đơn bán hàng', 'Xác nhận đơn hàng thành công.');
+          this.toastr.success('Đơn xuất hàng', 'Xác nhận đơn hàng thành công.');
           this.selectedOrder = res.data;
           this.loadOrders();
         }
       },
       error: (error) => {
-        this.toastr.error('Đơn bán hàng', error?.error?.message || 'Xác nhận đơn hàng thất bại.');
+        const errorCode = error?.error?.error_code || error?.error?.errorCode;
+        const apiMessage = error?.error?.message;
+        const errorMessage = String(apiMessage || '').toLowerCase();
+        const isStockError = errorCode === 'INV_004' || errorMessage.includes('tồn kho') || errorMessage.includes('available stock');
+        const hasStorageGuidance = errorMessage.includes('storage') || errorMessage.includes('điều chuyển');
+        const displayMessage = isStockError
+          ? (hasStorageGuidance ? apiMessage : 'Số lượng xuất vượt tồn kho khả dụng. Hãy giảm số lượng hoặc bổ sung tồn kho.')
+          : (apiMessage || 'Xác nhận đơn hàng thất bại.');
+        this.toastr.error('Đơn xuất hàng', displayMessage);
         if (this.selectedOrder?.id === id) {
           this.openDetailModal(this.selectedOrder);
         }
@@ -332,7 +384,7 @@ export class SalesOrderComponent implements OnInit {
     this.soService.cancel(orderId).subscribe({
       next: (res) => {
         if (res.success) {
-          this.toastr.success('Đơn bán hàng', 'Hủy đơn hàng thành công.');
+          this.toastr.success('Đơn xuất hàng', 'Hủy đơn hàng thành công.');
           this.showCancelConfirm = false;
           this.orderToCancel = null;
           if (this.selectedOrder?.id === orderId) {
@@ -351,7 +403,7 @@ export class SalesOrderComponent implements OnInit {
           displayMsg = 'Không thể hủy đơn hàng này.';
         }
         
-        this.toastr.error('Đơn bán hàng', displayMsg);
+        this.toastr.error('Đơn xuất hàng', displayMsg);
         this.showCancelConfirm = false;
         this.orderToCancel = null;
         if (this.selectedOrder?.id === orderId) {
@@ -367,6 +419,116 @@ export class SalesOrderComponent implements OnInit {
     this.showCancelConfirm = false;
     this.selectedOrder = null;
     this.orderToCancel = null;
+    this.productSearchKeyword = '';
+    this.productSearchFocused = false;
+  }
+
+  getFilteredProducts(selectedProductId = ''): ProductResponse[] {
+    const keyword = this.normalizeSearchText(this.productSearchKeyword);
+
+    if (!keyword) {
+      return this.products;
+    }
+
+    return this.products.filter((product) =>
+      product.id === selectedProductId ||
+      this.normalizeSearchText(`${product.sku} ${product.name}`).includes(keyword)
+    );
+  }
+
+  private getCreateValidationMessage(): string | null {
+    if (!this.createForm.get('customer_id')?.value) {
+      return 'Vui lòng chọn khách hàng.';
+    }
+    if (!this.createForm.get('warehouse_id')?.value) {
+      return 'Vui lòng chọn kho xuất.';
+    }
+    if (!this.createForm.get('order_date')?.value) {
+      return 'Vui lòng chọn ngày đặt hàng.';
+    }
+    if (!this.createForm.get('requested_delivery_date')?.value) {
+      return 'Vui lòng chọn ngày giao dự kiến.';
+    }
+    if (this.lines.length === 0) {
+      return 'Đơn xuất hàng phải có ít nhất một dòng sản phẩm.';
+    }
+
+    for (let index = 0; index < this.lines.length; index++) {
+      const line = this.lines.at(index);
+      const productId = line.get('product_id')?.value;
+      const quantity = Number(line.get('quantity_ordered')?.value);
+      const unitPrice = Number(line.get('unit_price')?.value);
+      const lineLabel = `Dòng ${index + 1}`;
+
+      if (!productId) {
+        return `${lineLabel}: vui lòng chọn sản phẩm.`;
+      }
+      if (!Number.isFinite(quantity) || quantity <= 0) {
+        return `${lineLabel}: số lượng phải lớn hơn 0.`;
+      }
+      if (quantity > 9999999999999.99) {
+        return `${lineLabel}: số lượng vượt quá giới hạn cho phép.`;
+      }
+      if (!Number.isFinite(unitPrice) || unitPrice < 0) {
+        return `${lineLabel}: đơn giá phải lớn hơn hoặc bằng 0.`;
+      }
+      if (unitPrice > 9999999999999.99) {
+        return `${lineLabel}: đơn giá vượt quá giới hạn cho phép.`;
+      }
+    }
+
+    return this.createForm.invalid ? 'Vui lòng kiểm tra lại thông tin đơn xuất hàng.' : null;
+  }
+
+  private showInsufficientStockMessage(availability?: CheckInventoryAvailabilityResponse): void {
+    const product = this.products.find((item) => item.id === availability?.product_id);
+    const productName = product ? `${product.name} (${product.sku})` : 'Sản phẩm đã chọn';
+    const requestedQuantity = Number(availability?.requested_quantity || 0);
+    const availableQuantity = Number(availability?.available_quantity || 0);
+
+    this.toastr.warning(
+      'Đơn xuất hàng',
+      `${productName} chỉ còn ${availableQuantity} khả dụng, không đủ để xuất ${requestedQuantity}.`
+    );
+  }
+
+  private isInventoryAvailable(availability?: CheckInventoryAvailabilityResponse): boolean {
+    if (!availability) {
+      return false;
+    }
+
+    return availability.is_available ?? availability.available ?? false;
+  }
+
+  selectProductFromSearch(product: ProductResponse): void {
+    const emptyLine = this.lines.controls.find((line) => !line.get('product_id')?.value);
+    const targetLine = emptyLine || this.addProductLine();
+
+    targetLine.get('product_id')?.setValue(product.id);
+    targetLine.get('product_id')?.markAsTouched();
+    this.productSearchKeyword = '';
+    this.productSearchFocused = false;
+  }
+
+  private addProductLine(): FormGroup {
+    const line = this.fb.group({
+      product_id: ['', Validators.required],
+      quantity_ordered: [1, [Validators.required, Validators.min(0.01)]],
+      unit_price: [0, [Validators.required, Validators.min(0)]],
+      notes: ['']
+    });
+    this.lines.push(line);
+    return line;
+  }
+
+  private normalizeSearchText(value: string): string {
+    return (value || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/đ/g, 'd')
+      .replace(/Đ/g, 'D')
+      .toLowerCase()
+      .trim();
   }
 
   getStatusLabel(status: string): string {
@@ -402,6 +564,22 @@ export class SalesOrderComponent implements OnInit {
   getProductName(productId: string): string {
     const product = this.products.find((item) => item.id === productId);
     return product ? `${product.sku} - ${product.name}` : productId;
+  }
+
+  getLineProductName(line: SalesOrderLineResponse): string {
+    if (line.product_name) {
+      return line.product_name;
+    }
+
+    return this.products.find((item) => item.id === line.product_id)?.name || 'Sản phẩm chưa xác định';
+  }
+
+  getLineProductSku(line: SalesOrderLineResponse): string {
+    if (line.product_sku) {
+      return line.product_sku;
+    }
+
+    return this.products.find((item) => item.id === line.product_id)?.sku || line.product_id;
   }
 
   getCustomerName(customerId: string): string {

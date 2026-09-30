@@ -140,6 +140,34 @@
   gap: 0.5rem;
 }
 
+.product-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.3rem;
+  min-width: 180px;
+}
+
+.product-name {
+  color: #1e293b;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.product-sku {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  background: #eff6ff;
+  color: #2563eb;
+  font-size: 0.7rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
 .summary-row td {
   background: #f8fafc;
   border-top: 2px solid #e2e8f0;
@@ -156,6 +184,23 @@
 .modal-xl {
   max-width: 960px !important;
   width: 95vw;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.modal-xl > .modal-body {
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.modal-xl > .modal-header,
+.modal-xl > .modal-footer,
+.modal-xl > .detail-action-bar,
+.modal-xl > .detail-tabs {
+  flex: 0 0 auto;
 }
 
 .modal-title-section {
@@ -256,6 +301,120 @@
   padding: 0.45rem 0.75rem;
   font-size: 0.875rem;
   border-radius: 6px;
+}
+
+.lines-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.product-search-wrapper {
+  position: relative;
+  min-width: 240px;
+}
+
+.product-search {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 0 0.65rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #64748b;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.product-search:focus-within {
+  border-color: #047857;
+  box-shadow: 0 0 0 3px rgba(4, 120, 87, 0.08);
+}
+
+.product-search input {
+  width: 100%;
+  min-width: 0;
+  padding: 0.45rem 0.5rem;
+  border: 0;
+  outline: 0;
+  color: #1f2937;
+  background: transparent;
+  font-size: 0.875rem;
+}
+
+.product-search-clear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+}
+
+.product-search-clear:hover {
+  background: #e2e8f0;
+  color: #334155;
+}
+
+.product-search-results {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 0.35rem);
+  right: 0;
+  left: 0;
+  max-height: 240px;
+  overflow-y: auto;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.16);
+}
+
+.product-search-result {
+  display: flex;
+  width: 100%;
+  padding: 0.65rem 0.75rem;
+  border: 0;
+  border-bottom: 1px solid #e2e8f0;
+  background: #ffffff;
+  color: #1e293b;
+  cursor: pointer;
+  text-align: left;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.product-search-result:last-child {
+  border-bottom: 0;
+}
+
+.product-search-result:hover,
+.product-search-result:focus {
+  background: #ecfdf5;
+  outline: 0;
+}
+
+.product-search-result-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.product-search-result-sku {
+  color: #64748b;
+  font-size: 0.75rem;
+}
+
+.product-search-empty {
+  padding: 0.75rem;
+  color: #64748b;
+  font-size: 0.875rem;
+  text-align: center;
 }
 
 /* ─── Empty States ───────────────────────────────────────── */

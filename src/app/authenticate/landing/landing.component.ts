@@ -21,7 +21,7 @@ export class LandingComponent {
     {
       icon: 'fa-solid fa-file-contract',
       title: 'Quản lý đơn hàng',
-      description: 'Xử lý đơn mua hàng và đơn bán hàng, tự động hóa quy trình tạo và theo dõi đơn hàng.'
+      description: 'Xử lý đơn nhập hàng và đơn xuất hàng, tự động hóa quy trình tạo và theo dõi đơn hàng.'
     },
     {
       icon: 'fa-solid fa-chart-line',

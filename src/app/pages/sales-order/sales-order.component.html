@@ -3,7 +3,7 @@
     <div class="hero-left">
       <div class="hero-accent"></div>
       <div class="hero-text">
-        <h1 class="hero-title"><i class="fa-solid fa-file-invoice-dollar" aria-hidden="true"></i> Đơn bán hàng</h1>
+        <h1 class="hero-title"><i class="fa-solid fa-file-invoice-dollar" aria-hidden="true"></i> Đơn xuất hàng</h1>
         <p class="hero-subtitle">Quản lý các đơn đặt hàng từ khách hàng, từ khâu tạo nháp đến khâu xác nhận để giữ tồn kho.</p>
       </div>
     </div>
@@ -159,8 +159,8 @@
           <i class="fa-solid fa-file-invoice" aria-hidden="true"></i>
         </div>
         <div>
-          <h3>Tạo đơn bán hàng mới</h3>
-          <p class="modal-subtitle">Điền thông tin để tạo đơn bán hàng mới</p>
+          <h3>Tạo đơn xuất hàng mới</h3>
+          <p class="modal-subtitle">Điền thông tin để tạo đơn xuất hàng mới</p>
         </div>
       </div>
       <button class="modal-close" (click)="closeAllModals()">✕</button>
@@ -169,7 +169,7 @@
     <div class="modal-body">
       <div class="info-box">
         <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
-        <div>Đơn bán hàng mới sẽ được tạo với trạng thái <strong>Nháp</strong>. Bạn có thể chỉnh sửa sau khi tạo.</div>
+        <div>Đơn xuất hàng mới sẽ được tạo với trạng thái <strong>Nháp</strong>. Bạn có thể chỉnh sửa sau khi tạo.</div>
       </div>
 
       <form [formGroup]="createForm">
@@ -222,9 +222,47 @@
         <div class="lines-section mt-4">
           <div class="lines-header">
             <h4><i class="fa-solid fa-boxes-packing" aria-hidden="true"></i> Danh sách sản phẩm</h4>
-            <button type="button" class="btn btn-secondary btn-sm" (click)="addLine()" *appHasAnyPermission="createPermissions">
-              <i class="fa-solid fa-plus" aria-hidden="true"></i> Thêm dòng
-            </button>
+            <div class="lines-actions">
+              <div class="product-search-wrapper">
+                <div class="product-search">
+                  <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                  <input
+                    type="search"
+                    [(ngModel)]="productSearchKeyword"
+                    [ngModelOptions]="{ standalone: true }"
+                    (focus)="productSearchFocused = true"
+                    (keyup.escape)="productSearchFocused = false"
+                    placeholder="Tìm tên hoặc SKU..."
+                    aria-label="Tìm sản phẩm theo tên hoặc SKU" />
+                  <button
+                    *ngIf="productSearchKeyword"
+                    type="button"
+                    class="product-search-clear"
+                    (click)="productSearchKeyword = ''; productSearchFocused = false"
+                    aria-label="Xóa từ khóa tìm sản phẩm">
+                    <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                  </button>
+                </div>
+
+                <div class="product-search-results" *ngIf="productSearchFocused && productSearchKeyword.trim()">
+                  <button
+                    type="button"
+                    class="product-search-result"
+                    *ngFor="let product of getFilteredProducts()"
+                    (mousedown)="$event.preventDefault()"
+                    (click)="selectProductFromSearch(product)">
+                    <span class="product-search-result-name">{{ product.name }}</span>
+                    <span class="product-search-result-sku">SKU: {{ product.sku }}</span>
+                  </button>
+                  <div class="product-search-empty" *ngIf="getFilteredProducts().length === 0">
+                    Không tìm thấy sản phẩm phù hợp.
+                  </div>
+                </div>
+              </div>
+              <button type="button" class="btn btn-secondary btn-sm" (click)="addLine()" *appHasAnyPermission="createPermissions">
+                <i class="fa-solid fa-plus" aria-hidden="true"></i> Thêm dòng
+              </button>
+            </div>
           </div>
           
           <div class="table-container">
@@ -243,7 +281,7 @@
                   <td>
                     <select formControlName="product_id" class="form-control">
                       <option value="">-- Chọn sản phẩm --</option>
-                      <option *ngFor="let p of products" [value]="p.id">{{ p.name }} ({{ p.sku }})</option>
+                      <option *ngFor="let p of getFilteredProducts(line.get('product_id')?.value)" [value]="p.id">{{ p.name }} ({{ p.sku }})</option>
                     </select>
                   </td>
                   <td>
@@ -348,7 +386,7 @@
         <div class="detail-grid">
           <div class="detail-item"><span class="detail-label">Số đơn hàng:</span><span><strong>{{ selectedOrder.so_number }}</strong></span></div>
           <div class="detail-item"><span class="detail-label">Khách hàng:</span><span>{{ selectedOrder.customer_name ?? selectedOrder.customer_id }}</span></div>
-          <div class="detail-item"><span class="detail-label">Kho xuất:</span><span>{{ selectedOrder.warehouse_name ?? selectedOrder.warehouse_id }}</span></div>
+          <div class="detail-item"><span class="detail-label">Kho xuất:</span><span>{{ selectedOrder.warehouse_name || getWarehouseName(selectedOrder.warehouse_id) }}</span></div>
           <div class="detail-item"><span class="detail-label">Trạng thái:</span><span class="badge" [ngClass]="getStatusClass(selectedOrder.status)">{{ getStatusLabel(selectedOrder.status) }}</span></div>
           <div class="detail-item"><span class="detail-label">Ngày đặt:</span><span>{{ selectedOrder.order_date | date:'dd/MM/yyyy' }}</span></div>
           <div class="detail-item"><span class="detail-label">Ngày giao dự kiến:</span><span>{{ selectedOrder.requested_delivery_date ? (selectedOrder.requested_delivery_date | date:'dd/MM/yyyy') : '—' }}</span></div>
@@ -369,9 +407,11 @@
         <div class="detail-section-title">Thông tin hệ thống</div>
         <div class="detail-grid">
           <div class="detail-item"><span class="detail-label">Xác nhận lúc:</span><span>{{ selectedOrder.confirmed_at ? (selectedOrder.confirmed_at | date:'dd/MM/yyyy HH:mm') : '—' }}</span></div>
-          <div class="detail-item"><span class="detail-label">Người xác nhận:</span><span>{{ selectedOrder.confirmed_by ?? '—' }}</span></div>
+          <div class="detail-item"><span class="detail-label">Người xác nhận:</span><span>{{ selectedOrder.confirmed_by_name || selectedOrder.confirmed_by || '—' }}</span></div>
           <div class="detail-item"><span class="detail-label">Tạo lúc:</span><span>{{ selectedOrder.created_at | date:'dd/MM/yyyy HH:mm' }}</span></div>
+          <div class="detail-item"><span class="detail-label">Người tạo:</span><span>{{ selectedOrder.created_by_name || selectedOrder.created_by || '—' }}</span></div>
           <div class="detail-item"><span class="detail-label">Cập nhật lúc:</span><span>{{ selectedOrder.updated_at | date:'dd/MM/yyyy HH:mm' }}</span></div>
+          <div class="detail-item"><span class="detail-label">Người cập nhật:</span><span>{{ selectedOrder.updated_by_name || selectedOrder.updated_by || '—' }}</span></div>
         </div>
       </div>
 
@@ -399,8 +439,8 @@
                 <td>{{ idx + 1 }}</td>
                 <td>
                   <div class="product-cell">
-                    <span class="product-name">{{ line.product_name ?? line.product_id }}</span>
-                    <span class="product-sku" *ngIf="line.product_sku">{{ line.product_sku }}</span>
+                    <span class="product-name">{{ getLineProductName(line) }}</span>
+                    <span class="product-sku">SKU: {{ getLineProductSku(line) }}</span>
                   </div>
                 </td>
                 <td class="text-center">

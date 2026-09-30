@@ -171,6 +171,10 @@
   transform-origin: left;
 }
 
+.toast.is-paused .progress-bar {
+  animation-play-state: paused;
+}
+
 .toast-success .progress-bar {
   background: #10b981;
 }

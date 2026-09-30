@@ -18,9 +18,12 @@ export interface SalesOrderResponse {
   notes: string | null;
   confirmed_at: string | null;
   confirmed_by: string | null;
+  confirmed_by_name?: string | null;
   created_at: string;
   updated_at: string;
   created_by?: string;
+  created_by_name?: string | null;
   updated_by?: string;
+  updated_by_name?: string | null;
   lines: SalesOrderLineResponse[];
 }

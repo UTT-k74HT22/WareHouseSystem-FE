@@ -3,6 +3,11 @@
     *ngFor="let toast of toasts"
     [@toastAnimation]
     class="toast toast-{{toast.type}}"
+    [class.is-paused]="isToastPaused(toast.id)"
+    (mouseenter)="pauseDismiss(toast.id)"
+    (mouseleave)="resumeDismiss(toast.id)"
+    (focusin)="pauseDismiss(toast.id)"
+    (focusout)="resumeDismiss(toast.id)"
     (click)="removeToast(toast.id)">
 
     <div class="toast-icon">

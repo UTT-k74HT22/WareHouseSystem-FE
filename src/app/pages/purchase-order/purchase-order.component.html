@@ -5,7 +5,7 @@
     <div class="hero-left">
       <div class="hero-accent"></div>
       <div class="hero-text">
-        <h1 class="hero-title"><i class="fa-solid fa-cart-shopping" aria-hidden="true"></i> Đơn mua hàng (PO)</h1>
+        <h1 class="hero-title"><i class="fa-solid fa-cart-shopping" aria-hidden="true"></i> Đơn nhập hàng (PO)</h1>
         <p class="hero-subtitle">Quản lý đơn đặt hàng từ nhà cung cấp</p>
       </div>
     </div>
@@ -37,7 +37,7 @@
 
   <!-- ══════════ FILTER ══════════ -->
   <div class="filter-section">
-    <input class="search-input" type="text" [(ngModel)]="searchKeyword" placeholder="Tìm theo số đơn mua hàng..." (keyup.enter)="onSearch()" />
+    <input class="search-input" type="text" [(ngModel)]="searchKeyword" placeholder="Tìm theo số đơn nhập hàng..." (keyup.enter)="onSearch()" />
     <select class="filter-select" [(ngModel)]="selectedStatus" (change)="onSearch()">
       <option value="">-- Tất cả trạng thái --</option>
       <option value="DRAFT">Nháp</option>
@@ -146,7 +146,7 @@
      ═══════════════════════════════════════════════════════════ -->
 <div class="modal-overlay" *ngIf="showCreateModal" (click)="showCreateModal = false">
   <div class="modal-box" (click)="$event.stopPropagation()">
-    <div class="modal-header"><h3>Tạo đơn mua hàng mới</h3><button class="modal-close" (click)="showCreateModal = false">✕</button></div>
+    <div class="modal-header"><h3>Tạo đơn nhập hàng mới</h3><button class="modal-close" (click)="showCreateModal = false">✕</button></div>
     <div class="modal-body">
       <div class="form-row">
         <div class="form-group">
@@ -516,7 +516,7 @@
      ═══════════════════════════════════════════════════════════ -->
 <div class="modal-overlay" *ngIf="showConfirmConfirm" (click)="closeSubModal('confirm')">
   <div class="modal-box modal-sm" (click)="$event.stopPropagation()">
-    <div class="modal-header"><h3>Xác nhận đơn mua hàng</h3><button class="modal-close" (click)="closeSubModal('confirm')">✕</button></div>
+    <div class="modal-header"><h3>Xác nhận đơn nhập hàng</h3><button class="modal-close" (click)="closeSubModal('confirm')">✕</button></div>
     <div class="modal-body">
       <p>Bạn muốn xác nhận đơn hàng <strong>{{ orderToConfirm?.purchase_order_number }}</strong>?</p>
       <p class="text-muted">Sau khi xác nhận, đơn hàng sẽ không thể chỉnh sửa. Tổng tiền sẽ được tính lại từ các dòng đơn hàng.</p>

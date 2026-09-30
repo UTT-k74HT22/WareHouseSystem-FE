@@ -4,7 +4,7 @@
       <div class="hero-accent"></div>
       <div class="hero-text">
         <h1 class="hero-title"><i class="fa-solid fa-boxes-packing" aria-hidden="true"></i> Nhập kho</h1>
-        <p class="hero-subtitle">Quản lý phiếu nhập theo đơn mua hàng đã xác nhận, từ danh sách tổng quan đến bước xác nhận nhập hàng.</p>
+        <p class="hero-subtitle">Quản lý phiếu nhập theo đơn nhập hàng đã xác nhận, từ danh sách tổng quan đến bước xác nhận nhập hàng.</p>
       </div>
     </div>
     <div class="hero-actions">
@@ -75,7 +75,7 @@
   </div>
 
   <div class="info-box">
-    Phiếu nhập chỉ được tạo từ đơn mua hàng ở trạng thái <strong>Đã xác nhận</strong> hoặc <strong>Nhận một phần</strong>.
+    Phiếu nhập chỉ được tạo từ đơn nhập hàng ở trạng thái <strong>Đã xác nhận</strong> hoặc <strong>Nhận một phần</strong>.
     Thông tin chung và các dòng của phiếu nhập chỉ được sửa khi phiếu còn ở trạng thái <strong>Nháp</strong>.
   </div>
 
@@ -87,7 +87,7 @@
         <tr>
           <th>#</th>
           <th>Số phiếu nhập</th>
-          <th>Đơn mua hàng</th>
+          <th>Đơn nhập hàng</th>
           <th>Kho nhận</th>
           <th>Ngày nhập</th>
           <th>Số giao nhận</th>
@@ -160,13 +160,13 @@
     <div class="modal-header"><h3>Tạo phiếu nhập</h3><button class="modal-close" (click)="closeCreateModal()">✕</button></div>
     <div class="modal-body">
       <div class="info-box">
-        Người dùng chỉ được chọn đơn mua hàng hợp lệ. Kho nhận của phiếu nhập sẽ được lấy theo đơn mua hàng và không cho phép sửa trên màn hình này.
+        Người dùng chỉ được chọn đơn nhập hàng hợp lệ. Kho nhận của phiếu nhập sẽ được lấy theo đơn nhập hàng và không cho phép sửa trên màn hình này.
       </div>
 
       <div class="form-group">
-        <label>Đơn mua hàng <span class="required">*</span></label>
+        <label>Đơn nhập hàng <span class="required">*</span></label>
         <select [(ngModel)]="createForm.purchase_order_id" (ngModelChange)="onCreatePurchaseOrderChange($event)">
-          <option value="">-- Chọn đơn mua hàng có thể tạo phiếu nhập --</option>
+          <option value="">-- Chọn đơn nhập hàng có thể tạo phiếu nhập --</option>
           <option *ngFor="let po of availablePurchaseOrders" [value]="po.id">
             {{ po.purchase_order_number }} - {{ po.supplier_name || po.supplier_id }} - {{ getOrderStatusLabel(po.status) }}
           </option>
@@ -174,16 +174,16 @@
       </div>
 
       <div class="loading-state loading-state-inline" *ngIf="loadingAvailablePurchaseOrders">
-        <span>Đang tải danh sách đơn mua hàng hợp lệ...</span>
+        <span>Đang tải danh sách đơn nhập hàng hợp lệ...</span>
       </div>
 
       <div class="empty-helper" *ngIf="!loadingAvailablePurchaseOrders && availablePurchaseOrders.length === 0">
-        Không có đơn mua hàng nào ở trạng thái đã xác nhận hoặc nhận một phần để tạo phiếu nhập.
+        Không có đơn nhập hàng nào ở trạng thái đã xác nhận hoặc nhận một phần để tạo phiếu nhập.
       </div>
 
       <div class="detail-grid" *ngIf="createPurchaseOrder">
-        <div class="detail-item"><span class="detail-label">Đơn mua hàng</span><span>{{ createPurchaseOrder.purchase_order_number }}</span></div>
-        <div class="detail-item"><span class="detail-label">Trạng thái đơn mua hàng</span><span class="badge" [ngClass]="getOrderStatusClass(createPurchaseOrder.status)">{{ getOrderStatusLabel(createPurchaseOrder.status) }}</span></div>
+        <div class="detail-item"><span class="detail-label">Đơn nhập hàng</span><span>{{ createPurchaseOrder.purchase_order_number }}</span></div>
+        <div class="detail-item"><span class="detail-label">Trạng thái đơn nhập hàng</span><span class="badge" [ngClass]="getOrderStatusClass(createPurchaseOrder.status)">{{ getOrderStatusLabel(createPurchaseOrder.status) }}</span></div>
         <div class="detail-item"><span class="detail-label">Nhà cung cấp</span><span>{{ createPurchaseOrder.supplier_name || createPurchaseOrder.supplier_id }}</span></div>
         <div class="detail-item"><span class="detail-label">Kho nhận</span><span>{{ createPurchaseOrder.warehouse_name || createPurchaseOrder.warehouse_id }}</span></div>
         <div class="detail-item"><span class="detail-label">Ngày đặt</span><span>{{ createPurchaseOrder.order_date | date:'dd/MM/yyyy' }}</span></div>
@@ -206,9 +206,9 @@
         <textarea [(ngModel)]="createForm.notes" rows="3" maxlength="1000"></textarea>
       </div>
 
-      <div class="detail-section-title" *ngIf="createPurchaseOrder">Các phiếu nhập đã có trên đơn mua hàng này</div>
+      <div class="detail-section-title" *ngIf="createPurchaseOrder">Các phiếu nhập đã có trên đơn nhập hàng này</div>
       <div class="loading-state loading-state-inline" *ngIf="loadingCreatePurchaseOrderReceipts">
-        <span>Đang tải phiếu nhập của đơn mua hàng này...</span>
+        <span>Đang tải phiếu nhập của đơn nhập hàng này...</span>
       </div>
       <div class="receipt-history-list" *ngIf="createPurchaseOrder && !loadingCreatePurchaseOrderReceipts">
         <div class="receipt-history-item" *ngFor="let receipt of createPurchaseOrderReceipts">
@@ -219,7 +219,7 @@
           <span class="badge" [ngClass]="getStatusClass(receipt.status)">{{ getStatusLabel(receipt.status) }}</span>
         </div>
         <div class="empty-helper" *ngIf="createPurchaseOrderReceipts.length === 0">
-          Đơn mua hàng này chưa có phiếu nhập nào. Đây sẽ là phiếu nhập đầu tiên.
+          Đơn nhập hàng này chưa có phiếu nhập nào. Đây sẽ là phiếu nhập đầu tiên.
         </div>
       </div>
     </div>
@@ -287,7 +287,7 @@
         <div class="detail-grid">
           <div class="detail-item"><span class="detail-label">Số phiếu</span><span><strong>{{ selectedReceipt.receipt_number }}</strong></span></div>
           <div class="detail-item"><span class="detail-label">Trạng thái</span><span class="badge" [ngClass]="getStatusClass(selectedReceipt.status)">{{ getStatusLabel(selectedReceipt.status) }}</span></div>
-          <div class="detail-item"><span class="detail-label">Đơn mua hàng</span><span>{{ selectedReceipt.purchase_order_number || selectedReceipt.purchase_order_id }}</span></div>
+          <div class="detail-item"><span class="detail-label">Đơn nhập hàng</span><span>{{ selectedReceipt.purchase_order_number || selectedReceipt.purchase_order_id }}</span></div>
           <div class="detail-item"><span class="detail-label">Kho nhận</span><span>{{ selectedReceipt.warehouse_name || selectedReceipt.warehouse_id }}</span></div>
           <div class="detail-item"><span class="detail-label">Ngày nhập</span><span>{{ selectedReceipt.receipt_date | date:'dd/MM/yyyy' }}</span></div>
           <div class="detail-item"><span class="detail-label">Số giao nhận</span><span>{{ selectedReceipt.delivery_note_number || '—' }}</span></div>
@@ -297,20 +297,20 @@
           <div class="detail-item"><span class="detail-label">Cập nhật lúc</span><span>{{ selectedReceipt.updated_at | date:'dd/MM/yyyy HH:mm' }}</span></div>
         </div>
 
-        <div class="detail-section-title">Thông tin đơn mua hàng liên quan</div>
+        <div class="detail-section-title">Thông tin đơn nhập hàng liên quan</div>
         <div class="loading-state loading-state-inline" *ngIf="loadingDetailPurchaseOrder">
-          <span>Đang tải đơn mua hàng và các dòng liên quan...</span>
+          <span>Đang tải đơn nhập hàng và các dòng liên quan...</span>
         </div>
         <div class="detail-grid" *ngIf="detailPurchaseOrder && !loadingDetailPurchaseOrder">
-        <div class="detail-item"><span class="detail-label">Đơn mua hàng</span><span>{{ detailPurchaseOrder.purchase_order_number }}</span></div>
-          <div class="detail-item"><span class="detail-label">Trạng thái đơn mua hàng</span><span class="badge" [ngClass]="getOrderStatusClass(detailPurchaseOrder.status)">{{ getOrderStatusLabel(detailPurchaseOrder.status) }}</span></div>
+        <div class="detail-item"><span class="detail-label">Đơn nhập hàng</span><span>{{ detailPurchaseOrder.purchase_order_number }}</span></div>
+          <div class="detail-item"><span class="detail-label">Trạng thái đơn nhập hàng</span><span class="badge" [ngClass]="getOrderStatusClass(detailPurchaseOrder.status)">{{ getOrderStatusLabel(detailPurchaseOrder.status) }}</span></div>
           <div class="detail-item"><span class="detail-label">Nhà cung cấp</span><span>{{ detailPurchaseOrder.supplier_name || detailPurchaseOrder.supplier_id }}</span></div>
           <div class="detail-item"><span class="detail-label">Kho nhận</span><span>{{ detailPurchaseOrder.warehouse_name || detailPurchaseOrder.warehouse_id }}</span></div>
           <div class="detail-item"><span class="detail-label">Ngày đặt</span><span>{{ detailPurchaseOrder.order_date | date:'dd/MM/yyyy' }}</span></div>
           <div class="detail-item"><span class="detail-label">Ngày dự kiến</span><span>{{ detailPurchaseOrder.expected_delivery_date ? (detailPurchaseOrder.expected_delivery_date | date:'dd/MM/yyyy') : '—' }}</span></div>
         </div>
         <div class="empty-helper" *ngIf="!detailPurchaseOrder && !loadingDetailPurchaseOrder">
-          Không tải được ngữ cảnh đơn mua hàng cho phiếu nhập này.
+          Không tải được ngữ cảnh đơn nhập hàng cho phiếu nhập này.
         </div>
 
         <div class="detail-section-title" *ngIf="selectedReceipt.notes">Ghi chú</div>
@@ -320,7 +320,7 @@
           Phiếu nhập đang ở trạng thái nháp. Người dùng được sửa thông tin chung, xóa phiếu nhập, và chỉ được xác nhận khi phiếu đã có ít nhất 1 dòng.
         </div>
         <div class="info-box" *ngIf="selectedReceipt.status === InboundReceiptStatus.CONFIRMED">
-          Phiếu nhập đã được xác nhận. Thông tin chung đã bị khóa và kết quả nhận hàng đã được cập nhật vào tồn kho cùng đơn mua hàng theo giao dịch hệ thống xử lý.
+          Phiếu nhập đã được xác nhận. Thông tin chung đã bị khóa và kết quả nhận hàng đã được cập nhật vào tồn kho cùng đơn nhập hàng theo giao dịch hệ thống xử lý.
         </div>
       </div>
 
@@ -403,13 +403,13 @@
           Cột "SL đã nhận trên đơn" phản ánh phần đã xác nhận trên PO. Dòng draft của phiếu hiện tại vẫn đang được tách riêng để FE kiểm tra split theo vị trí, batch và quality trước khi confirm.
         </div>
         <div class="info-box" *ngIf="selectedReceipt.lines.length > 0 && selectedReceipt.status === InboundReceiptStatus.CONFIRMED">
-          Các dòng phiếu nhập được đối chiếu với dòng của đơn mua hàng để kiểm tra số lượng đặt/đã nhận/còn lại sau khi xác nhận.
+          Các dòng phiếu nhập được đối chiếu với dòng của đơn nhập hàng để kiểm tra số lượng đặt/đã nhận/còn lại sau khi xác nhận.
         </div>
         <div class="info-box" *ngIf="selectedReceipt.lines.length === 0 && selectedReceipt.status === InboundReceiptStatus.DRAFT">
-          Phiếu nhập đang ở trạng thái nháp nhưng chưa có dòng nào. Hãy thêm dòng nhận hàng từ các dòng đơn mua hàng còn số lượng có thể nhận.
+          Phiếu nhập đang ở trạng thái nháp nhưng chưa có dòng nào. Hãy thêm dòng nhận hàng từ các dòng đơn nhập hàng còn số lượng có thể nhận.
         </div>
         <div class="info-box" *ngIf="selectedReceipt.status === InboundReceiptStatus.DRAFT">
-          Với cùng một dòng đơn mua hàng, bạn có thể tách nhiều line theo <strong>vị trí</strong>, <strong>batch</strong> hoặc <strong>chất lượng</strong>.
+          Với cùng một dòng đơn nhập hàng, bạn có thể tách nhiều line theo <strong>vị trí</strong>, <strong>batch</strong> hoặc <strong>chất lượng</strong>.
           FE sẽ chặn line trùng dimension và chặn số lượng vượt phần còn lại trước khi gọi backend.
         </div>
       </div>
@@ -441,12 +441,12 @@
         </div>
 
         <div class="form-group">
-          <label>Dòng đơn mua hàng <span class="required">*</span></label>
+          <label>Dòng đơn nhập hàng <span class="required">*</span></label>
           <select
             [(ngModel)]="lineForm.purchase_order_line_id"
             (ngModelChange)="onLinePurchaseOrderChange($event)"
             [disabled]="lineEditorMode === 'edit'">
-            <option value="">-- Chọn dòng đơn mua hàng --</option>
+            <option value="">-- Chọn dòng đơn nhập hàng --</option>
             <option *ngFor="let poLine of getSelectablePurchaseOrderLines()" [value]="poLine.id">
               {{ getPurchaseOrderLineOptionLabel(poLine) }}
             </option>
@@ -570,7 +570,7 @@
     <div class="modal-header"><h3>Xác nhận phiếu nhập</h3><button class="modal-close" (click)="closeSubModal('confirm')">✕</button></div>
     <div class="modal-body">
       <p>Bạn muốn xác nhận phiếu nhập <strong>{{ receiptToConfirm?.receipt_number }}</strong>?</p>
-      <p class="text-muted">Sau khi xác nhận, phiếu nhập sẽ bị khóa chỉnh sửa và cập nhật tồn kho, lịch sử dịch chuyển cùng dòng đơn mua hàng theo giao dịch hệ thống xử lý.</p>
+      <p class="text-muted">Sau khi xác nhận, phiếu nhập sẽ bị khóa chỉnh sửa và cập nhật tồn kho, lịch sử dịch chuyển cùng dòng đơn nhập hàng theo giao dịch hệ thống xử lý.</p>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" (click)="closeSubModal('confirm')">Hủy</button>

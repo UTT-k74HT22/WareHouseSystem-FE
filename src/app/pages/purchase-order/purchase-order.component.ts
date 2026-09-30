@@ -140,7 +140,7 @@ export class PurchaseOrderComponent implements OnInit {
         this.orders = [];
         this.totalElements = 0;
         this.totalPages = 0;
-        this.toastr.error(error?.error?.message || 'Không tải được danh sách đơn mua hàng.');
+        this.toastr.error(error?.error?.message || 'Không tải được danh sách đơn nhập hàng.');
         this.loading = false;
       }
     });
@@ -216,13 +216,13 @@ export class PurchaseOrderComponent implements OnInit {
 
   onCreateSubmit(): void {
     if (!this.isCreateFormValid) {
-      this.toastr.warning('Đơn mua hàng', 'Vui lòng điền đầy đủ thông tin bắt buộc.');
+      this.toastr.warning('Đơn nhập hàng', 'Vui lòng điền đầy đủ thông tin bắt buộc.');
       return;
     }
     this.poService.create(this.createForm).subscribe({
       next: (res) => {
         if (res.success) {
-          this.toastr.success('Đơn mua hàng', 'Tạo đơn mua hàng thành công!');
+          this.toastr.success('Đơn nhập hàng', 'Tạo đơn nhập hàng thành công!');
           this.showCreateModal = false;
           this.loadOrders();
           // Mở detail ngay để user thêm lines
@@ -232,7 +232,7 @@ export class PurchaseOrderComponent implements OnInit {
         }
       },
       error: (error) => {
-        this.toastr.error('Đơn mua hàng', error?.error?.message || 'Tạo đơn mua hàng thất bại.');
+        this.toastr.error('Đơn nhập hàng', error?.error?.message || 'Tạo đơn nhập hàng thất bại.');
       }
     });
   }
@@ -305,7 +305,7 @@ export class PurchaseOrderComponent implements OnInit {
     this.poService.update(this.selectedOrder.id, this.editForm).subscribe({
       next: (res) => {
         if (res.success) {
-          this.toastr.success('Đơn mua hàng', 'Cập nhật đơn hàng thành công!');
+          this.toastr.success('Đơn nhập hàng', 'Cập nhật đơn hàng thành công!');
           this.selectedOrder = this.enrichOrder(res.data);
           this.showEditModal = false;
           this.loadOrders();
@@ -313,11 +313,11 @@ export class PurchaseOrderComponent implements OnInit {
       },
       error: (error) => {
         if (error?.status === 400 && error?.error?.error_code === 'PO_002') {
-          this.toastr.error('Đơn mua hàng', 'Đơn hàng không còn ở trạng thái Nháp. Đã chuyển sang chỉ xem.');
+          this.toastr.error('Đơn nhập hàng', 'Đơn hàng không còn ở trạng thái Nháp. Đã chuyển sang chỉ xem.');
           this.loadOrderDetail(this.selectedOrder!.id);
           this.showEditModal = false;
         } else {
-          this.toastr.error('Đơn mua hàng', error?.error?.message || 'Cập nhật đơn hàng thất bại.');
+          this.toastr.error('Đơn nhập hàng', error?.error?.message || 'Cập nhật đơn hàng thất bại.');
         }
       }
     });
@@ -337,7 +337,7 @@ export class PurchaseOrderComponent implements OnInit {
     this.poService.delete(deletedId).subscribe({
       next: (res) => {
         if (res.success) {
-          this.toastr.success('Đơn mua hàng', 'Xoá đơn hàng thành công!');
+          this.toastr.success('Đơn nhập hàng', 'Xoá đơn hàng thành công!');
           this.showDeleteConfirm = false;
           this.orderToDelete = null;
           if (this.selectedOrder?.id === deletedId) {
@@ -348,7 +348,7 @@ export class PurchaseOrderComponent implements OnInit {
         }
       },
       error: (error) => {
-        this.toastr.error('Đơn mua hàng', error?.error?.message || 'Xoá đơn hàng thất bại.');
+        this.toastr.error('Đơn nhập hàng', error?.error?.message || 'Xoá đơn hàng thất bại.');
       }
     });
   }
@@ -367,7 +367,7 @@ export class PurchaseOrderComponent implements OnInit {
     this.poService.confirm(orderId).subscribe({
       next: (res) => {
         if (res.success) {
-          this.toastr.success('Đơn mua hàng', 'Đã xác nhận đơn mua hàng thành công!');
+          this.toastr.success('Đơn nhập hàng', 'Đã xác nhận đơn nhập hàng thành công!');
           this.showConfirmConfirm = false;
           this.orderToConfirm = null;
           if (this.selectedOrder?.id === orderId) {
@@ -379,8 +379,8 @@ export class PurchaseOrderComponent implements OnInit {
       error: (error) => {
         this.showConfirmConfirm = false;
         this.orderToConfirm = null;
-        const msg = error?.error?.message || 'Xác nhận đơn mua hàng thất bại.';
-        this.toastr.error('Đơn mua hàng', msg);
+        const msg = error?.error?.message || 'Xác nhận đơn nhập hàng thất bại.';
+        this.toastr.error('Đơn nhập hàng', msg);
         if (this.selectedOrder?.id === orderId) {
           this.loadOrderDetail(orderId);
           this.loadOrderLines(orderId);
@@ -408,13 +408,13 @@ export class PurchaseOrderComponent implements OnInit {
 
   onAddLineSubmit(): void {
     if (!this.isLineFormValid) {
-      this.toastr.warning('Đơn mua hàng', 'Vui lòng điền đầy đủ thông tin dòng đơn hàng.');
+      this.toastr.warning('Đơn nhập hàng', 'Vui lòng điền đầy đủ thông tin dòng đơn hàng.');
       return;
     }
     this.polService.create(this.lineForm).subscribe({
       next: (res) => {
         if (res.success) {
-          this.toastr.success('Đơn mua hàng', 'Thêm dòng đơn hàng thành công!');
+          this.toastr.success('Đơn nhập hàng', 'Thêm dòng đơn hàng thành công!');
           this.showAddLineModal = false;
           this.refreshAfterLineMutation();
         }
@@ -422,13 +422,13 @@ export class PurchaseOrderComponent implements OnInit {
       error: (error) => {
         const code = error?.error?.error_code;
         if (code === 'POL_005') {
-          this.toastr.error('Đơn mua hàng', 'Sản phẩm đã tồn tại trong đơn hàng. Vui lòng chọn sản phẩm khác.');
+          this.toastr.error('Đơn nhập hàng', 'Sản phẩm đã tồn tại trong đơn hàng. Vui lòng chọn sản phẩm khác.');
         } else if (code === 'PO_002') {
-          this.toastr.error('Đơn mua hàng', 'Đơn hàng không còn ở trạng thái Nháp.');
+          this.toastr.error('Đơn nhập hàng', 'Đơn hàng không còn ở trạng thái Nháp.');
           this.refreshAfterLineMutation();
           this.showAddLineModal = false;
         } else {
-          this.toastr.error('Đơn mua hàng', error?.error?.message || 'Thêm dòng đơn hàng thất bại.');
+          this.toastr.error('Đơn nhập hàng', error?.error?.message || 'Thêm dòng đơn hàng thất bại.');
         }
       }
     });
@@ -457,7 +457,7 @@ export class PurchaseOrderComponent implements OnInit {
     this.polService.update(this.selectedLine.id, this.editLineForm).subscribe({
       next: (res) => {
         if (res.success) {
-          this.toastr.success('Đơn mua hàng', 'Cập nhật dòng đơn hàng thành công!');
+          this.toastr.success('Đơn nhập hàng', 'Cập nhật dòng đơn hàng thành công!');
           this.showEditLineModal = false;
           this.selectedLine = null;
           this.refreshAfterLineMutation();
@@ -466,13 +466,13 @@ export class PurchaseOrderComponent implements OnInit {
       error: (error) => {
         const code = error?.error?.error_code;
         if (code === 'POL_005') {
-          this.toastr.error('Đơn mua hàng', 'Sản phẩm đã tồn tại trong đơn hàng.');
+          this.toastr.error('Đơn nhập hàng', 'Sản phẩm đã tồn tại trong đơn hàng.');
         } else if (code === 'PO_002') {
-          this.toastr.error('Đơn mua hàng', 'Đơn hàng không còn ở trạng thái Nháp.');
+          this.toastr.error('Đơn nhập hàng', 'Đơn hàng không còn ở trạng thái Nháp.');
           this.refreshAfterLineMutation();
           this.showEditLineModal = false;
         } else {
-          this.toastr.error('Đơn mua hàng', error?.error?.message || 'Cập nhật dòng đơn hàng thất bại.');
+          this.toastr.error('Đơn nhập hàng', error?.error?.message || 'Cập nhật dòng đơn hàng thất bại.');
         }
       }
     });
@@ -489,14 +489,14 @@ export class PurchaseOrderComponent implements OnInit {
     this.polService.delete(this.lineToDelete.id).subscribe({
       next: (res) => {
         if (res.success) {
-          this.toastr.success('Đơn mua hàng', 'Xoá dòng đơn hàng thành công!');
+          this.toastr.success('Đơn nhập hàng', 'Xoá dòng đơn hàng thành công!');
           this.showDeleteLineConfirm = false;
           this.lineToDelete = null;
           this.refreshAfterLineMutation();
         }
       },
       error: (error) => {
-        this.toastr.error('Đơn mua hàng', error?.error?.message || 'Xoá dòng đơn hàng thất bại.');
+        this.toastr.error('Đơn nhập hàng', error?.error?.message || 'Xoá dòng đơn hàng thất bại.');
       }
     });
   }

@@ -271,12 +271,12 @@ export class InboundLineEditorService {
 
     const purchaseOrderLine = this.getSelectedPurchaseOrderLine(context);
     if (!purchaseOrderLine) {
-      return 'Vui lòng chọn dòng đơn mua hàng.';
+      return 'Vui lòng chọn dòng đơn nhập hàng.';
     }
 
     const product = this.getSelectedProduct(context);
     if (!product) {
-      return 'Không xác định được sản phẩm của dòng đơn mua hàng.';
+      return 'Không xác định được sản phẩm của dòng đơn nhập hàng.';
     }
 
     const location = this.getAvailableLineLocations(context).find((item) => item.id === context.lineForm.location_id);
@@ -295,7 +295,7 @@ export class InboundLineEditorService {
     }
 
     if (quantityReceived > remaining) {
-      return `Số lượng nhận vượt phần còn lại có thể phân bổ của dòng đơn mua hàng (${remaining.toFixed(2)}).`;
+      return `Số lượng nhận vượt phần còn lại có thể phân bổ của dòng đơn nhập hàng (${remaining.toFixed(2)}).`;
     }
 
     const notes = this.normalizeOptionalText(context.lineForm.notes);
