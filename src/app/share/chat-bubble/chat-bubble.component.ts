@@ -370,9 +370,9 @@ export class ChatBubbleComponent implements OnInit, AfterViewChecked, OnDestroy 
     const lastNewline = truncated.lastIndexOf('\n');
     const lastBullet = truncated.lastIndexOf('•');
     const cutPoint = Math.max(lastNewline, lastBullet);
-    return cutPoint > this.MAX_MESSAGE_LENGTH - 100
-      ? truncated.substring(0, cutPoint) + '\n\n... (phản hồi quá dài, vui lòng xem chi tiết trong trang đầy đủ)'
-      : truncated + '\n\n... (phản hồi quá dài)';
+    return (cutPoint > this.MAX_MESSAGE_LENGTH - 100
+      ? truncated.substring(0, cutPoint)
+      : truncated).trimEnd();
   }
 
   private scrollToBottom(): void {

@@ -242,7 +242,7 @@ export class InboundComponent implements OnInit {
 
   onCreateSubmit(): void {
     if (!this.createForm.purchase_order_id) {
-      this.toastr.warning('Nhập kho', 'Vui lòng chọn đơn mua hàng để tạo phiếu nhập.');
+      this.toastr.warning('Nhập kho', 'Vui lòng chọn đơn nhập hàng để tạo phiếu nhập.');
       return;
     }
 
@@ -428,12 +428,12 @@ export class InboundComponent implements OnInit {
     }
 
     if (this.loadingDetailPurchaseOrder) {
-      this.toastr.warning('Đang tải thông tin dòng đơn mua hàng. Vui lòng thử lại sau.');
+      this.toastr.warning('Đang tải thông tin dòng đơn nhập hàng. Vui lòng thử lại sau.');
       return;
     }
 
     if (mode === 'create' && this.getCreateAvailablePurchaseOrderLines().length === 0) {
-      this.toastr.warning('Không còn dòng đơn mua hàng nào có thể nhận thêm trên phiếu nhập này.');
+      this.toastr.warning('Không còn dòng đơn nhập hàng nào có thể nhận thêm trên phiếu nhập này.');
       return;
     }
 
@@ -925,7 +925,7 @@ export class InboundComponent implements OnInit {
       error: (error) => {
         this.availablePurchaseOrders = [];
         this.loadingAvailablePurchaseOrders = false;
-        this.toastr.error(error?.error?.message || 'Không tải được danh sách đơn mua hàng hợp lệ.');
+        this.toastr.error(error?.error?.message || 'Không tải được danh sách đơn nhập hàng hợp lệ.');
       }
     });
   }

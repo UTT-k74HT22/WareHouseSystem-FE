@@ -32,6 +32,10 @@ export class ToastrComponent implements OnInit, OnDestroy {
   private toastId = 0;
   private subscription: Subscription | undefined;
   private dismissTimer: ReturnType<typeof setTimeout> | undefined;
+  private activeToastId: number | null = null;
+  private remainingDismissTime = 0;
+  private dismissStartedAt = 0;
+  private isDismissPaused = false;
 
   constructor(private toastrService: ToastrService) {}
 
@@ -57,11 +61,12 @@ export class ToastrComponent implements OnInit, OnDestroy {
 
     this.clearDismissTimer();
     this.toasts = [toast];
+    this.activeToastId = toast.id;
+    this.remainingDismissTime = Math.max(duration, 0);
+    this.isDismissPaused = false;
 
     if (duration > 0) {
-      this.dismissTimer = setTimeout(() => {
-        this.removeToast(toast.id);
-      }, duration);
+      this.startDismissTimer(toast.id);
     }
   }
 
@@ -83,9 +88,39 @@ export class ToastrComponent implements OnInit, OnDestroy {
 
   removeToast(id: number): void {
     this.toasts = this.toasts.filter(toast => toast.id !== id);
-    if (this.toasts.length === 0) {
+    if (this.toasts.length === 0 || this.activeToastId === id) {
       this.clearDismissTimer();
+      this.activeToastId = null;
+      this.remainingDismissTime = 0;
+      this.dismissStartedAt = 0;
+      this.isDismissPaused = false;
     }
+  }
+
+  pauseDismiss(id: number): void {
+    if (id !== this.activeToastId || this.isDismissPaused || this.remainingDismissTime <= 0) {
+      return;
+    }
+
+    const elapsed = Date.now() - this.dismissStartedAt;
+    this.remainingDismissTime = Math.max(0, this.remainingDismissTime - elapsed);
+    this.clearDismissTimer();
+    this.isDismissPaused = true;
+  }
+
+  resumeDismiss(id: number): void {
+    if (id !== this.activeToastId || !this.isDismissPaused) {
+      return;
+    }
+
+    this.isDismissPaused = false;
+    if (this.remainingDismissTime > 0) {
+      this.startDismissTimer(id);
+    }
+  }
+
+  isToastPaused(id: number): boolean {
+    return id === this.activeToastId && this.isDismissPaused;
   }
 
   private clearDismissTimer(): void {
@@ -93,6 +128,13 @@ export class ToastrComponent implements OnInit, OnDestroy {
       clearTimeout(this.dismissTimer);
       this.dismissTimer = undefined;
     }
+  }
+
+  private startDismissTimer(id: number): void {
+    this.dismissStartedAt = Date.now();
+    this.dismissTimer = setTimeout(() => {
+      this.removeToast(id);
+    }, this.remainingDismissTime);
   }
 
   getIcon(type: string): string {

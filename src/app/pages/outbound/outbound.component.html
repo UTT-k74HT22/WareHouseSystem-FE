@@ -4,7 +4,7 @@
       <div class="hero-accent"></div>
       <div class="hero-text">
         <h1 class="hero-title"><i class="fa-solid fa-truck-ramp-box" aria-hidden="true"></i> Xuất kho</h1>
-        <p class="hero-subtitle">Quản lý các phiếu xuất kho từ đơn bán hàng, thực hiện quy trình lấy hàng (picking) và xác nhận xuất hàng.</p>
+        <p class="hero-subtitle">Quản lý các phiếu xuất kho từ đơn xuất hàng, thực hiện quy trình lấy hàng (picking) và xác nhận xuất hàng.</p>
       </div>
     </div>
     <div class="hero-actions">
@@ -76,9 +76,9 @@
         <tr>
           <th>#</th>
           <th>Số phiếu xuất</th>
-          <th>Đơn bán hàng</th>
+          <th>Đơn xuất hàng</th>
           <th>Kho</th>
-          <th>Ngày xuất</th>
+          <th>Thời gian dự kiến xuất</th>
           <th>Nhà vận chuyển</th>
           <th>Trạng thái</th>
           <th>Thao tác</th>
@@ -90,7 +90,10 @@
           <td><a class="link" (click)="openDetailModal(shipment)">{{ getShipmentNumber(shipment) }}</a></td>
           <td>{{ getSalesOrderDisplay(getSalesOrderId(shipment)) }}</td>
           <td>{{ getWarehouseName(getWarehouseId(shipment)) }}</td>
-          <td>{{ getShipmentDate(shipment) | date:'dd/MM/yyyy' }}</td>
+          <td>
+            {{ getShipmentDate(shipment) | date:'dd/MM/yyyy' }}
+            <span class="shipment-time" *ngIf="getShipmentTime(shipment)">{{ getShipmentTime(shipment) }}</span>
+          </td>
           <td>{{ shipment.carrier || '—' }}</td>
           <td><span class="badge" [ngClass]="getStatusClass(getShipmentStatus(shipment))">{{ getStatusLabel(getShipmentStatus(shipment)) }}</span></td>
           <td class="actions">
@@ -132,13 +135,13 @@
 
 <!-- Modal Create -->
 <div class="modal-overlay" *ngIf="showCreateModal" (click)="closeAllModals()">
-  <div class="modal-box modal-lg" (click)="$event.stopPropagation()">
+  <div class="modal-box modal-xl outbound-create-modal" (click)="$event.stopPropagation()">
     <div class="modal-header">
       <div class="modal-title-section">
         <div class="modal-icon"><i class="fa-solid fa-truck-fast"></i></div>
         <div>
           <h3>Tạo phiếu xuất kho</h3>
-          <p class="modal-subtitle">Lên kế hoạch xuất kho cho đơn bán hàng</p>
+          <p class="modal-subtitle">Lên kế hoạch xuất kho cho đơn xuất hàng</p>
         </div>
       </div>
       <button class="modal-close" (click)="closeAllModals()">✕</button>
@@ -148,17 +151,54 @@
         <div class="form-section-title"><i class="fa-solid fa-file-invoice"></i> Thông tin cơ bản</div>
         <div class="form-grid">
           <div class="form-group">
-            <label>Đơn bán hàng <span class="required">*</span></label>
-            <select formControlName="sales_order_id" (change)="onOrderSelect($any($event.target).value)">
-              <option value="">-- Chọn đơn bán hàng --</option>
-              <option *ngFor="let order of confirmedOrders" [value]="order.id">
-                {{ order.so_number }} - {{ getOrderStatusLabel(order.status) }}
-              </option>
-            </select>
+            <label>Đơn xuất hàng <span class="required">*</span></label>
+            <div class="sales-order-combobox">
+              <div class="sales-order-search-input">
+                <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                <input
+                  type="text"
+                  [(ngModel)]="salesOrderSearchKeyword"
+                  [ngModelOptions]="{ standalone: true }"
+                  (ngModelChange)="onSalesOrderSearchChange()"
+                  (focus)="salesOrderSearchFocused = true"
+                  (keyup.escape)="salesOrderSearchFocused = false"
+                  placeholder="Tìm mã đơn hoặc khách hàng..."
+                  aria-label="Tìm đơn xuất hàng" />
+                <button
+                  *ngIf="salesOrderSearchKeyword"
+                  type="button"
+                  class="sales-order-search-clear"
+                  (click)="clearSalesOrderSelection()"
+                  aria-label="Xóa đơn xuất hàng đã chọn">
+                  <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                </button>
+              </div>
+
+              <div class="sales-order-search-results" *ngIf="salesOrderSearchFocused">
+                <button
+                  type="button"
+                  class="sales-order-search-result"
+                  *ngFor="let order of getFilteredConfirmedOrders()"
+                  (mousedown)="$event.preventDefault()"
+                  (click)="selectSalesOrder(order)">
+                  <span class="sales-order-number">{{ order.so_number }}</span>
+                  <span class="sales-order-meta">
+                    {{ getCustomerName(order, 'Chưa có khách hàng') }} · {{ getOrderStatusLabel(order.status) }}
+                    <ng-container *ngIf="order.created_at">· Tạo: {{ order.created_at | date:'dd/MM/yyyy HH:mm' }}</ng-container>
+                  </span>
+                </button>
+                <div class="sales-order-search-empty" *ngIf="getFilteredConfirmedOrders().length === 0">
+                  Không tìm thấy đơn xuất hàng phù hợp.
+                </div>
+              </div>
+            </div>
           </div>
           <div class="form-group">
-            <label>Ngày xuất kho <span class="required">*</span></label>
-            <input type="date" formControlName="shipment_date" />
+            <label>Thời gian dự kiến xuất kho <span class="required">*</span></label>
+            <div class="shipment-schedule">
+              <input type="date" formControlName="shipment_date" aria-label="Ngày xuất kho" />
+              <input type="time" formControlName="shipment_time" aria-label="Giờ xuất kho" />
+            </div>
           </div>
           <div class="form-group">
             <label>Nhà vận chuyển</label>
@@ -166,9 +206,50 @@
           </div>
           <div class="form-group">
             <label>Kho xuất</label>
-            <input type="text" [value]="getSelectedWarehouseName()" placeholder="Chọn đơn bán hàng để tự động lấy kho xuất" readonly />
+            <input type="text" [value]="getSelectedWarehouseName()" placeholder="Chọn đơn xuất hàng để tự động lấy kho xuất" readonly />
           </div>
         </div>
+
+        <section class="selected-order-summary" *ngIf="selectedOrder" aria-label="Tóm tắt đơn xuất hàng đã chọn">
+          <div class="selected-order-summary__header">
+            <div>
+              <span class="selected-order-summary__eyebrow">Đơn xuất hàng đã chọn</span>
+              <strong>{{ selectedOrder.so_number }}</strong>
+            </div>
+            <span class="order-status-badge">{{ getOrderStatusLabel(selectedOrder.status) }}</span>
+          </div>
+
+          <div class="selected-order-summary__grid">
+            <div class="order-summary-item">
+              <i class="fa-solid fa-user" aria-hidden="true"></i>
+              <div>
+                <span>Khách hàng</span>
+                <strong>{{ getCustomerName(selectedOrder) }}</strong>
+              </div>
+            </div>
+            <div class="order-summary-item">
+              <i class="fa-regular fa-calendar" aria-hidden="true"></i>
+              <div>
+                <span>Ngày đặt hàng</span>
+                <strong>{{ selectedOrder.order_date | date:'dd/MM/yyyy' }}</strong>
+              </div>
+            </div>
+            <div class="order-summary-item">
+              <i class="fa-solid fa-truck-ramp-box" aria-hidden="true"></i>
+              <div>
+                <span>Ngày giao dự kiến</span>
+                <strong>{{ selectedOrder.requested_delivery_date | date:'dd/MM/yyyy' }}</strong>
+              </div>
+            </div>
+            <div class="order-summary-item">
+              <i class="fa-solid fa-boxes-stacked" aria-hidden="true"></i>
+              <div>
+                <span>Hàng còn có thể xuất</span>
+                <strong>{{ selectedOrderLines.length }} dòng hàng</strong>
+              </div>
+            </div>
+          </div>
+        </section>
 
         <div class="form-group mt-3">
           <label>Ghi chú</label>
@@ -177,9 +258,59 @@
 
         <div class="lines-section mt-4" *ngIf="lines.length > 0">
           <div class="form-section-title"><i class="fa-solid fa-boxes-stacked"></i> Danh sách hàng xuất</div>
+          <section class="dispatch-order-context" *ngIf="selectedOrder" aria-label="Thông tin đơn xuất cần lập phiếu">
+            <div class="dispatch-order-context__header">
+              <div>
+                <span>Đơn xuất cần lập phiếu</span>
+                <strong>{{ selectedOrder.so_number }}</strong>
+              </div>
+              <span class="order-status-badge">{{ getOrderStatusLabel(selectedOrder.status) }}</span>
+            </div>
+
+            <div class="dispatch-order-context__details">
+              <div><span>Khách hàng</span><strong>{{ getCustomerName(selectedOrder) }}</strong></div>
+              <div><span>Kho xuất</span><strong>{{ getSelectedWarehouseName() }}</strong></div>
+              <div><span>Ngày giao dự kiến</span><strong>{{ selectedOrder.requested_delivery_date | date:'dd/MM/yyyy' }}</strong></div>
+              <div *ngIf="selectedOrder.notes"><span>Ghi chú đơn hàng</span><strong>{{ selectedOrder.notes }}</strong></div>
+            </div>
+
+            <div class="dispatch-order-context__products">
+              <span>Sản phẩm trong đợt xuất</span>
+              <div class="dispatch-order-context__product-list">
+                <div class="dispatch-order-context__product" *ngFor="let line of lines.controls">
+                  <div class="dispatch-order-context__product-main">
+                    <span class="dispatch-order-context__product-icon"><i class="fa-solid fa-box" aria-hidden="true"></i></span>
+                    <div>
+                      <strong>{{ line.get('product_name')?.value }}</strong>
+                      <code>SKU: {{ line.get('product_sku')?.value }}</code>
+                    </div>
+                  </div>
+                  <div class="dispatch-order-context__product-quantities">
+                    <span>Đặt: <strong>{{ line.get('qty_ordered')?.value | number:'1.0-0' }}</strong></span>
+                    <span>Đã xuất: <strong>{{ line.get('qty_shipped_total')?.value | number:'1.0-0' }}</strong></span>
+                    <span class="is-remaining">Còn lại: <strong>{{ line.get('qty_remaining')?.value | number:'1.0-0' }}</strong></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="dispatch-order-context__totals">
+              <div><span>Tổng số lượng đặt</span><strong>{{ getSelectedOrderQuantity('ordered') | number:'1.0-0' }}</strong></div>
+              <div><span>Đã xuất trước đó</span><strong>{{ getSelectedOrderQuantity('shipped') | number:'1.0-0' }}</strong></div>
+              <div class="dispatch-order-context__remaining"><span>Còn lại có thể xuất</span><strong>{{ getSelectedOrderQuantity('remaining') | number:'1.0-0' }}</strong></div>
+            </div>
+          </section>
           <div class="info-box mb-3">
-            <i class="fa-solid fa-circle-info"></i>
-            <div>Số lượng sẽ được hệ thống giữ chỗ (reserve) sau khi phiếu được tạo.</div>
+            <div class="reserve-info-text">
+              Số lượng của đơn xuất đã được hệ thống giữ chỗ khi đơn được xác nhận; tạo phiếu sẽ sử dụng phần tồn đã giữ này.
+              <button type="button" class="reserve-tooltip-trigger" aria-label="Giải thích về giữ chỗ tồn kho">
+                <i class="fa-regular fa-circle-question" aria-hidden="true"></i>
+                <span class="reserve-tooltip" role="tooltip">
+                  <strong>Giữ chỗ tồn kho là gì?</strong>
+                  Số lượng này được trừ khỏi tồn khả dụng để không bị dùng cho đơn khác. Tồn thực tế chỉ giảm khi xác nhận xuất kho; nếu hủy đơn, hệ thống sẽ trả lại phần tồn đã giữ.
+                </span>
+              </button>
+            </div>
           </div>
           
           <div class="table-container">
@@ -208,7 +339,7 @@
                     {{ line.get('qty_remaining')?.value | number:'1.0-0' }}
                   </td>
                   <td>
-                    <input type="number" formControlName="quantity_shipped" class="form-input text-center" style="font-weight: 700; color: #2563eb;" />
+                    <input type="number" min="0" step="0.01" formControlName="quantity_shipped" class="form-input text-center" style="font-weight: 700; color: #2563eb;" />
                   </td>
                   <td><input type="text" formControlName="notes" class="form-input" placeholder="Ghi chú..." /></td>
                 </tr>
@@ -318,11 +449,11 @@
 
         <div class="detail-grid">
           <div class="detail-item"><span class="detail-label">Số phiếu xuất:</span><span><strong>{{ getShipmentNumber(selectedShipment) }}</strong></span></div>
-          <div class="detail-item"><span class="detail-label">Đơn bán hàng:</span><span class="text-primary"><strong>{{ getSalesOrderDisplay(getSalesOrderId(selectedShipment)) }}</strong></span></div>
-          <div class="detail-item"><span class="detail-label">Khách hàng:</span><span>{{ selectedOrder?.customer_name || '—' }}</span></div>
+          <div class="detail-item"><span class="detail-label">Đơn xuất hàng:</span><span class="text-primary"><strong>{{ getSalesOrderDisplay(getSalesOrderId(selectedShipment)) }}</strong></span></div>
+          <div class="detail-item"><span class="detail-label">Khách hàng:</span><span>{{ getCustomerName(selectedOrder, '—') }}</span></div>
           <div class="detail-item"><span class="detail-label">Kho xuất:</span><span>{{ getWarehouseName(getWarehouseId(selectedShipment)) }}</span></div>
           <div class="detail-item"><span class="detail-label">Trạng thái:</span><span class="badge" [ngClass]="getStatusClass(getShipmentStatus(selectedShipment))">{{ getStatusLabel(getShipmentStatus(selectedShipment)) }}</span></div>
-          <div class="detail-item"><span class="detail-label">Dự kiến xuất:</span><span>{{ getShipmentDate(selectedShipment) | date:'dd/MM/yyyy' }}</span></div>
+          <div class="detail-item"><span class="detail-label">Dự kiến xuất:</span><span>{{ getShipmentDate(selectedShipment) | date:'dd/MM/yyyy' }} {{ getShipmentTime(selectedShipment) || '' }}</span></div>
           <div class="detail-item"><span class="detail-label">Hãng vận chuyển:</span><span>{{ selectedShipment.carrier || 'Chưa cập nhật' }}</span></div>
           <div class="detail-item"><span class="detail-label">Vận đơn (Tracking):</span><span class="text-info">{{ getTrackingNumber(selectedShipment) || 'Chưa có' }}</span></div>
         </div>
@@ -355,7 +486,14 @@
         </div>
 
         <div class="table-container">
-          <table class="data-table">
+          <table class="data-table shipment-lines-table">
+            <colgroup>
+              <col class="shipment-col-index" />
+              <col class="shipment-col-product" />
+              <col class="shipment-col-inventory" />
+              <col class="shipment-col-quantity" />
+              <col class="shipment-col-status" />
+            </colgroup>
             <thead>
               <tr>
                 <th width="50">#</th>
@@ -386,9 +524,6 @@
                 <td>
                   <div class="pick-status" *ngIf="getLinePickedAt(line)">
                     <span class="badge badge-completed"><i class="fa-solid fa-check"></i> Đã lấy hàng</span>
-                    <div class="text-muted" style="font-size: 0.75rem; margin-top: 4px;">
-                      {{ getLinePickedBy(line) }} lúc {{ getLinePickedAt(line) | date:'HH:mm dd/MM/yyyy' }}
-                    </div>
                   </div>
                   <div class="pick-status" *ngIf="!getLinePickedAt(line)">
                     <span class="badge badge-draft">Chờ lấy hàng</span>

@@ -9,6 +9,25 @@ import { InventoryFilterRequest } from '../../dto/request/Inventory/InventoryFil
 import { InventorySummaryResponse } from '../../dto/response/Inventory/InventorySummaryResponse';
 import { InventoryByLocationResponse } from '../../dto/response/Inventory/InventoryByLocationResponse';
 
+export interface CheckInventoryAvailabilityRequest {
+  product_id: string;
+  quantity: number;
+  warehouse_id?: string;
+  /** Chỉ tính tồn khả dụng tại khu lưu trữ (STORAGE). */
+  storage_only?: boolean;
+}
+
+export interface CheckInventoryAvailabilityResponse {
+  product_id: string;
+  warehouse_id: string | null;
+  requested_quantity: number;
+  available_quantity: number;
+  is_available: boolean;
+  /** Hỗ trợ phản hồi từ các backend cũ, nơi boolean được serialize là `available`. */
+  available?: boolean;
+  message: string | null;
+}
+
 @Injectable({ providedIn: 'root' })
 export class InventoryService {
   private readonly apiUrl = `${BaseURL.API_URL}inventories`;
@@ -65,5 +84,12 @@ export class InventoryService {
     }
 
     return this.http.get<ApiResponse<InventoryByLocationResponse[]>>(`${this.apiUrl}/by-location`, { params });
+  }
+
+  checkAvailability(request: CheckInventoryAvailabilityRequest): Observable<ApiResponse<CheckInventoryAvailabilityResponse>> {
+    return this.http.post<ApiResponse<CheckInventoryAvailabilityResponse>>(
+      `${this.apiUrl}/check-availability`,
+      request
+    );
   }
 }

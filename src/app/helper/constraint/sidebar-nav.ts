@@ -34,8 +34,8 @@ export const SIDEBAR_NAV_SECTIONS: SidebarNavSection[] = [
   {
     title: 'Vận hành',
     items: [
-      { label: 'Đơn mua hàng', route: '/purchase-order', iconClass: 'fa-solid fa-cart-shopping', requiredPermissions: ['PERM_PURCHASE_ORDER_READ'] },
-      { label: 'Đơn bán hàng', route: '/sales-order', iconClass: 'fa-solid fa-money-bill-wave', requiredPermissions: ['PERM_SALES_ORDER_READ'] },
+      { label: 'Đơn nhập hàng', route: '/purchase-order', iconClass: 'fa-solid fa-cart-shopping', requiredPermissions: ['PERM_PURCHASE_ORDER_READ'] },
+      { label: 'Đơn xuất hàng', route: '/sales-order', iconClass: 'fa-solid fa-money-bill-wave', requiredPermissions: ['PERM_SALES_ORDER_READ'] },
       { label: 'Nhập kho', route: '/inbound', iconClass: 'fa-solid fa-boxes-packing', requiredPermissions: ['PERM_INBOUND_RECEIPT_READ'] },
       { label: 'Xuất kho', route: '/outbound', iconClass: 'fa-solid fa-truck-fast', requiredPermissions: ['PERM_OUTBOUND_SHIPMENT_READ'] }
     ]

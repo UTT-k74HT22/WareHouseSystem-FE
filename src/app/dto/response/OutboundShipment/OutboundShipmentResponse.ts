@@ -6,15 +6,19 @@ export interface OutboundShipmentsResponse {
   sales_order_id?: string;
   warehouse_id?: string;
   shipment_date?: string;
+  shipment_time?: string | null;
   status: string;
   tracking_number?: string | null;
   carrier: string | null;
   shipped_at?: string | null;
   confirmed_by?: string | null;
+  confirmed_by_name?: string | null;
   notes: string | null;
   lines?: OutboundShipmentLinesResponse[];
   created_at?: string;
   updated_at?: string;
   created_by?: string;
+  created_by_name?: string | null;
   updated_by?: string;
+  updated_by_name?: string | null;
 }
