@@ -2,6 +2,7 @@ import { Component, HostListener, OnInit } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 import { ProductResponse } from '../../dto/response/Product/ProductResponse';
+import { BusinessPartnerResponse } from '../../dto/response/BusinessPartner/BusinessPartnerResponse';
 import { OutboundShipmentsResponse } from '../../dto/response/OutboundShipment/OutboundShipmentResponse';
 import { OutboundShipmentLinesResponse } from '../../dto/response/OutboundShipmentLine/OutboundShipmentLineResponse';
 import { SalesOrderLineResponse } from '../../dto/response/SalesOrderLine/SalesOrderLineResponse';
@@ -15,6 +16,7 @@ import { ProductService } from '../../service/ProductService/product.service';
 import { SalesOrderService } from '../../service/SalesOrderService/sales-order.service';
 import { ToastrService } from '../../service/SystemService/toastr.service';
 import { WarehouseService } from '../../service/WarehouseService/warehouse.service';
+import { BusinessPartnerService } from '../../service/BusinessPartnerService/business-partner.service';
 
 type ShipmentDetail = OutboundShipmentsResponse & { lines: OutboundShipmentLinesResponse[] };
 
@@ -33,6 +35,7 @@ export class OutboundComponent implements OnInit {
   selectedOrderLines: SalesOrderLineResponse[] = [];
   products: ProductResponse[] = [];
   warehouses: WareHouseResponse[] = [];
+  customers: BusinessPartnerResponse[] = [];
 
   currentPage = 0;
   pageSize = 10;
@@ -65,7 +68,8 @@ export class OutboundComponent implements OnInit {
     private soService: SalesOrderService,
     private warehouseService: WarehouseService,
     private toastr: ToastrService,
-    private productService: ProductService
+    private productService: ProductService,
+    private businessPartnerService: BusinessPartnerService
   ) {
     this.createForm = this.fb.group({
       sales_order_id: ['', Validators.required],
@@ -83,6 +87,7 @@ export class OutboundComponent implements OnInit {
     this.loadConfirmedOrders();
     this.loadWarehouses();
     this.loadProducts();
+    this.loadCustomers();
   }
 
   get lines(): FormArray {
@@ -174,6 +179,17 @@ export class OutboundComponent implements OnInit {
       },
       error: () => {
         this.products = [];
+      }
+    });
+  }
+
+  loadCustomers(): void {
+    this.businessPartnerService.getAll().subscribe({
+      next: (res) => {
+        this.customers = res.success ? (res.data || []) : [];
+      },
+      error: () => {
+        this.customers = [];
       }
     });
   }
@@ -560,9 +576,18 @@ export class OutboundComponent implements OnInit {
     }
 
     return this.confirmedOrders.filter((order) =>
-      this.normalizeSearchText(`${order.so_number} ${order.customer_name || ''} ${this.getOrderStatusLabel(order.status)}`)
+      this.normalizeSearchText(`${order.so_number} ${this.getCustomerName(order, '')} ${this.getOrderStatusLabel(order.status)}`)
         .includes(keyword)
     );
+  }
+
+  getCustomerName(order: SalesOrderResponse | null | undefined, fallback = 'Chưa có thông tin khách hàng'): string {
+    if (!order) {
+      return fallback;
+    }
+    return order.customer_name
+      || this.customers.find((customer) => customer.id === order.customer_id)?.name
+      || fallback;
   }
 
   onSalesOrderSearchChange(): void {

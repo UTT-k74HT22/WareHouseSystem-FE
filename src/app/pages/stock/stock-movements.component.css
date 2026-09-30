@@ -7,40 +7,33 @@
 .movement-table th,
 .movement-table td {
   white-space: normal;
-  word-break: break-word;
+  overflow-wrap: anywhere;
   vertical-align: top;
+}
+
+.movement-table .movement-col-index { width: 4%; }
+.movement-table .movement-col-code { width: 13%; }
+.movement-table .movement-col-type { width: 10%; }
+.movement-table .movement-col-product { width: 14%; }
+.movement-table .movement-col-warehouse { width: 11%; }
+.movement-table .movement-col-location { width: 13%; }
+.movement-table .movement-col-batch { width: 9%; }
+.movement-table .movement-col-quantity { width: 9%; }
+.movement-table .movement-col-reference { width: 11%; }
+.movement-table .movement-col-time { width: 6%; }
+
+.movement-type .badge {
+  max-width: 100%;
+  justify-content: center;
+  text-align: center;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .movement-table th:nth-child(1),
 .movement-table td:nth-child(1) {
-  width: 50px;
   text-align: center;
   white-space: nowrap;
-}
-
-.movement-table th:nth-child(2),
-.movement-table td:nth-child(2) {
-  width: 13%;
-}
-
-.movement-table th:nth-child(4),
-.movement-table td:nth-child(4) {
-  width: 14%;
-}
-
-.movement-table th:nth-child(5),
-.movement-table td:nth-child(5) {
-  width: 11%;
-}
-
-.movement-table th:nth-child(6),
-.movement-table td:nth-child(6) {
-  width: 13%;
-}
-
-.movement-table th:nth-child(9),
-.movement-table td:nth-child(9) {
-  width: 14%;
 }
 
 .movement-reference small {
@@ -49,6 +42,10 @@
 }
 
 @media (max-width: 1200px) {
+  .movement-table .movement-col-reference {
+    visibility: collapse;
+  }
+
   .movement-table th:nth-child(9),
   .movement-table td:nth-child(9) {
     display: none;
@@ -56,6 +53,10 @@
 }
 
 @media (max-width: 992px) {
+  .movement-table .movement-col-warehouse {
+    visibility: collapse;
+  }
+
   .movement-table th:nth-child(5),
   .movement-table td:nth-child(5) {
     display: none;
@@ -63,6 +64,11 @@
 }
 
 @media (max-width: 768px) {
+  .movement-table .movement-col-code,
+  .movement-table .movement-col-time {
+    visibility: collapse;
+  }
+
   .page-container {
     padding: 1rem;
   }

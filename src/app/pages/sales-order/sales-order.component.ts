@@ -30,6 +30,8 @@ export class SalesOrderComponent implements OnInit {
   customers: BusinessPartnerResponse[] = [];
   warehouses: WareHouseResponse[] = [];
   products: ProductResponse[] = [];
+  eligibleWarehouseIds: Set<string> | null = null;
+  warehouseAvailabilityLoading = false;
 
   currentPage = 0;
   pageSize = 10;
@@ -103,6 +105,7 @@ export class SalesOrderComponent implements OnInit {
       return;
     }
     this.lines.removeAt(index);
+    this.refreshEligibleWarehouses();
   }
 
   private loadSeq = 0;
@@ -258,6 +261,8 @@ export class SalesOrderComponent implements OnInit {
     });
     this.lines.clear();
     this.addLine();
+    this.eligibleWarehouseIds = null;
+    this.warehouseAvailabilityLoading = false;
     this.showCreateModal = true;
   }
 
@@ -286,7 +291,8 @@ export class SalesOrderComponent implements OnInit {
       this.inventoryService.checkAvailability({
         product_id: productId,
         warehouse_id: warehouseId,
-        quantity
+        quantity,
+        storage_only: true
       })
     );
 
@@ -421,6 +427,100 @@ export class SalesOrderComponent implements OnInit {
     this.orderToCancel = null;
     this.productSearchKeyword = '';
     this.productSearchFocused = false;
+    this.refreshEligibleWarehouses();
+  }
+
+  onProductOrQuantityChanged(): void {
+    this.refreshEligibleWarehouses();
+  }
+
+  getSelectableWarehouses(): WareHouseResponse[] {
+    if (this.eligibleWarehouseIds === null) {
+      return this.warehouses;
+    }
+    return this.warehouses.filter((warehouse) => this.eligibleWarehouseIds?.has(warehouse.id));
+  }
+
+  hasSelectedProducts(): boolean {
+    return this.lines.controls.some((line) => Boolean(line.get('product_id')?.value));
+  }
+
+  private warehouseAvailabilitySeq = 0;
+
+  /**
+   * Chỉ hiển thị kho có đủ tồn tại STORAGE cho toàn bộ các dòng đã chọn.
+   * Việc này giúp người dùng không chọn được kho chỉ còn hàng ở PICKING/PACKING.
+   */
+  private refreshEligibleWarehouses(): void {
+    const quantitiesByProduct = new Map<string, number>();
+    this.lines.controls.forEach((line) => {
+      const productId = line.get('product_id')?.value;
+      const quantity = Number(line.get('quantity_ordered')?.value || 0);
+      if (productId && Number.isFinite(quantity) && quantity > 0) {
+        quantitiesByProduct.set(productId, (quantitiesByProduct.get(productId) || 0) + quantity);
+      }
+    });
+
+    if (quantitiesByProduct.size === 0) {
+      this.eligibleWarehouseIds = null;
+      this.warehouseAvailabilityLoading = false;
+      return;
+    }
+
+    const activeWarehouses = this.warehouses.filter((warehouse) => warehouse.status === 'ACTIVE');
+    if (activeWarehouses.length === 0) {
+      this.eligibleWarehouseIds = new Set();
+      return;
+    }
+
+    const productsToCheck = Array.from(quantitiesByProduct.entries());
+    const sequence = ++this.warehouseAvailabilitySeq;
+    this.warehouseAvailabilityLoading = true;
+    const checks = activeWarehouses.flatMap((warehouse) =>
+      productsToCheck.map(([productId, quantity]) =>
+        this.inventoryService.checkAvailability({
+          product_id: productId,
+          warehouse_id: warehouse.id,
+          quantity,
+          storage_only: true
+        })
+      )
+    );
+
+    forkJoin(checks).subscribe({
+      next: (responses) => {
+        if (sequence !== this.warehouseAvailabilitySeq) {
+          return;
+        }
+
+        const eligibleIds = new Set<string>();
+        activeWarehouses.forEach((warehouse, warehouseIndex) => {
+          const offset = warehouseIndex * productsToCheck.length;
+          const hasEnoughStock = productsToCheck.every((_, productIndex) => {
+            const response = responses[offset + productIndex];
+            return response.success && this.isInventoryAvailable(response.data);
+          });
+          if (hasEnoughStock) {
+            eligibleIds.add(warehouse.id);
+          }
+        });
+        this.eligibleWarehouseIds = eligibleIds;
+        this.warehouseAvailabilityLoading = false;
+
+        const selectedWarehouseId = this.createForm.get('warehouse_id')?.value;
+        if (selectedWarehouseId && !eligibleIds.has(selectedWarehouseId)) {
+          this.createForm.get('warehouse_id')?.setValue('');
+          this.toastr.warning('Đơn xuất hàng', 'Kho đã chọn không còn đủ tồn tại khu Lưu trữ cho các sản phẩm trong đơn. Vui lòng chọn kho khác.');
+        }
+      },
+      error: () => {
+        if (sequence !== this.warehouseAvailabilitySeq) {
+          return;
+        }
+        this.eligibleWarehouseIds = new Set();
+        this.warehouseAvailabilityLoading = false;
+      }
+    });
   }
 
   getFilteredProducts(selectedProductId = ''): ProductResponse[] {
@@ -585,6 +685,20 @@ export class SalesOrderComponent implements OnInit {
   getCustomerName(customerId: string): string {
     const customer = this.customers.find((item) => item.id === customerId);
     return customer ? customer.name : customerId;
+  }
+
+  getCustomerDisplay(customerId: string, customerName?: string | null): string {
+    const resolvedName = customerName
+      || this.customers.find((item) => item.id === customerId)?.name;
+
+    return resolvedName ? `${resolvedName} (${customerId})` : customerId;
+  }
+
+  getActorDisplay(accountId?: string | null, accountName?: string | null): string {
+    if (!accountId) {
+      return '—';
+    }
+    return accountName ? `${accountName} (${accountId})` : accountId;
   }
 
   getWarehouseName(warehouseId: string): string {

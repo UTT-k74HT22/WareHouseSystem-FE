@@ -312,6 +312,29 @@
 .pick-status {
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+}
+
+.shipment-lines-table {
+  table-layout: fixed;
+}
+
+.shipment-lines-table .shipment-col-index { width: 5%; }
+.shipment-lines-table .shipment-col-product { width: 23%; }
+.shipment-lines-table .shipment-col-inventory { width: 27%; }
+.shipment-lines-table .shipment-col-quantity { width: 11%; }
+.shipment-lines-table .shipment-col-status { width: 34%; }
+
+.shipment-lines-table th,
+.shipment-lines-table td {
+  min-width: 0;
+  vertical-align: middle;
+}
+
+.shipment-lines-table .badge {
+  width: fit-content;
+  max-width: 100%;
 }
 
 /* ─── Form Elements ──────────────────────────────────────── */

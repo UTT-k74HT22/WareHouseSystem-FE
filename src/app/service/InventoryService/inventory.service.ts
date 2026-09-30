@@ -13,6 +13,8 @@ export interface CheckInventoryAvailabilityRequest {
   product_id: string;
   quantity: number;
   warehouse_id?: string;
+  /** Chỉ tính tồn khả dụng tại khu lưu trữ (STORAGE). */
+  storage_only?: boolean;
 }
 
 export interface CheckInventoryAvailabilityResponse {

@@ -38,6 +38,18 @@
 
   <div class="table-container" *ngIf="!loading && viewMode === 'list'">
     <table class="data-table movement-table">
+      <colgroup>
+        <col class="movement-col-index" />
+        <col class="movement-col-code" />
+        <col class="movement-col-type" />
+        <col class="movement-col-product" />
+        <col class="movement-col-warehouse" />
+        <col class="movement-col-location" />
+        <col class="movement-col-batch" />
+        <col class="movement-col-quantity" />
+        <col class="movement-col-reference" />
+        <col class="movement-col-time" />
+      </colgroup>
       <thead>
         <tr>
           <th>#</th>
@@ -56,7 +68,7 @@
         <tr *ngFor="let m of movements; let i = index">
           <td>{{ startIndex + i + 1 }}</td>
           <td><code>{{ getMovementDisplayCode(m) }}</code></td>
-          <td><span class="badge" [ngClass]="getTypeClass(m.movement_type)">{{ getTypeLabel(m.movement_type) }}</span></td>
+          <td class="movement-type"><span class="badge" [ngClass]="getTypeClass(m.movement_type)">{{ getTypeLabel(m.movement_type) }}</span></td>
           <td>
             <div class="cell-main">{{ getMovementProductDisplay(m) }}</div>
             <div class="cell-sub" *ngIf="m.product_sku">{{ m.product_sku }}</div>

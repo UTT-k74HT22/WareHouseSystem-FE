@@ -183,7 +183,7 @@
                   (click)="selectSalesOrder(order)">
                   <span class="sales-order-number">{{ order.so_number }}</span>
                   <span class="sales-order-meta">
-                    {{ order.customer_name || 'Chưa có khách hàng' }} · {{ getOrderStatusLabel(order.status) }}
+                    {{ getCustomerName(order, 'Chưa có khách hàng') }} · {{ getOrderStatusLabel(order.status) }}
                     <ng-container *ngIf="order.created_at">· Tạo: {{ order.created_at | date:'dd/MM/yyyy HH:mm' }}</ng-container>
                   </span>
                 </button>
@@ -224,7 +224,7 @@
               <i class="fa-solid fa-user" aria-hidden="true"></i>
               <div>
                 <span>Khách hàng</span>
-                <strong>{{ selectedOrder.customer_name || 'Chưa có thông tin khách hàng' }}</strong>
+                <strong>{{ getCustomerName(selectedOrder) }}</strong>
               </div>
             </div>
             <div class="order-summary-item">
@@ -268,7 +268,7 @@
             </div>
 
             <div class="dispatch-order-context__details">
-              <div><span>Khách hàng</span><strong>{{ selectedOrder.customer_name || 'Chưa có thông tin khách hàng' }}</strong></div>
+              <div><span>Khách hàng</span><strong>{{ getCustomerName(selectedOrder) }}</strong></div>
               <div><span>Kho xuất</span><strong>{{ getSelectedWarehouseName() }}</strong></div>
               <div><span>Ngày giao dự kiến</span><strong>{{ selectedOrder.requested_delivery_date | date:'dd/MM/yyyy' }}</strong></div>
               <div *ngIf="selectedOrder.notes"><span>Ghi chú đơn hàng</span><strong>{{ selectedOrder.notes }}</strong></div>
@@ -450,7 +450,7 @@
         <div class="detail-grid">
           <div class="detail-item"><span class="detail-label">Số phiếu xuất:</span><span><strong>{{ getShipmentNumber(selectedShipment) }}</strong></span></div>
           <div class="detail-item"><span class="detail-label">Đơn xuất hàng:</span><span class="text-primary"><strong>{{ getSalesOrderDisplay(getSalesOrderId(selectedShipment)) }}</strong></span></div>
-          <div class="detail-item"><span class="detail-label">Khách hàng:</span><span>{{ selectedOrder?.customer_name || '—' }}</span></div>
+          <div class="detail-item"><span class="detail-label">Khách hàng:</span><span>{{ getCustomerName(selectedOrder, '—') }}</span></div>
           <div class="detail-item"><span class="detail-label">Kho xuất:</span><span>{{ getWarehouseName(getWarehouseId(selectedShipment)) }}</span></div>
           <div class="detail-item"><span class="detail-label">Trạng thái:</span><span class="badge" [ngClass]="getStatusClass(getShipmentStatus(selectedShipment))">{{ getStatusLabel(getShipmentStatus(selectedShipment)) }}</span></div>
           <div class="detail-item"><span class="detail-label">Dự kiến xuất:</span><span>{{ getShipmentDate(selectedShipment) | date:'dd/MM/yyyy' }} {{ getShipmentTime(selectedShipment) || '' }}</span></div>
@@ -486,7 +486,14 @@
         </div>
 
         <div class="table-container">
-          <table class="data-table">
+          <table class="data-table shipment-lines-table">
+            <colgroup>
+              <col class="shipment-col-index" />
+              <col class="shipment-col-product" />
+              <col class="shipment-col-inventory" />
+              <col class="shipment-col-quantity" />
+              <col class="shipment-col-status" />
+            </colgroup>
             <thead>
               <tr>
                 <th width="50">#</th>
@@ -517,9 +524,6 @@
                 <td>
                   <div class="pick-status" *ngIf="getLinePickedAt(line)">
                     <span class="badge badge-completed"><i class="fa-solid fa-check"></i> Đã lấy hàng</span>
-                    <div class="text-muted" style="font-size: 0.75rem; margin-top: 4px;">
-                      {{ getLinePickedBy(line) }} lúc {{ getLinePickedAt(line) | date:'HH:mm dd/MM/yyyy' }}
-                    </div>
                   </div>
                   <div class="pick-status" *ngIf="!getLinePickedAt(line)">
                     <span class="badge badge-draft">Chờ lấy hàng</span>
