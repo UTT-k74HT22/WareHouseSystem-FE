@@ -162,14 +162,14 @@ export class BatchComponent implements OnInit {
       next: (res) => {
         if (res.success) {
           const createdBatch = this.enrichBatch(res.data);
-          this.toastr.success('Tạo lô thành công.');
+          this.toastr.success('Thành công', 'Tạo lô thành công.');
           this.closeCreateModal();
           this.replaceBatchInState(createdBatch, true);
           this.openDetailModal(createdBatch);
         }
       },
       error: (error) => {
-        this.toastr.error(error?.error?.message || 'Tạo lô thất bại.');
+        this.toastr.error('Lỗi', error?.error?.message || 'Tạo lô thất bại.');
       }
     });
   }
@@ -198,7 +198,7 @@ export class BatchComponent implements OnInit {
       },
       error: (error) => {
         this.detailLoading = false;
-        this.toastr.error(error?.error?.message || 'Không tải được chi tiết lô.');
+        this.toastr.error('Lỗi', error?.error?.message || 'Không tải được chi tiết lô.');
       }
     });
   }
@@ -229,7 +229,7 @@ export class BatchComponent implements OnInit {
       next: (res) => {
         if (res.success) {
           const updatedBatch = this.enrichBatch(res.data);
-          this.toastr.success('Cập nhật lô thành công.');
+          this.toastr.success('Thành công', 'Cập nhật lô thành công.');
           this.closeEditModal();
           this.replaceBatchInState(updatedBatch, true);
         }
@@ -237,7 +237,7 @@ export class BatchComponent implements OnInit {
       },
       error: (error) => {
         this.savingEdit = false;
-        this.toastr.error(error?.error?.message || 'Cập nhật lô thất bại.');
+        this.toastr.error('Lỗi', error?.error?.message || 'Cập nhật lô thất bại.');
       }
     });
   }
@@ -259,22 +259,22 @@ export class BatchComponent implements OnInit {
     }
 
     if (this.statusForm.status === this.selectedBatch.status) {
-      this.toastr.warning('Vui lòng chọn trạng thái mới cho lô.');
+      this.toastr.warning('Cảnh báo', 'Vui lòng chọn trạng thái mới cho lô.');
       return;
     }
 
     if (!this.selectedStatusOptions.includes(this.statusForm.status)) {
-      this.toastr.warning('Trạng thái được chọn không phù hợp với lô hiện tại.');
+      this.toastr.warning('Cảnh báo', 'Trạng thái được chọn không phù hợp với lô hiện tại.');
       return;
     }
 
     const note = this.statusNote.trim();
     if (!note) {
-      this.toastr.warning('Vui lòng nhập lý do/ghi chú cho thao tác trạng thái.');
+      this.toastr.warning('Thiếu thông tin', 'Vui lòng nhập lý do/ghi chú cho thao tác trạng thái.');
       return;
     }
     if (note.length > 1000) {
-      this.toastr.warning('Ghi chú không được vượt quá 1000 ký tự.');
+      this.toastr.warning('Cảnh báo', 'Ghi chú không được vượt quá 1000 ký tự.');
       return;
     }
 
@@ -283,14 +283,14 @@ export class BatchComponent implements OnInit {
     this.resolveStatusRequest(this.selectedBatch, this.statusForm.status, note).subscribe({
       next: (updatedBatch) => {
         const normalizedBatch = this.enrichBatch(updatedBatch);
-        this.toastr.success(this.getStatusSuccessMessage(this.selectedBatch!.status, this.statusForm.status));
+        this.toastr.success('Thành công', this.getStatusSuccessMessage(this.selectedBatch!.status, this.statusForm.status));
         this.closeStatusModal();
         this.replaceBatchInState(normalizedBatch, true);
         this.savingStatus = false;
       },
       error: (error) => {
         this.savingStatus = false;
-        this.toastr.error(error?.error?.message || 'Cập nhật trạng thái lô thất bại.');
+        this.toastr.error('Lỗi', error?.error?.message || 'Cập nhật trạng thái lô thất bại.');
       }
     });
   }
@@ -539,40 +539,40 @@ export class BatchComponent implements OnInit {
 
   private validateCreateRequest(request: CreateBatchRequest): boolean {
     if (this.loadingProducts) {
-      this.toastr.warning('Danh sách sản phẩm theo dõi lô đang được tải. Vui lòng thử lại sau.');
+      this.toastr.warning('Cảnh báo', 'Danh sách sản phẩm theo dõi lô đang được tải. Vui lòng thử lại sau.');
       return false;
     }
 
     if (!request.product_id) {
-      this.toastr.warning('Vui lòng chọn sản phẩm.');
+      this.toastr.warning('Thiếu thông tin', 'Vui lòng chọn sản phẩm.');
       return false;
     }
 
     const selectedProduct = this.creatableProducts.find((product) => product.id === request.product_id);
     if (!selectedProduct) {
-      this.toastr.warning('Sản phẩm đã chọn không hợp lệ hoặc không hỗ trợ theo dõi lô.');
+      this.toastr.warning('Cảnh báo', 'Sản phẩm đã chọn không hợp lệ hoặc không hỗ trợ theo dõi lô.');
       return false;
     }
 
     if (request.supplier_batch_number && request.supplier_batch_number.length > 50) {
-      this.toastr.warning('Mã lô của nhà cung cấp không được vượt quá 50 ký tự.');
+      this.toastr.warning('Cảnh báo', 'Mã lô của nhà cung cấp không được vượt quá 50 ký tự.');
       return false;
     }
 
     const manufacturingDate = this.toDateOnly(request.manufacturing_date);
     if (!manufacturingDate) {
-      this.toastr.warning('Vui lòng chọn ngày sản xuất.');
+      this.toastr.warning('Thiếu thông tin', 'Vui lòng chọn ngày sản xuất.');
       return false;
     }
 
     if (manufacturingDate > this.today()) {
-      this.toastr.warning('Ngày sản xuất không được ở tương lai.');
+      this.toastr.warning('Cảnh báo', 'Ngày sản xuất không được ở tương lai.');
       return false;
     }
 
     const expiryDate = this.toDateOnly(request.expiry_date);
-    if (expiryDate && expiryDate < manufacturingDate) {
-      this.toastr.warning('Hạn sử dụng phải sau hoặc bằng ngày sản xuất.');
+    if (expiryDate && expiryDate <= manufacturingDate) {
+      this.toastr.warning('Thiếu thông tin', 'Hạn sử dụng phải sau ngày sản xuất (lớn hơn, không được bằng).');
       return false;
     }
 
@@ -581,29 +581,29 @@ export class BatchComponent implements OnInit {
 
   private validateUpdateRequest(request: UpdateBatchRequest): boolean {
     if (!this.selectedBatch) {
-      this.toastr.warning('Không xác định được lô cần cập nhật.');
+      this.toastr.warning('Cảnh báo', 'Không xác định được lô cần cập nhật.');
       return false;
     }
 
     if ((request.supplier_batch_number || '').length > 50) {
-      this.toastr.warning('Mã lô của nhà cung cấp không được vượt quá 50 ký tự.');
+      this.toastr.warning('Cảnh báo', 'Mã lô của nhà cung cấp không được vượt quá 50 ký tự.');
       return false;
     }
 
     const manufacturingDate = this.toDateOnly(request.manufacturing_date);
     if (!manufacturingDate) {
-      this.toastr.warning('Ngày sản xuất không được để trống.');
+      this.toastr.warning('Thiếu thông tin', 'Ngày sản xuất không được để trống.');
       return false;
     }
 
     if (manufacturingDate > this.today()) {
-      this.toastr.warning('Ngày sản xuất không được ở tương lai.');
+      this.toastr.warning('Cảnh báo', 'Ngày sản xuất không được ở tương lai.');
       return false;
     }
 
     const expiryDate = this.toDateOnly(request.expiry_date);
-    if (expiryDate && expiryDate < manufacturingDate) {
-      this.toastr.warning('Hạn sử dụng phải sau hoặc bằng ngày sản xuất.');
+    if (expiryDate && expiryDate <= manufacturingDate) {
+      this.toastr.warning('Thiếu thông tin', 'Hạn sử dụng phải sau ngày sản xuất (lớn hơn, không được bằng).');
       return false;
     }
 

@@ -448,7 +448,7 @@ export class StockAdjustmentsComponent implements OnInit, OnDestroy {
     this.subscriptions.add(
       this.filterChange$.pipe(debounceTime(500)).subscribe(() => {
         if (!this.isDateRangeValid()) {
-          this.toastr.error('Stock Adjustment', 'createdFrom khong duoc lon hon createdTo.');
+          this.toastr.warning('Điều chỉnh kho', 'createdFrom khong duoc lon hon createdTo.');
           return;
         }
         this.currentPage = 0;
@@ -571,7 +571,7 @@ export class StockAdjustmentsComponent implements OnInit, OnDestroy {
         map((response) => response.data),
         catchError((error) => {
           this.toastr.error(
-            'Stock Adjustment',
+            'Điều chỉnh kho',
             errorMessage(error, 'Không tải được danh sách stock adjustment từ backend.')
           );
           return of(this.emptyAdjustmentsPage(page));
@@ -631,7 +631,7 @@ export class StockAdjustmentsComponent implements OnInit, OnDestroy {
 
   onSearch(): void {
     if (!this.isDateRangeValid()) {
-      this.toastr.error('Điều chỉnh kho', 'Ngày bắt đầu không được lớn hơn ngày kết thúc.');
+      this.toastr.warning('Điều chỉnh kho', 'Ngày bắt đầu không được lớn hơn ngày kết thúc.');
       return;
     }
 
@@ -645,7 +645,7 @@ export class StockAdjustmentsComponent implements OnInit, OnDestroy {
 
   onFilterSelectChange(): void {
     if (!this.isDateRangeValid()) {
-      this.toastr.error('Stock Adjustment', 'createdFrom khong duoc lon hon createdTo.');
+      this.toastr.warning('Điều chỉnh kho', 'createdFrom khong duoc lon hon createdTo.');
       return;
     }
     this.currentPage = 0;
@@ -745,7 +745,7 @@ export class StockAdjustmentsComponent implements OnInit, OnDestroy {
       .pipe(
         map((response) => response.data.content),
         catchError((error) => {
-          this.toastr.error(errorMessage(error, 'Không tải được inventory để tạo phiếu điều chỉnh.'), 'Stock Adjustment');
+          this.toastr.error('Điều chỉnh kho', errorMessage(error, 'Không tải được inventory để tạo phiếu điều chỉnh.'));
           return of([]);
         })
       )
@@ -854,38 +854,38 @@ export class StockAdjustmentsComponent implements OnInit, OnDestroy {
 
   onCreateSubmit(): void {
     if (!this.selectedInventory || !this.createForm.inventory_id) {
-      this.toastr.error('Stock Adjustment', 'Bạn phải chọn inventory cần điều chỉnh.');
+      this.toastr.warning('Điều chỉnh kho', 'Bạn phải chọn inventory cần điều chỉnh.');
       return;
     }
 
     if (this.createForm.quantity_after === null || Number.isNaN(Number(this.createForm.quantity_after))) {
-      this.toastr.error('Stock Adjustment', 'Số lượng sau điều chỉnh là bắt buộc.');
+      this.toastr.warning('Điều chỉnh kho', 'Số lượng sau điều chỉnh là bắt buộc.');
       return;
     }
 
     const quantityAfter = Number(this.createForm.quantity_after);
     if (!Number.isFinite(quantityAfter) || quantityAfter < 0) {
-      this.toastr.error('Stock Adjustment', 'Số lượng sau điều chỉnh phải >= 0.');
+      this.toastr.warning('Điều chỉnh kho', 'Số lượng sau điều chỉnh phải >= 0.');
       return;
     }
 
     if (!hasNoFractionOverflow(quantityAfter)) {
-      this.toastr.error('Stock Adjustment', 'Số lượng sau điều chỉnh chỉ được tối đa 13 chữ số nguyên và 2 chữ số thập phân.');
+      this.toastr.warning('Điều chỉnh kho', 'Số lượng sau điều chỉnh chỉ được tối đa 13 chữ số nguyên và 2 chữ số thập phân.');
       return;
     }
 
     if (quantityAfter < this.selectedInventory.reserved_quantity) {
-      this.toastr.error('Stock Adjustment', 'Số lượng sau điều chỉnh không được nhỏ hơn số lượng đã giữ chỗ.');
+      this.toastr.warning('Điều chỉnh kho', 'Số lượng sau điều chỉnh không được nhỏ hơn số lượng đã giữ chỗ.');
       return;
     }
 
     if (quantityAfter === this.selectedInventory.on_hand_quantity) {
-      this.toastr.error('Stock Adjustment', 'Backend không chấp nhận điều chỉnh có biến động bằng 0.');
+      this.toastr.warning('Điều chỉnh kho', 'Backend không chấp nhận điều chỉnh có biến động bằng 0.');
       return;
     }
 
     if (this.createForm.notes.trim().length > 2000) {
-      this.toastr.error('Stock Adjustment', 'Ghi chú không được vượt quá 2000 ký tự.');
+      this.toastr.warning('Điều chỉnh kho', 'Ghi chú không được vượt quá 2000 ký tự.');
       return;
     }
 
@@ -902,7 +902,7 @@ export class StockAdjustmentsComponent implements OnInit, OnDestroy {
       next: (response) => {
         const adjustment = this.enrichAdjustment(response.data);
         this.toastr.success(
-          'Stock Adjustment',
+          'Điều chỉnh kho',
           adjustment.requires_approval
             ? 'Đã tạo phiếu điều chỉnh ở trạng thái chờ duyệt.'
             : 'Đã tạo phiếu điều chỉnh và áp dụng tồn kho.'
@@ -915,7 +915,7 @@ export class StockAdjustmentsComponent implements OnInit, OnDestroy {
       },
       error: (error) => {
         this.actionLoading = false;
-        this.toastr.error('Stock Adjustment', errorMessage(error, 'Tạo phiếu điều chỉnh thất bại.'));
+        this.toastr.error('Điều chỉnh kho', errorMessage(error, 'Tạo phiếu điều chỉnh thất bại.'));
       },
     });
   }
@@ -927,7 +927,7 @@ export class StockAdjustmentsComponent implements OnInit, OnDestroy {
 
     const approvalNote = this.approveForm.approval_note.trim();
     if (approvalNote.length > 500) {
-      this.toastr.error('Stock Adjustment', 'Ghi chú phê duyệt không được vượt quá 500 ký tự.');
+      this.toastr.warning('Điều chỉnh kho', 'Ghi chú phê duyệt không được vượt quá 500 ký tự.');
       return;
     }
 
@@ -939,7 +939,7 @@ export class StockAdjustmentsComponent implements OnInit, OnDestroy {
 
     this.stockAdjustmentService.approve(this.selectedAdjustment.id, request).subscribe({
       next: (response) => {
-        this.toastr.success('Stock Adjustment', 'Đã phê duyệt phiếu điều chỉnh.');
+        this.toastr.success('Điều chỉnh kho', 'Đã phê duyệt phiếu điều chỉnh.');
         this.actionLoading = false;
         this.closeAllModals();
         this.selectedAdjustment = this.enrichAdjustment(response.data);
@@ -948,7 +948,7 @@ export class StockAdjustmentsComponent implements OnInit, OnDestroy {
       },
       error: (error) => {
         this.actionLoading = false;
-        this.toastr.error('Stock Adjustment', errorMessage(error, 'Phê duyệt phiếu điều chỉnh thất bại.'));
+        this.toastr.error('Điều chỉnh kho', errorMessage(error, 'Phê duyệt phiếu điều chỉnh thất bại.'));
       },
     });
   }
@@ -960,11 +960,11 @@ export class StockAdjustmentsComponent implements OnInit, OnDestroy {
 
     const rejectionReason = this.rejectForm.rejection_reason.trim();
     if (!rejectionReason) {
-      this.toastr.error('Stock Adjustment', 'Lý do từ chối là bắt buộc.');
+      this.toastr.warning('Điều chỉnh kho', 'Lý do từ chối là bắt buộc.');
       return;
     }
     if (rejectionReason.length > 500) {
-      this.toastr.error('Stock Adjustment', 'Lý do từ chối không được vượt quá 500 ký tự.');
+      this.toastr.warning('Điều chỉnh kho', 'Lý do từ chối không được vượt quá 500 ký tự.');
       return;
     }
 
@@ -976,7 +976,7 @@ export class StockAdjustmentsComponent implements OnInit, OnDestroy {
 
     this.stockAdjustmentService.reject(this.selectedAdjustment.id, request).subscribe({
       next: (response) => {
-        this.toastr.success('Stock Adjustment', 'Đã từ chối phiếu điều chỉnh.');
+        this.toastr.success('Điều chỉnh kho', 'Đã từ chối phiếu điều chỉnh.');
         this.actionLoading = false;
         this.closeAllModals();
         this.selectedAdjustment = this.enrichAdjustment(response.data);
@@ -984,7 +984,7 @@ export class StockAdjustmentsComponent implements OnInit, OnDestroy {
       },
       error: (error) => {
         this.actionLoading = false;
-        this.toastr.error('Stock Adjustment', errorMessage(error, 'Từ chối phiếu điều chỉnh thất bại.'));
+        this.toastr.error('Điều chỉnh kho', errorMessage(error, 'Từ chối phiếu điều chỉnh thất bại.'));
       },
     });
   }
@@ -1223,7 +1223,7 @@ export class StockTransfersComponent implements OnInit {
         map((response) => response.data),
         catchError((error) => {
           this.toastr.error(
-            'Stock Transfer',
+            'Chuyển kho',
             errorMessage(error, 'Không tải được danh sách stock transfer từ backend.')
           );
           return of(this.emptyTransfersPage(page));
@@ -1391,14 +1391,14 @@ export class StockTransfersComponent implements OnInit {
       inventories: this.inventoryService.getAll(0, 100, { warehouse_id: this.createForm.warehouse_id }).pipe(
         map((response) => response.data.content),
         catchError((error) => {
-          this.toastr.error('Stock Transfer', errorMessage(error, 'Không tải được inventory nguồn cho chuyển kho.'));
+          this.toastr.error('Chuyển kho', errorMessage(error, 'Không tải được inventory nguồn cho chuyển kho.'));
           return of([]);
         })
       ),
       locations: this.locationService.getByWarehouse(this.createForm.warehouse_id, 0, 100).pipe(
         map((response) => response.data.content),
         catchError((error) => {
-          this.toastr.error('Stock Transfer', errorMessage(error, 'Không tải được vị trí đích cho chuyển kho.'));
+          this.toastr.error('Chuyển kho', errorMessage(error, 'Không tải được vị trí đích cho chuyển kho.'));
           return of([]);
         })
       ),
@@ -1447,58 +1447,58 @@ export class StockTransfersComponent implements OnInit {
 
   onCreateSubmit(): void {
     if (!this.createForm.warehouse_id) {
-      this.toastr.error('Stock Transfer', 'Kho là bắt buộc.');
+      this.toastr.warning('Chuyển kho', 'Kho là bắt buộc.');
       return;
     }
 
     if (!this.selectedSourceInventory) {
-      this.toastr.error('Stock Transfer', 'Bạn phải chọn tồn nguồn.');
+      this.toastr.warning('Chuyển kho', 'Bạn phải chọn tồn nguồn.');
       return;
     }
 
     if (this.selectedSourceInventory.warehouse_id !== this.createForm.warehouse_id) {
-      this.toastr.error('Stock Transfer', 'Tồn nguồn không thuộc kho đã chọn.');
+      this.toastr.warning('Chuyển kho', 'Tồn nguồn không thuộc kho đã chọn.');
       return;
     }
 
     if (!this.createForm.product_id || !this.createForm.from_location_id) {
-      this.toastr.error('Stock Transfer', 'Thông tin sản phẩm và vị trí nguồn phải được lấy từ tồn nguồn.');
+      this.toastr.warning('Chuyển kho', 'Thông tin sản phẩm và vị trí nguồn phải được lấy từ tồn nguồn.');
       return;
     }
 
     if (!this.createForm.to_location_id) {
-      this.toastr.error('Stock Transfer', 'Vị trí đích là bắt buộc.');
+      this.toastr.warning('Chuyển kho', 'Vị trí đích là bắt buộc.');
       return;
     }
 
     if (this.createForm.to_location_id === this.createForm.from_location_id) {
-      this.toastr.error('Stock Transfer', 'Vị trí nguồn và đích không được trùng nhau.');
+      this.toastr.warning('Chuyển kho', 'Vị trí nguồn và đích không được trùng nhau.');
       return;
     }
 
     if (this.createForm.quantity === null || !Number.isFinite(Number(this.createForm.quantity))) {
-      this.toastr.error('Stock Transfer', 'Số lượng chuyển là bắt buộc.');
+      this.toastr.warning('Chuyển kho', 'Số lượng chuyển là bắt buộc.');
       return;
     }
 
     const quantity = Number(this.createForm.quantity);
     if (quantity <= 0) {
-      this.toastr.error('Stock Transfer', 'Số lượng chuyển phải > 0.');
+      this.toastr.warning('Chuyển kho', 'Số lượng chuyển phải > 0.');
       return;
     }
 
     if (!this.createForm.reason) {
-      this.toastr.error('Stock Transfer', 'Lý do chuyển là bắt buộc.');
+      this.toastr.warning('Chuyển kho', 'Lý do chuyển là bắt buộc.');
       return;
     }
 
     if (this.createForm.notes.trim().length > 2000) {
-      this.toastr.error('Stock Transfer', 'Ghi chú không được vượt quá 2000 ký tự.');
+      this.toastr.warning('Chuyển kho', 'Ghi chú không được vượt quá 2000 ký tự.');
       return;
     }
 
     if (this.quantityPreviewWarning) {
-      this.toastr.warning('Stock Transfer', this.quantityPreviewWarning);
+      this.toastr.warning('Chuyển kho', this.quantityPreviewWarning);
     }
 
     const request: CreateStockTransferRequest = {
@@ -1516,14 +1516,14 @@ export class StockTransfersComponent implements OnInit {
 
     this.stockTransferService.create(request).subscribe({
       next: () => {
-        this.toastr.success('Stock Transfer', 'Đã tạo phiếu chuyển kho ở trạng thái nháp.');
+        this.toastr.success('Chuyển kho', 'Đã tạo phiếu chuyển kho ở trạng thái nháp.');
         this.submitting = false;
         this.closeAllModals();
         this.loadTransfers(0);
       },
       error: (error) => {
         this.submitting = false;
-        this.toastr.error('Stock Transfer', errorMessage(error, 'Tạo phiếu chuyển kho thất bại.'));
+        this.toastr.error('Chuyển kho', errorMessage(error, 'Tạo phiếu chuyển kho thất bại.'));
       },
     });
   }
@@ -1537,14 +1537,14 @@ export class StockTransfersComponent implements OnInit {
 
     this.stockTransferService.submit(this.actionTransfer.id).subscribe({
       next: () => {
-        this.toastr.success('Stock Transfer', 'Đã trình phiếu chuyển kho chờ thực hiện.');
+        this.toastr.success('Chuyển kho', 'Đã trình phiếu chuyển kho chờ thực hiện.');
         this.submitting = false;
         this.closeAllModals();
         this.loadTransfers(this.currentPage);
       },
       error: (error) => {
         this.submitting = false;
-        this.toastr.error('Stock Transfer', errorMessage(error, 'Trình phiếu chuyển kho thất bại.'));
+        this.toastr.error('Chuyển kho', errorMessage(error, 'Trình phiếu chuyển kho thất bại.'));
       },
     });
   }
@@ -1558,14 +1558,14 @@ export class StockTransfersComponent implements OnInit {
 
     this.stockTransferService.complete(this.actionTransfer.id).subscribe({
       next: () => {
-        this.toastr.success('Stock Transfer', 'Đã hoàn tất phiếu chuyển kho.');
+        this.toastr.success('Chuyển kho', 'Đã hoàn tất phiếu chuyển kho.');
         this.submitting = false;
         this.closeAllModals();
         this.loadTransfers(this.currentPage);
       },
       error: (error) => {
         this.submitting = false;
-        this.toastr.error('Stock Transfer', errorMessage(error, 'Hoàn tất phiếu chuyển kho thất bại.'));
+        this.toastr.error('Chuyển kho', errorMessage(error, 'Hoàn tất phiếu chuyển kho thất bại.'));
       },
     });
   }
@@ -1579,14 +1579,14 @@ export class StockTransfersComponent implements OnInit {
 
     this.stockTransferService.cancel(this.actionTransfer.id).subscribe({
       next: () => {
-        this.toastr.success('Stock Transfer', 'Đã huỷ phiếu chuyển kho.');
+        this.toastr.success('Chuyển kho', 'Đã huỷ phiếu chuyển kho.');
         this.submitting = false;
         this.closeAllModals();
         this.loadTransfers(this.currentPage);
       },
       error: (error) => {
         this.submitting = false;
-        this.toastr.error('Stock Transfer', errorMessage(error, 'Huỷ phiếu chuyển kho thất bại.'));
+        this.toastr.error('Chuyển kho', errorMessage(error, 'Huỷ phiếu chuyển kho thất bại.'));
       },
     });
   }

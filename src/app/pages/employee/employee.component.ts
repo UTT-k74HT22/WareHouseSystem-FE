@@ -120,7 +120,7 @@ export class EmployeeComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error fetching employees:', error);
-        this.toastr.error('Lỗi tải dữ liệu', error.error?.message || 'Có lỗi khi tải danh sách nhân viên');
+        this.toastr.error('Nhân viên', error.error?.message || 'Có lỗi khi tải danh sách nhân viên');
         this.loading = false;
       }
     });
@@ -185,7 +185,7 @@ export class EmployeeComponent implements OnInit {
     const idx = this.editRoles.indexOf(roleName);
     if (idx >= 0) {
       if (this.editRoles.length === 1) {
-        this.toastr.warning('Cập nhật nhân viên', 'Mỗi tài khoản phải có ít nhất một vai trò.');
+        this.toastr.warning('Nhân viên', 'Mỗi tài khoản phải có ít nhất một vai trò.');
         return;
       }
       this.editRoles.splice(idx, 1);
@@ -235,7 +235,7 @@ export class EmployeeComponent implements OnInit {
       .map((role) => role.id);
     if (roleIds.length !== this.editRoles.length) {
       this.loading = false;
-      this.toastr.error('Cập nhật nhân viên', 'Không tải được danh sách vai trò nên không thể lưu thay đổi vai trò.');
+      this.toastr.error('Nhân viên', 'Không tải được danh sách vai trò nên không thể lưu thay đổi vai trò.');
       return;
     }
     const request: AssignRolesRequest = { role_ids: roleIds };
@@ -244,7 +244,7 @@ export class EmployeeComponent implements OnInit {
       error: (error) => {
         console.error('Error updating user roles:', error);
         this.loading = false;
-        this.toastr.error('Cập nhật nhân viên', error?.error?.message || 'Cập nhật vai trò thất bại.');
+        this.toastr.error('Nhân viên', error?.error?.message || 'Cập nhật vai trò thất bại.');
       }
     });
   }
@@ -361,18 +361,18 @@ export class EmployeeComponent implements OnInit {
     this.employeeService.create(payload).subscribe({
       next: (response) => {
         if (response.success) {
-          this.toastr.success('Thành công', 'Tạo nhân viên mới thành công!');
+          this.toastr.success('Nhân viên', 'Tạo nhân viên mới thành công!');
           this.closeCreateModal();
           this.loadEmployees();
         } else {
-          this.toastr.error('Lỗi', response.message || 'Có lỗi khi tạo nhân viên');
+          this.toastr.error('Nhân viên', response.message || 'Có lỗi khi tạo nhân viên');
           this.loading = false;
         }
       },
       error: (error) => {
         console.error('Error creating employee:', error);
         const msg = error.error?.message || 'Có lỗi khi tạo nhân viên';
-        this.toastr.error('Lỗi', msg);
+        this.toastr.error('Nhân viên', msg);
         this.loading = false;
       }
     });
@@ -417,7 +417,7 @@ export class EmployeeComponent implements OnInit {
     this.employeeService.update(this.employeeToEdit.id, payload).subscribe({
       next: (response) => {
         if (!response.success) {
-          this.toastr.error('Lỗi', response.message || 'Có lỗi khi cập nhật nhân viên');
+          this.toastr.error('Nhân viên', response.message || 'Có lỗi khi cập nhật nhân viên');
           this.loading = false;
           return;
         }
@@ -427,31 +427,31 @@ export class EmployeeComponent implements OnInit {
             next: (statusRes) => {
               if (statusRes.success) {
                 this.persistEditRolesIfChanged(() => {
-                  this.toastr.success('Thành công', 'Cập nhật nhân viên thành công!');
+                  this.toastr.success('Nhân viên', 'Cập nhật nhân viên thành công!');
                   this.closeEditModal();
                   this.loadEmployees();
                 });
               } else {
-                this.toastr.error('Lỗi', statusRes.message || 'Có lỗi khi đổi trạng thái.');
+                this.toastr.error('Nhân viên', statusRes.message || 'Có lỗi khi đổi trạng thái.');
                 this.loading = false;
               }
             },
             error: (error) => {
-              this.toastr.error('Lỗi', error.error?.message || 'Có lỗi khi đổi trạng thái.');
+              this.toastr.error('Nhân viên', error.error?.message || 'Có lỗi khi đổi trạng thái.');
               this.loading = false;
             }
           });
           return;
         }
         this.persistEditRolesIfChanged(() => {
-          this.toastr.success('Thành công', 'Cập nhật nhân viên thành công!');
+          this.toastr.success('Nhân viên', 'Cập nhật nhân viên thành công!');
           this.closeEditModal();
           this.loadEmployees();
         });
       },
       error: (error) => {
         console.error('Error updating employee:', error);
-        this.toastr.error('Lỗi', error.error?.message || 'Có lỗi khi cập nhật nhân viên');
+        this.toastr.error('Nhân viên', error.error?.message || 'Có lỗi khi cập nhật nhân viên');
         this.loading = false;
       }
     });
@@ -475,17 +475,17 @@ export class EmployeeComponent implements OnInit {
     this.employeeService.delete(this.employeeToDelete.id).subscribe({
       next: (response) => {
         if (response.success) {
-          this.toastr.success('Thành công', 'Cho nhân viên nghỉ việc thành công!');
+          this.toastr.success('Nhân viên', 'Cho nhân viên nghỉ việc thành công!');
           this.closeDeleteConfirm();
           this.loadEmployees();
         } else {
-          this.toastr.error('Lỗi', response.message || 'Có lỗi khi xử lý');
+          this.toastr.error('Nhân viên', response.message || 'Có lỗi khi xử lý');
           this.loading = false;
         }
       },
       error: (error) => {
         console.error('Error deleting employee:', error);
-        this.toastr.error('Lỗi', error.error?.message || 'Có lỗi khi xử lý');
+        this.toastr.error('Nhân viên', error.error?.message || 'Có lỗi khi xử lý');
         this.loading = false;
       }
     });
@@ -503,55 +503,55 @@ export class EmployeeComponent implements OnInit {
   // Validation
   private validateCreateForm(): boolean {
     if (!this.createForm.username.trim()) {
-      this.toastr.warning('Thiếu thông tin', 'Vui lòng nhập tên đăng nhập');
+      this.toastr.warning('Nhân viên', 'Vui lòng nhập tên đăng nhập');
       return false;
     }
     if (!this.createForm.password.trim()) {
-      this.toastr.warning('Thiếu thông tin', 'Vui lòng nhập mật khẩu');
+      this.toastr.warning('Nhân viên', 'Vui lòng nhập mật khẩu');
       return false;
     }
     const pwdRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
     if (!pwdRegex.test(this.createForm.password)) {
-      this.toastr.warning('Mật khẩu không hợp lệ', 'Mật khẩu phải có ít nhất 8 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt');
+      this.toastr.warning('Nhân viên', 'Mật khẩu phải có ít nhất 8 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt');
       return false;
     }
     if (!this.createForm.first_name.trim()) {
-      this.toastr.warning('Thiếu thông tin', 'Vui lòng nhập họ');
+      this.toastr.warning('Nhân viên', 'Vui lòng nhập họ');
       return false;
     }
     if (!this.createForm.last_name.trim()) {
-      this.toastr.warning('Thiếu thông tin', 'Vui lòng nhập tên');
+      this.toastr.warning('Nhân viên', 'Vui lòng nhập tên');
       return false;
     }
     if (!this.createForm.email.trim()) {
-      this.toastr.warning('Thiếu thông tin', 'Vui lòng nhập email');
+      this.toastr.warning('Nhân viên', 'Vui lòng nhập email');
       return false;
     }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(this.createForm.email)) {
-      this.toastr.warning('Email không hợp lệ', 'Vui lòng nhập đúng định dạng email');
+      this.toastr.warning('Nhân viên', 'Vui lòng nhập đúng định dạng email');
       return false;
     }
     if (this.createForm.phone_number && !/^\d{10,15}$/.test(this.createForm.phone_number)) {
-      this.toastr.warning('SĐT không hợp lệ', 'Số điện thoại phải từ 10-15 chữ số');
+      this.toastr.warning('Nhân viên', 'Số điện thoại phải từ 10-15 chữ số');
       return false;
     }
     if (this.createForm.username.trim().length > 50
       || this.createForm.first_name.trim().length > 50
       || this.createForm.last_name.trim().length > 50) {
-      this.toastr.warning('Quá dài', 'Tên đăng nhập, họ và tên không được vượt quá 50 ký tự');
+      this.toastr.warning('Nhân viên', 'Tên đăng nhập, họ và tên không được vượt quá 50 ký tự');
       return false;
     }
     if (this.createForm.email.trim().length > 100) {
-      this.toastr.warning('Quá dài', 'Email không được vượt quá 100 ký tự');
+      this.toastr.warning('Nhân viên', 'Email không được vượt quá 100 ký tự');
       return false;
     }
     if ((this.createForm.department?.length || 0) > 100 || (this.createForm.position?.length || 0) > 100) {
-      this.toastr.warning('Quá dài', 'Phòng ban và chức vụ không được vượt quá 100 ký tự');
+      this.toastr.warning('Nhân viên', 'Phòng ban và chức vụ không được vượt quá 100 ký tự');
       return false;
     }
     if (this.createForm.roles.length === 0) {
-      this.toastr.warning('Thiếu thông tin', 'Vui lòng chọn ít nhất một vai trò');
+      this.toastr.warning('Nhân viên', 'Vui lòng chọn ít nhất một vai trò');
       return false;
     }
     return true;
@@ -559,11 +559,11 @@ export class EmployeeComponent implements OnInit {
 
   private validateEditForm(): boolean {
     if ((this.editForm.department?.length || 0) > 100 || (this.editForm.position?.length || 0) > 100) {
-      this.toastr.warning('Quá dài', 'Phòng ban và chức vụ không được vượt quá 100 ký tự');
+      this.toastr.warning('Nhân viên', 'Phòng ban và chức vụ không được vượt quá 100 ký tự');
       return false;
     }
     if ((this.editForm.salary_grade?.length || 0) > 20) {
-      this.toastr.warning('Quá dài', 'Bậc lương không được vượt quá 20 ký tự');
+      this.toastr.warning('Nhân viên', 'Bậc lương không được vượt quá 20 ký tự');
       return false;
     }
     return true;

@@ -81,7 +81,7 @@ export class CategoryComponent implements OnInit {
         this.categories = [];
         this.totalElements = 0;
         this.totalPages = 0;
-        this.toastr.error(error?.error?.message || 'Không tải được danh mục.');
+        this.toastr.error('Danh mục', error?.error?.message || 'Không tải được danh mục.');
         this.loading = false;
       }
     });
@@ -161,7 +161,7 @@ export class CategoryComponent implements OnInit {
           this.categoryService.changeStatus(selectedCategory.id, { status: this.editStatus }).subscribe({
             next: (statusRes) => {
               if (statusRes.success) {
-                this.toastr.success('Cập nhật danh mục thành công!');
+                this.toastr.success('Danh mục', 'Cập nhật danh mục thành công!');
                 this.showEditModal = false;
                 this.loadCategories();
               }
@@ -173,7 +173,7 @@ export class CategoryComponent implements OnInit {
           return;
         }
 
-        this.toastr.success('Cập nhật danh mục thành công!');
+        this.toastr.success('Danh mục', 'Cập nhật danh mục thành công!');
         this.showEditModal = false;
         this.loadCategories();
       },
@@ -193,7 +193,7 @@ export class CategoryComponent implements OnInit {
     this.categoryService.changeStatus(this.categoryToDelete.id, { status: CategoryStatus.INACTIVE }).subscribe({
       next: (res) => {
         if (res.success) {
-          this.toastr.success('Đã ngừng hoạt động danh mục.');
+          this.toastr.success('Danh mục', 'Đã ngừng hoạt động danh mục.');
           this.showDeleteConfirm = false;
           this.loadCategories();
         }

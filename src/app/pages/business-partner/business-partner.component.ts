@@ -66,7 +66,7 @@ export class BusinessPartnerComponent implements OnInit {
       error: (error) => {
         this.partners = [];
         this.filteredPartners = [];
-        this.toastr.error(error?.error?.message || 'Không tải được danh sách đối tác.');
+        this.toastr.error('Đối tác', error?.error?.message || 'Không tải được danh sách đối tác.');
         this.loading = false;
       }
     });
@@ -187,7 +187,7 @@ export class BusinessPartnerComponent implements OnInit {
     this.bpService.update(this.selectedPartner.id, payload).subscribe({
       next: (res) => {
         if (res.success) {
-          this.toastr.success('Cập nhật đối tác thành công!');
+          this.toastr.success('Đối tác', 'Cập nhật đối tác thành công!');
           this.showEditModal = false;
           this.loadPartners();
         }
@@ -208,7 +208,7 @@ export class BusinessPartnerComponent implements OnInit {
     this.bpService.delete(this.partnerToDelete.id).subscribe({
       next: (res) => {
         if (res.success) {
-          this.toastr.success('Xoá đối tác thành công!');
+          this.toastr.success('Đối tác', 'Xoá đối tác thành công!');
           this.showDeleteConfirm = false;
           this.loadPartners();
         }

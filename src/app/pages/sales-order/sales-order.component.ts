@@ -101,7 +101,7 @@ export class SalesOrderComponent implements OnInit {
 
   removeLine(index: number): void {
     if (this.lines.length === 1) {
-      this.toastr.warning('Đơn hàng cần ít nhất một dòng sản phẩm.');
+      this.toastr.warning('Đơn xuất hàng', 'Đơn hàng cần ít nhất một dòng sản phẩm.');
       return;
     }
     this.lines.removeAt(index);
@@ -147,7 +147,7 @@ export class SalesOrderComponent implements OnInit {
         this.totalElements = 0;
         this.totalPages = 0;
         this.loading = false;
-        this.toastr.error(error?.error?.message || 'Không thể tải danh sách đơn xuất hàng.');
+        this.toastr.error('Đơn xuất hàng', error?.error?.message || 'Không thể tải danh sách đơn xuất hàng.');
       }
     });
   }
@@ -175,9 +175,9 @@ export class SalesOrderComponent implements OnInit {
           );
         }
       },
-      error: () => {
+      error: (error) => {
         this.customers = [];
-        this.toastr.error('Không thể tải danh sách khách hàng.');
+        this.toastr.error('Đơn xuất hàng', error?.error?.message || 'Không thể tải danh sách khách hàng.');
       }
     });
   }
@@ -189,9 +189,9 @@ export class SalesOrderComponent implements OnInit {
           this.warehouses = res.data.filter((warehouse) => warehouse.status === 'ACTIVE');
         }
       },
-      error: () => {
+      error: (error) => {
         this.warehouses = [];
-        this.toastr.error('Không thể tải danh sách kho.');
+        this.toastr.error('Đơn xuất hàng', error?.error?.message || 'Không thể tải danh sách kho.');
       }
     });
   }
@@ -201,9 +201,9 @@ export class SalesOrderComponent implements OnInit {
       next: (products) => {
         this.products = products.filter((product) => product.status === 'ACTIVE');
       },
-      error: () => {
+      error: (error) => {
         this.products = [];
-        this.toastr.error('Không thể tải danh sách sản phẩm.');
+        this.toastr.error('Đơn xuất hàng', error?.error?.message || 'Không thể tải danh sách sản phẩm.');
       }
     });
   }
@@ -345,7 +345,7 @@ export class SalesOrderComponent implements OnInit {
       },
       error: (error) => {
         this.loading = false;
-        this.toastr.error(error?.error?.message || 'Không thể tải chi tiết đơn hàng.');
+        this.toastr.error('Đơn xuất hàng', error?.error?.message || 'Không thể tải chi tiết đơn hàng.');
       }
     });
   }

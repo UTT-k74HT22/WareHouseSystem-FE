@@ -165,7 +165,7 @@ export class InventoryComponent implements OnInit, OnDestroy {
         this.locationGroups = [];
         this.totalElements = 0;
         this.totalPages = 0;
-        this.toastr.error(error?.error?.message || 'Không tải được dữ liệu tồn kho.');
+        this.toastr.error('Tồn kho', error?.error?.message || 'Không tải được dữ liệu tồn kho.');
         this.loading = false;
       }
     });

@@ -140,7 +140,7 @@ export class PurchaseOrderComponent implements OnInit {
         this.orders = [];
         this.totalElements = 0;
         this.totalPages = 0;
-        this.toastr.error(error?.error?.message || 'Không tải được danh sách đơn nhập hàng.');
+        this.toastr.error('Đơn nhập hàng', error?.error?.message || 'Không tải được danh sách đơn nhập hàng.');
         this.loading = false;
       }
     });
@@ -156,9 +156,9 @@ export class PurchaseOrderComponent implements OnInit {
           this.orders = this.orders.map((order) => this.enrichOrder(order));
         }
       },
-      error: () => {
+      error: (error) => {
         this.suppliers = [];
-        this.toastr.error('Không tải được nhà cung cấp.');
+        this.toastr.error('Đơn nhập hàng', error?.error?.message || 'Không tải được nhà cung cấp.');
       }
     });
   }
@@ -171,9 +171,9 @@ export class PurchaseOrderComponent implements OnInit {
           this.orders = this.orders.map((order) => this.enrichOrder(order));
         }
       },
-      error: () => {
+      error: (error) => {
         this.warehouses = [];
-        this.toastr.error('Không tải được danh sách kho.');
+        this.toastr.error('Đơn nhập hàng', error?.error?.message || 'Không tải được danh sách kho.');
       }
     });
   }
@@ -183,9 +183,9 @@ export class PurchaseOrderComponent implements OnInit {
       next: (products) => {
         this.products = products.filter(p => p.status === 'ACTIVE');
       },
-      error: () => {
+      error: (error) => {
         this.products = [];
-        this.toastr.error('Không tải được danh sách sản phẩm.');
+        this.toastr.error('Đơn nhập hàng', error?.error?.message || 'Không tải được danh sách sản phẩm.');
       }
     });
   }
@@ -257,7 +257,7 @@ export class PurchaseOrderComponent implements OnInit {
         }
       },
       error: (error) => {
-        this.toastr.error(error?.error?.message || 'Không tải được chi tiết đơn hàng.');
+        this.toastr.error('Đơn nhập hàng', error?.error?.message || 'Không tải được chi tiết đơn hàng.');
       }
     });
   }
@@ -274,7 +274,7 @@ export class PurchaseOrderComponent implements OnInit {
       error: (error) => {
         this.orderLines = [];
         this.linesLoading = false;
-        this.toastr.error(error?.error?.message || 'Không tải được dòng đơn hàng.');
+        this.toastr.error('Đơn nhập hàng', error?.error?.message || 'Không tải được dòng đơn hàng.');
       }
     });
   }
