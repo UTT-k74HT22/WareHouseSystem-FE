@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 import { BusinessPartnerResponse } from '../../dto/response/BusinessPartner/BusinessPartnerResponse';
@@ -71,7 +72,8 @@ export class SalesOrderComponent implements OnInit {
   private warehouseService: WarehouseService,
   private productService: ProductService,
     private inventoryService: InventoryService,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private route: ActivatedRoute
   ) {
     this.createForm = this.fb.group({
       customer_id: ['', Validators.required],
@@ -89,6 +91,25 @@ export class SalesOrderComponent implements OnInit {
     this.loadCustomers();
     this.loadWarehouses();
     this.loadProducts();
+    this.openDocDeepLink();
+  }
+
+  /** Mở chi tiết đơn xuất khi điều hướng từ lịch sử tồn kho (?doc=<id>). */
+  private openDocDeepLink(): void {
+    const docId = this.route.snapshot.queryParamMap.get('doc')?.trim();
+    if (!docId) {
+      return;
+    }
+    this.soService.getById(docId).subscribe({
+      next: (res) => {
+        if (res.success) {
+          this.openDetailModal(res.data);
+        }
+      },
+      error: (error) => {
+        this.toastr.error('Đơn xuất hàng', error?.error?.message || 'Không tìm thấy đơn xuất hàng.');
+      }
+    });
   }
 
   get lines(): FormArray {

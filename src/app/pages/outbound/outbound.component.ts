@@ -1,4 +1,5 @@
 import { Component, HostListener, OnInit } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 import { ProductResponse } from '../../dto/response/Product/ProductResponse';
@@ -69,7 +70,8 @@ export class OutboundComponent implements OnInit {
     private warehouseService: WarehouseService,
     private toastr: ToastrService,
     private productService: ProductService,
-    private businessPartnerService: BusinessPartnerService
+    private businessPartnerService: BusinessPartnerService,
+    private route: ActivatedRoute
   ) {
     this.createForm = this.fb.group({
       sales_order_id: ['', Validators.required],
@@ -88,6 +90,25 @@ export class OutboundComponent implements OnInit {
     this.loadWarehouses();
     this.loadProducts();
     this.loadCustomers();
+    this.openDocDeepLink();
+  }
+
+  /** Mở chi tiết phiếu xuất khi điều hướng từ lịch sử tồn kho (?doc=<id>). */
+  private openDocDeepLink(): void {
+    const docId = this.route.snapshot.queryParamMap.get('doc')?.trim();
+    if (!docId) {
+      return;
+    }
+    this.outboundService.getById(docId).subscribe({
+      next: (res) => {
+        if (res.success) {
+          this.openDetailModal(res.data);
+        }
+      },
+      error: (error) => {
+        this.toastr.error('Xuất kho', error?.error?.message || 'Không tìm thấy phiếu xuất.');
+      }
+    });
   }
 
   get lines(): FormArray {

@@ -8,6 +8,7 @@ import { InventoryResponse } from '../../dto/response/Inventory/InventoryRespons
 import { InventoryFilterRequest } from '../../dto/request/Inventory/InventoryFilterRequest';
 import { InventorySummaryResponse } from '../../dto/response/Inventory/InventorySummaryResponse';
 import { InventoryByLocationResponse } from '../../dto/response/Inventory/InventoryByLocationResponse';
+import { InventoryByProductResponse } from '../../dto/response/Inventory/InventoryByProductResponse';
 
 export interface CheckInventoryAvailabilityRequest {
   product_id: string;
@@ -84,6 +85,24 @@ export class InventoryService {
     }
 
     return this.http.get<ApiResponse<InventoryByLocationResponse[]>>(`${this.apiUrl}/by-location`, { params });
+  }
+
+  /**
+   * GET /api/v1/inventories/by-product
+   * Aggregate stock per (warehouse, product). Only products with inventory records.
+   */
+  getStockByProduct(filters?: InventoryFilterRequest): Observable<ApiResponse<InventoryByProductResponse[]>> {
+    let params = new HttpParams();
+
+    if (filters) {
+      if (filters.product_id) params = params.set('productId', filters.product_id);
+      if (filters.product_sku) params = params.set('productSku', filters.product_sku);
+      if (filters.product_name) params = params.set('productName', filters.product_name);
+      if (filters.warehouse_id) params = params.set('warehouseId', filters.warehouse_id);
+      if (filters.batch_id) params = params.set('batchId', filters.batch_id);
+    }
+
+    return this.http.get<ApiResponse<InventoryByProductResponse[]>>(`${this.apiUrl}/by-product`, { params });
   }
 
   checkAvailability(request: CheckInventoryAvailabilityRequest): Observable<ApiResponse<CheckInventoryAvailabilityResponse>> {

@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnDestroy, OnInit } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { Subject, Subscription, catchError, debounceTime, forkJoin, map, of } from 'rxjs';
 import { ToastrService } from '../../service/SystemService/toastr.service';
@@ -434,7 +435,8 @@ export class StockAdjustmentsComponent implements OnInit, OnDestroy {
     private readonly productService: ProductService,
     private readonly locationService: LocationService,
     private readonly batchService: BatchService,
-    private readonly toastr: ToastrService
+    private readonly toastr: ToastrService,
+    private readonly route: ActivatedRoute
   ) {}
 
   ngOnInit(): void {
@@ -458,6 +460,25 @@ export class StockAdjustmentsComponent implements OnInit, OnDestroy {
 
     this.loadLookupData();
     this.loadAdjustments();
+    this.openDocDeepLink();
+  }
+
+  /** Mở chi tiết phiếu điều chỉnh khi điều hướng từ lịch sử tồn kho (?doc=<id>). */
+  private openDocDeepLink(): void {
+    const docId = this.route.snapshot.queryParamMap.get('doc')?.trim();
+    if (!docId) {
+      return;
+    }
+    this.stockAdjustmentService.getById(docId).subscribe({
+      next: (res) => {
+        if (res.success) {
+          this.openDetailModal(res.data);
+        }
+      },
+      error: (error) => {
+        this.toastr.error('Điều chỉnh kho', error?.error?.message || 'Không tìm thấy phiếu điều chỉnh.');
+      }
+    });
   }
 
   ngOnDestroy(): void {
@@ -1151,12 +1172,32 @@ export class StockTransfersComponent implements OnInit {
     private readonly locationService: LocationService,
     private readonly productService: ProductService,
     private readonly batchService: BatchService,
-    private readonly toastr: ToastrService
+    private readonly toastr: ToastrService,
+    private readonly route: ActivatedRoute
   ) {}
 
   ngOnInit(): void {
     this.loadLookupData();
     this.loadTransfers();
+    this.openDocDeepLink();
+  }
+
+  /** Mở chi tiết phiếu chuyển khi điều hướng từ lịch sử tồn kho (?doc=<id>). */
+  private openDocDeepLink(): void {
+    const docId = this.route.snapshot.queryParamMap.get('doc')?.trim();
+    if (!docId) {
+      return;
+    }
+    this.stockTransferService.getById(docId).subscribe({
+      next: (res) => {
+        if (res.success) {
+          this.openDetailModal(res.data);
+        }
+      },
+      error: (error) => {
+        this.toastr.error('Chuyển kho', error?.error?.message || 'Không tìm thấy phiếu chuyển.');
+      }
+    });
   }
 
   private createEmptyTransferForm(): StockTransferForm {
