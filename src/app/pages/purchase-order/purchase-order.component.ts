@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { PurchaseOrderResponse } from '../../dto/response/PurchaseOrder/PurchaseOrderResponse';
 import { PurchaseOrderLineResponse } from '../../dto/response/PurchaseOrderLine/PurchaseOrderLineResponse';
 import { PurchaseOrderService } from '../../service/PurchaseOrderService/purchase-order.service';
@@ -89,7 +90,8 @@ export class PurchaseOrderComponent implements OnInit {
     private bpService: BusinessPartnerService,
     private warehouseService: WarehouseService,
     private productService: ProductService,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private route: ActivatedRoute
   ) {}
 
   ngOnInit(): void {
@@ -97,6 +99,25 @@ export class PurchaseOrderComponent implements OnInit {
     this.loadSuppliers();
     this.loadWarehouses();
     this.loadProducts();
+    this.openDocDeepLink();
+  }
+
+  /** Mở chi tiết đơn nhập khi điều hướng từ lịch sử tồn kho (?doc=<id>). */
+  private openDocDeepLink(): void {
+    const docId = this.route.snapshot.queryParamMap.get('doc')?.trim();
+    if (!docId) {
+      return;
+    }
+    this.poService.getById(docId).subscribe({
+      next: (res) => {
+        if (res.success) {
+          this.openDetailModal(res.data);
+        }
+      },
+      error: (error) => {
+        this.toastr.error('Đơn nhập hàng', error?.error?.message || 'Không tìm thấy đơn nhập hàng.');
+      }
+    });
   }
 
   // ══════════════════════════════════════════════════

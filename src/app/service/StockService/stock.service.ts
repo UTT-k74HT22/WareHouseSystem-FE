@@ -22,9 +22,25 @@ export class StockMovementService {
 
   constructor(private http: HttpClient) {}
 
-  /** GET /api/v1/stock-movements */
-  getAll(page = 0, size = 20): Observable<ApiResponse<PageResponse<StockMovementResponse>>> {
-    const params = new HttpParams().set('page', page).set('size', size);
+  /** GET /api/v1/stock-movements (filterable for traceability history) */
+  getAll(
+    page = 0,
+    size = 20,
+    filters?: SearchStockMovementsParams
+  ): Observable<ApiResponse<PageResponse<StockMovementResponse>>> {
+    let params = new HttpParams().set('page', page).set('size', size);
+
+    if (filters) {
+      if (filters.product_id) params = params.set('productId', filters.product_id);
+      if (filters.warehouse_id) params = params.set('warehouseId', filters.warehouse_id);
+      if (filters.location_id) params = params.set('locationId', filters.location_id);
+      if (filters.batch_id) params = params.set('batchId', filters.batch_id);
+      if (filters.movement_type) params = params.set('movementType', filters.movement_type);
+      if (filters.reference_type) params = params.set('referenceType', filters.reference_type);
+      if (filters.movement_date_from) params = params.set('movementDateFrom', filters.movement_date_from);
+      if (filters.movement_date_to) params = params.set('movementDateTo', filters.movement_date_to);
+    }
+
     return this.http.get<ApiResponse<PageResponse<StockMovementResponse>>>(this.movementsUrl, { params });
   }
 
@@ -40,6 +56,17 @@ export class StockMovementService {
       `${this.movementsUrl}/reference/${referenceType}/${referenceId}`, { params }
     );
   }
+}
+
+export interface SearchStockMovementsParams {
+  product_id?: string;
+  warehouse_id?: string;
+  location_id?: string;
+  batch_id?: string;
+  movement_type?: string;
+  reference_type?: string;
+  movement_date_from?: string;
+  movement_date_to?: string;
 }
 
 // ======================== STOCK ADJUSTMENTS ========================

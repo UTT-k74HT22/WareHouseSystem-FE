@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { InboundReceiptResponse } from '../../dto/response/InboundReceipt/InboundReceiptResponse';
 import { InboundReceiptLineResponse } from '../../dto/response/InboundReceiptLine/InboundReceiptLineResponse';
 import {
@@ -118,13 +119,33 @@ export class InboundComponent implements OnInit {
     private inboundReferenceDataService: InboundReferenceDataService,
     private inboundLineEditorService: InboundLineEditorService,
     private toastr: ToastrService,
-    private accountService: AccountService
+    private accountService: AccountService,
+    private route: ActivatedRoute
   ) {}
 
   ngOnInit(): void {
     this.loadReceipts();
     this.loadReferences();
     this.loadProductCatalog();
+    this.openDocDeepLink();
+  }
+
+  /** Mở chi tiết phiếu nhập khi điều hướng từ lịch sử tồn kho (?doc=<id>). */
+  private openDocDeepLink(): void {
+    const docId = this.route.snapshot.queryParamMap.get('doc')?.trim();
+    if (!docId) {
+      return;
+    }
+    this.inboundService.getById(docId).subscribe({
+      next: (res) => {
+        if (res.success) {
+          this.openDetailModal(res.data);
+        }
+      },
+      error: (error) => {
+        this.toastr.error('Nhập kho', error?.error?.message || 'Không tìm thấy phiếu nhập.');
+      }
+    });
   }
 
   private loadSeq = 0;

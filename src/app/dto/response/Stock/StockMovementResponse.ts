@@ -10,6 +10,7 @@ export interface StockMovementResponse {
   warehouse_id: string;
   warehouse_name?: string;
   location_id: string;
+  to_location_id?: string | null;
   location_code?: string;
   batch_id: string | null;
   batch_number?: string | null;
