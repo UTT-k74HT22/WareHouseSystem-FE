@@ -61,7 +61,7 @@ export class UomComponent implements OnInit {
       error: (error) => {
         this.uomList = [];
         this.filteredList = [];
-        this.toastr.error(error?.error?.message || 'Không tải được danh sách đơn vị tính.');
+        this.toastr.error('Đơn vị tính', error?.error?.message || 'Không tải được danh sách đơn vị tính.');
         this.loading = false;
       }
     });
@@ -124,7 +124,7 @@ export class UomComponent implements OnInit {
     }).subscribe({
       next: (res) => {
         if (res.success) {
-          this.toastr.success('Cập nhật đơn vị tính thành công!');
+          this.toastr.success('Đơn vị tính', 'Cập nhật đơn vị tính thành công!');
           this.showEditModal = false;
           this.loadUOMs();
         }
@@ -145,7 +145,7 @@ export class UomComponent implements OnInit {
     this.uomService.delete(this.uomToDelete.id).subscribe({
       next: (res) => {
         if (res.success) {
-          this.toastr.success('Xoá đơn vị tính thành công!');
+          this.toastr.success('Đơn vị tính', 'Xoá đơn vị tính thành công!');
           this.showDeleteConfirm = false;
           this.loadUOMs();
         }

@@ -100,7 +100,7 @@ export class ProductComponent implements OnInit {
         this.products = [];
         this.totalElements = 0;
         this.totalPages = 0;
-        this.toastr.error(error?.error?.message || 'Không tải được danh sách sản phẩm.');
+        this.toastr.error('Sản phẩm', error?.error?.message || 'Không tải được danh sách sản phẩm.');
         this.loading = false;
       }
     });
@@ -111,7 +111,7 @@ export class ProductComponent implements OnInit {
       next: (res) => { if (res.success) this.categories = res.data.content; },
       error: () => {
         this.categories = [];
-        this.toastr.error('Không tải được danh mục sản phẩm.');
+        this.toastr.error('Sản phẩm', 'Không tải được danh mục sản phẩm.');
       }
     });
   }
@@ -121,7 +121,7 @@ export class ProductComponent implements OnInit {
       next: (res) => { if (res.success) this.uomList = res.data; },
       error: () => {
         this.uomList = [];
-        this.toastr.error('Không tải được đơn vị tính.');
+        this.toastr.error('Sản phẩm', 'Không tải được đơn vị tính.');
       }
     });
   }
@@ -204,7 +204,7 @@ export class ProductComponent implements OnInit {
     this.productService.update(this.selectedProduct.id, this.editForm).subscribe({
       next: (res) => {
         if (res.success) {
-          this.toastr.success('Cập nhật sản phẩm thành công!');
+          this.toastr.success('Sản phẩm', 'Cập nhật sản phẩm thành công!');
           this.showEditModal = false;
           this.loadProducts();
         }
@@ -225,7 +225,7 @@ export class ProductComponent implements OnInit {
     this.productService.delete(this.productToDelete.id).subscribe({
       next: (res) => {
         if (res.success) {
-          this.toastr.success('Xoá sản phẩm thành công!');
+          this.toastr.success('Sản phẩm', 'Xoá sản phẩm thành công!');
           this.showDeleteConfirm = false;
           this.loadProducts();
         }
@@ -340,11 +340,11 @@ export class ProductComponent implements OnInit {
 
     // Validate phía client
     if (!file.type.startsWith('image/')) {
-      this.toastr.error('Chỉ chấp nhận file ảnh (JPEG, PNG, GIF, WebP)');
+      this.toastr.error('Sản phẩm', 'Chỉ chấp nhận file ảnh (JPEG, PNG, GIF, WebP)');
       return;
     }
     if (file.size > 50 * 1024 * 1024) {
-      this.toastr.error('Dung lượng file tối đa 50MB');
+      this.toastr.error('Sản phẩm', 'Dung lượng file tối đa 50MB');
       return;
     }
 
@@ -361,12 +361,12 @@ export class ProductComponent implements OnInit {
             URL.revokeObjectURL(this.createImagePreview!);
             this.createImagePreview = res.data.presigned_url;
           }
-          this.toastr.success('Tải ảnh lên thành công!');
+          this.toastr.success('Sản phẩm', 'Tải ảnh lên thành công!');
         }
         this.uploadingImage = false;
       },
       error: () => {
-        this.toastr.error('Tải ảnh lên thất bại');
+        this.toastr.error('Sản phẩm', 'Tải ảnh lên thất bại');
         // Giữ preview local để user thấy ảnh đã chọn
         this.uploadingImage = false;
       }
@@ -382,11 +382,11 @@ export class ProductComponent implements OnInit {
     const file = input.files[0];
 
     if (!file.type.startsWith('image/')) {
-      this.toastr.error('Chỉ chấp nhận file ảnh (JPEG, PNG, GIF, WebP)');
+      this.toastr.error('Sản phẩm', 'Chỉ chấp nhận file ảnh (JPEG, PNG, GIF, WebP)');
       return;
     }
     if (file.size > 50 * 1024 * 1024) {
-      this.toastr.error('Dung lượng file tối đa 50MB');
+      this.toastr.error('Sản phẩm', 'Dung lượng file tối đa 50MB');
       return;
     }
 
@@ -403,12 +403,12 @@ export class ProductComponent implements OnInit {
             URL.revokeObjectURL(this.editImagePreview!);
             this.editImagePreview = res.data.presigned_url;
           }
-          this.toastr.success('Tải ảnh lên thành công!');
+          this.toastr.success('Sản phẩm', 'Tải ảnh lên thành công!');
         }
         this.uploadingImage = false;
       },
       error: () => {
-        this.toastr.error('Tải ảnh lên thất bại');
+        this.toastr.error('Sản phẩm', 'Tải ảnh lên thất bại');
         // Giữ preview local để user thấy ảnh đã chọn
         this.uploadingImage = false;
       }

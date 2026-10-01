@@ -128,7 +128,7 @@ export class OutboundComponent implements OnInit {
         this.totalElements = 0;
         this.totalPages = 0;
         this.loading = false;
-        this.toastr.error(error?.error?.message || 'Không thể tải danh sách phiếu xuất kho.');
+        this.toastr.error('Xuất kho', error?.error?.message || 'Không thể tải danh sách phiếu xuất kho.');
       }
     });
   }
@@ -152,9 +152,9 @@ export class OutboundComponent implements OnInit {
         });
         this.confirmedOrders = Array.from(orderMap.values());
       },
-      error: () => {
+      error: (error) => {
         this.confirmedOrders = [];
-        this.toastr.error('Không thể tải danh sách đơn xuất hàng có thể xuất kho.');
+        this.toastr.error('Xuất kho', error?.error?.message || 'Không thể tải danh sách đơn xuất hàng có thể xuất kho.');
       }
     });
   }
@@ -234,7 +234,7 @@ export class OutboundComponent implements OnInit {
         );
 
         if (this.selectedOrderLines.length === 0) {
-          this.toastr.warning('Đơn xuất hàng này không còn số lượng để xuất kho.');
+          this.toastr.warning('Xuất kho', 'Đơn xuất hàng này không còn số lượng để xuất kho.');
           return;
         }
 
@@ -246,7 +246,7 @@ export class OutboundComponent implements OnInit {
         if (selectionSeq !== this.orderSelectionSeq) {
           return;
         }
-        this.toastr.error(error?.error?.message || 'Không thể tải chi tiết đơn xuất hàng.');
+        this.toastr.error('Xuất kho', error?.error?.message || 'Không thể tải chi tiết đơn xuất hàng.');
       }
     });
   }
@@ -413,7 +413,7 @@ export class OutboundComponent implements OnInit {
       },
       error: (error) => {
         this.loading = false;
-        this.toastr.error(error?.error?.message || 'Không thể tải chi tiết phiếu xuất.');
+        this.toastr.error('Xuất kho', error?.error?.message || 'Không thể tải chi tiết phiếu xuất.');
       }
     });
   }
@@ -544,7 +544,7 @@ export class OutboundComponent implements OnInit {
       },
       error: (error) => {
         this.loading = false;
-        this.toastr.error(error?.error?.message || 'Không thể cập nhật chi tiết phiếu xuất.');
+        this.toastr.error('Xuất kho', error?.error?.message || 'Không thể cập nhật chi tiết phiếu xuất.');
       }
     });
   }

@@ -165,7 +165,7 @@ export class InboundComponent implements OnInit {
         this.totalElements = 0;
         this.totalPages = 0;
         this.loading = false;
-        this.toastr.error(error?.error?.message || 'Không tải được danh sách phiếu nhập.');
+        this.toastr.error('Nhập kho', error?.error?.message || 'Không tải được danh sách phiếu nhập.');
       }
     });
   }
@@ -182,11 +182,11 @@ export class InboundComponent implements OnInit {
         this.detailPurchaseOrder = this.detailPurchaseOrder ? this.enrichPurchaseOrder(this.detailPurchaseOrder) : null;
         this.referenceLoading = false;
       },
-      error: () => {
+      error: (error) => {
         this.referenceLoading = false;
         this.suppliers = [];
         this.warehouses = [];
-        this.toastr.error('Không tải được dữ liệu tham chiếu cho màn nhập kho.');
+        this.toastr.error('Nhập kho', error?.error?.message || 'Không tải được dữ liệu tham chiếu cho màn nhập kho.');
       }
     });
   }
@@ -203,7 +203,7 @@ export class InboundComponent implements OnInit {
       error: (error) => {
         this.products = [];
         this.loadingProductCatalog = false;
-        this.toastr.error(error?.error?.message || 'Không tải được danh mục sản phẩm.');
+        this.toastr.error('Nhập kho', error?.error?.message || 'Không tải được danh mục sản phẩm.');
       }
     });
   }
@@ -297,7 +297,7 @@ export class InboundComponent implements OnInit {
         this.detailLoading = false;
         this.showDetailModal = false;
         this.selectedReceipt = null;
-        this.toastr.error(error?.error?.message || 'Không tải được chi tiết phiếu nhập.');
+        this.toastr.error('Nhập kho', error?.error?.message || 'Không tải được chi tiết phiếu nhập.');
         this.loadReceipts();
       }
     });
@@ -334,7 +334,7 @@ export class InboundComponent implements OnInit {
     this.inboundService.delete(this.receiptToDelete.id).subscribe({
       next: (res) => {
         if (res.success) {
-          this.toastr.success('Xóa phiếu nhập thành công.');
+          this.toastr.success('Nhập kho', 'Xóa phiếu nhập thành công.');
           const deletedId = this.receiptToDelete?.id;
           this.showDeleteConfirm = false;
           this.receiptToDelete = null;
@@ -346,7 +346,7 @@ export class InboundComponent implements OnInit {
         }
       },
       error: (error) => {
-        this.toastr.error(error?.error?.message || 'Xóa phiếu nhập thất bại.');
+        this.toastr.error('Nhập kho', error?.error?.message || 'Xóa phiếu nhập thất bại.');
         this.showDeleteConfirm = false;
         this.receiptToDelete = null;
         this.refreshSelectedReceiptIfOpen();
@@ -375,7 +375,7 @@ export class InboundComponent implements OnInit {
     this.inboundService.update(this.selectedReceipt.id, this.editForm).subscribe({
       next: (res) => {
         if (res.success) {
-          this.toastr.success('Cập nhật phiếu nhập thành công.');
+          this.toastr.success('Nhập kho', 'Cập nhật phiếu nhập thành công.');
           this.showEditModal = false;
           this.selectedReceipt = res.data;
           this.loadReceipts();
@@ -383,7 +383,7 @@ export class InboundComponent implements OnInit {
         }
       },
       error: (error) => {
-        this.toastr.error(error?.error?.message || 'Cập nhật phiếu nhập thất bại.');
+        this.toastr.error('Nhập kho', error?.error?.message || 'Cập nhật phiếu nhập thất bại.');
         this.showEditModal = false;
         this.refreshSelectedReceiptIfOpen();
       }
@@ -428,12 +428,12 @@ export class InboundComponent implements OnInit {
     }
 
     if (this.loadingDetailPurchaseOrder) {
-      this.toastr.warning('Đang tải thông tin dòng đơn nhập hàng. Vui lòng thử lại sau.');
+      this.toastr.warning('Nhập kho', 'Đang tải thông tin dòng đơn nhập hàng. Vui lòng thử lại sau.');
       return;
     }
 
     if (mode === 'create' && this.getCreateAvailablePurchaseOrderLines().length === 0) {
-      this.toastr.warning('Không còn dòng đơn nhập hàng nào có thể nhận thêm trên phiếu nhập này.');
+      this.toastr.warning('Nhập kho', 'Không còn dòng đơn nhập hàng nào có thể nhận thêm trên phiếu nhập này.');
       return;
     }
 
@@ -473,7 +473,7 @@ export class InboundComponent implements OnInit {
       this.inboundReceiptLineService.create(request).subscribe({
         next: (res) => {
           if (res.success) {
-            this.toastr.success('Thêm dòng phiếu nhập thành công.');
+            this.toastr.success('Nhập kho', 'Thêm dòng phiếu nhập thành công.');
             this.closeSubModal('lineEditor');
             this.refreshSelectedReceiptIfOpen(this.selectedReceipt!.id);
           }
@@ -481,7 +481,7 @@ export class InboundComponent implements OnInit {
         },
         error: (error) => {
           this.lineSubmitting = false;
-          this.toastr.error(error?.error?.message || 'Thêm dòng phiếu nhập thất bại.');
+          this.toastr.error('Nhập kho', error?.error?.message || 'Thêm dòng phiếu nhập thất bại.');
         }
       });
       return;
@@ -496,7 +496,7 @@ export class InboundComponent implements OnInit {
     this.inboundReceiptLineService.update(this.selectedLine.id, request).subscribe({
       next: (res) => {
         if (res.success) {
-          this.toastr.success('Cập nhật dòng phiếu nhập thành công.');
+          this.toastr.success('Nhập kho', 'Cập nhật dòng phiếu nhập thành công.');
           this.closeSubModal('lineEditor');
           this.refreshSelectedReceiptIfOpen(this.selectedReceipt!.id);
         }
@@ -504,7 +504,7 @@ export class InboundComponent implements OnInit {
       },
       error: (error) => {
         this.lineSubmitting = false;
-        this.toastr.error(error?.error?.message || 'Cập nhật dòng phiếu nhập thất bại.');
+        this.toastr.error('Nhập kho', error?.error?.message || 'Cập nhật dòng phiếu nhập thất bại.');
       }
     });
   }
@@ -560,14 +560,14 @@ export class InboundComponent implements OnInit {
     this.inboundReceiptLineService.delete(this.lineToDelete.id).subscribe({
       next: (res) => {
         if (res.success) {
-          this.toastr.success('Xóa dòng phiếu nhập thành công.');
+          this.toastr.success('Nhập kho', 'Xóa dòng phiếu nhập thành công.');
           this.showDeleteLineConfirm = false;
           this.lineToDelete = null;
           this.refreshSelectedReceiptIfOpen(receiptId);
         }
       },
       error: (error) => {
-        this.toastr.error(error?.error?.message || 'Xóa dòng phiếu nhập thất bại.');
+        this.toastr.error('Nhập kho', error?.error?.message || 'Xóa dòng phiếu nhập thất bại.');
       }
     });
   }
@@ -925,7 +925,7 @@ export class InboundComponent implements OnInit {
       error: (error) => {
         this.availablePurchaseOrders = [];
         this.loadingAvailablePurchaseOrders = false;
-        this.toastr.error(error?.error?.message || 'Không tải được danh sách đơn nhập hàng hợp lệ.');
+        this.toastr.error('Nhập kho', error?.error?.message || 'Không tải được danh sách đơn nhập hàng hợp lệ.');
       }
     });
   }
@@ -977,7 +977,7 @@ export class InboundComponent implements OnInit {
   private validateLineForm(): boolean {
     const errorMessage = this.inboundLineEditorService.validateForm(this.getLineEditorContext());
     if (errorMessage) {
-      this.toastr.warning(errorMessage);
+      this.toastr.warning('Nhập kho', errorMessage);
       return false;
     }
 

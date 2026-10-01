@@ -259,6 +259,9 @@ export class RbacComponent implements OnInit {
         this.toastr.success('Phân quyền', 'Tạo role thành công!');
         this.showCreateRoleModal = false;
         this.loadRoles();
+      },
+      error: (e) => {
+        this.toastr.error('Phân quyền', e?.error?.message || 'Tạo role thất bại.');
       }
     });
   }
@@ -292,6 +295,9 @@ export class RbacComponent implements OnInit {
         this.toastr.success('Phân quyền', 'Cập nhật role thành công!');
         this.showEditRoleModal = false;
         this.loadRoles();
+      },
+      error: (e) => {
+        this.toastr.error('Phân quyền', e?.error?.message || 'Cập nhật role thất bại.');
       }
     });
   }
@@ -316,6 +322,9 @@ export class RbacComponent implements OnInit {
         this.toastr.success('Phân quyền', 'Xóa role thành công!');
         this.showDeleteRoleConfirm = false;
         this.loadRoles();
+      },
+      error: (e) => {
+        this.toastr.error('Phân quyền', e?.error?.message || 'Xóa role thất bại.');
       }
     });
   }
@@ -357,7 +366,7 @@ export class RbacComponent implements OnInit {
   onAssignPermSubmit(): void {
     if (!this.selectedRole) return;
     if (this.isSystemAdminRole(this.selectedRole)) {
-      this.toastr.warning('Role ADMIN được bảo vệ', 'Không thể thay đổi permission của role quản trị hệ thống.');
+      this.toastr.warning('Phân quyền', 'Không thể thay đổi permission của role quản trị hệ thống.');
       return;
     }
 
