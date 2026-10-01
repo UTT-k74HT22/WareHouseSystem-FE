@@ -75,7 +75,7 @@
             <button *appHasAnyPermission="userUpdatePermissions" class="btn-icon btn-edit" (click)="openEditModal(user)" title="Chỉnh sửa">
               <i class="fa-regular fa-pen-to-square" aria-hidden="true"></i>
             </button>
-            <button *appHasAnyPermission="userUpdatePermissions" class="btn-icon btn-key" (click)="openResetPasswordModal(user)" title="Đặt lại mật khẩu">
+            <button *appHasAnyPermission="userPasswordResetPermissions" class="btn-icon btn-key" (click)="openResetPasswordModal(user)" title="Đặt lại mật khẩu">
               <i class="fa-solid fa-key" aria-hidden="true"></i>
             </button>
           </td>
@@ -217,7 +217,7 @@
               <input
                 type="checkbox"
                 [checked]="isRoleSelected(role.id)"
-                [disabled]="savingEdit"
+                [disabled]="isRoleSelectionDisabled(role.id)"
                 (change)="toggleRoleSelection(role.id)" />
               <span class="role-checkbox-name">{{ role.name }}</span>
               <span class="role-checkbox-desc" *ngIf="role.description">{{ role.description }}</span>
@@ -272,7 +272,7 @@
 
     <div class="modal-footer">
       <button class="btn btn-ghost" (click)="closeResetPasswordModal()" [disabled]="savingPassword">Hủy</button>
-      <button *appHasAnyPermission="userUpdatePermissions" class="btn btn-primary" (click)="onResetPasswordSubmit()" [disabled]="savingPassword">
+      <button *appHasAnyPermission="userPasswordResetPermissions" class="btn btn-primary" (click)="onResetPasswordSubmit()" [disabled]="savingPassword">
         <span *ngIf="savingPassword"><i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i> Đang lưu...</span>
         <span *ngIf="!savingPassword">Lưu</span>
       </button>

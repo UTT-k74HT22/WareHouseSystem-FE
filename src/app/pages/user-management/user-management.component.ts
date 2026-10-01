@@ -8,6 +8,7 @@ import { AccountResponse } from '../../dto/response/Account/AccountResponse';
 import { RoleResponse } from '../../dto/response/Role/RoleResponse';
 import { AssignRolesRequest } from '../../dto/request/Role/RoleRequest';
 import { ResetUserPasswordRequest, UpdateUserRequest } from '../../dto/request/User/UserRequest';
+import { AuthService } from '../../service/AuthService/auth-service.service';
 
 @Component({
   selector: 'app-user-management',
@@ -16,8 +17,9 @@ import { ResetUserPasswordRequest, UpdateUserRequest } from '../../dto/request/U
 })
 export class UserManagementComponent implements OnInit {
   readonly userRoleReadPermissions = ['PERM_USER_ROLE_READ'];
-  readonly userRoleManagePermissions = ['PERM_USER_ROLE_CREATE', 'PERM_USER_ROLE_DELETE'];
+  readonly userRoleManagePermissions = ['PERM_USER_ROLE_UPDATE'];
   readonly userUpdatePermissions = ['PERM_USER_UPDATE'];
+  readonly userPasswordResetPermissions = ['PERM_USER_PASSWORD_RESET_UPDATE'];
 
   users: AccountResponse[] = [];
   loading = false;
@@ -56,7 +58,8 @@ export class UserManagementComponent implements OnInit {
     private accountService: AccountService,
     private userRoleService: UserRoleService,
     private roleService: RoleService,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private authService: AuthService
   ) {}
 
   ngOnInit(): void {
@@ -174,12 +177,15 @@ export class UserManagementComponent implements OnInit {
   }
 
   private loadRoleSelection(userId: string): void {
+    if (!this.authService.hasAnyPermission(this.userRoleManagePermissions)) {
+      return;
+    }
     forkJoin({
       allRoles: this.roleService.getAll(0, 200),
       userRoles: this.userRoleService.getUserRoles(userId, 0, 200)
     }).subscribe({
       next: (res) => {
-        if (!res.allRoles.success) {
+        if (!res.allRoles.success || !res.userRoles.success) {
           this.toastr.error('Quản lý user', 'Không tải được danh sách roles.');
           return;
         }
@@ -235,6 +241,9 @@ export class UserManagementComponent implements OnInit {
       this.editForm.first_name.trim() !== (this.editUser.first_name || '') ||
       this.editForm.last_name.trim() !== (this.editUser.last_name || '');
     const statusChanged = !!this.editForm.status && this.editForm.status !== String(this.editUser.status);
+    if (!this.validateRoleChanges()) {
+      return;
+    }
     if (!infoChanged && !statusChanged && !this.hasRoleChanges()) {
       this.toastr.info('Quản lý user', 'Không có thay đổi nào.');
       this.closeEditModal();
@@ -276,9 +285,8 @@ export class UserManagementComponent implements OnInit {
       return;
     }
 
-    if (this.selectedRolesForUser.length === 0) {
+    if (!this.validateRoleChanges()) {
       this.savingEdit = false;
-      this.toastr.warning('Quản lý user', 'Mỗi user phải có ít nhất một role.');
       return;
     }
 
@@ -287,9 +295,9 @@ export class UserManagementComponent implements OnInit {
       return;
     }
 
-    // BE POST đã sync/replace toàn bộ: chỉ cần 1 call, tránh dở dang giữa DELETE và POST
+    // BE đồng bộ toàn bộ danh sách role trong một transaction.
     const request: AssignRolesRequest = { role_ids: this.selectedRolesForUser };
-    this.userRoleService.assignRolesToUser(userId, request).subscribe({
+    this.userRoleService.updateUserRoles(userId, request).subscribe({
       next: () => onDone(),
       error: (error) => {
         this.savingEdit = false;
@@ -299,6 +307,9 @@ export class UserManagementComponent implements OnInit {
   }
 
   toggleRoleSelection(roleId: string): void {
+    if (this.isRoleSelectionDisabled(roleId)) {
+      return;
+    }
     const idx = this.selectedRolesForUser.indexOf(roleId);
     if (idx >= 0) {
       if (this.selectedRolesForUser.length === 1) {
@@ -315,6 +326,28 @@ export class UserManagementComponent implements OnInit {
 
   isRoleSelected(roleId: string): boolean {
     return this.selectedRolesForUser.includes(roleId);
+  }
+
+  isRoleSelectionDisabled(roleId: string): boolean {
+    if (this.savingEdit || !this.rolesEditable) {
+      return true;
+    }
+    return !this.authService.hasPermission('PERM_USER_ROLE_UPDATE');
+  }
+
+  private validateRoleChanges(): boolean {
+    if (!this.rolesEditable) {
+      return true;
+    }
+    if (this.selectedRolesForUser.length === 0) {
+      this.toastr.warning('Quản lý user', 'Mỗi user phải có ít nhất một role.');
+      return false;
+    }
+    if (!this.authService.hasPermission('PERM_USER_ROLE_UPDATE')) {
+      this.toastr.warning('Quản lý user', 'Bạn không có quyền cập nhật vai trò.');
+      return false;
+    }
+    return true;
   }
 
   openResetPasswordModal(user: AccountResponse): void {

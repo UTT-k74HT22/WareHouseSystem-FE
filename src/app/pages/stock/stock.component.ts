@@ -396,8 +396,6 @@ export class StockAdjustmentsComponent implements OnInit, OnDestroy {
   approvedCount = 0;
   rejectedCount = 0;
 
-  roles: string[] = [];
-  isAdminReviewer = false;
   private readonly subscriptions = new Subscription();
   private readonly filterChange$ = new Subject<void>();
   private loadSeq = 0;
@@ -440,13 +438,6 @@ export class StockAdjustmentsComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    this.subscriptions.add(
-      this.authService.authState$.subscribe((state) => {
-        this.roles = state.roles || [];
-        this.isAdminReviewer = this.roles.some((role) => (role || '').trim().toUpperCase() === 'ADMIN');
-      })
-    );
-
     this.subscriptions.add(
       this.filterChange$.pipe(debounceTime(500)).subscribe(() => {
         if (!this.isDateRangeValid()) {
@@ -848,11 +839,10 @@ export class StockAdjustmentsComponent implements OnInit, OnDestroy {
       return true;
     }
 
-    const roleSet = this.roles.map((role) => (role || '').trim().toUpperCase());
-    if (roleSet.some((role) => role === 'ADMIN')) {
+    if (this.authService.hasPermission('PERM_STOCK_ADJUSTMENT_AUTO_APPROVAL_UPDATE')) {
       return false;
     }
-    if (roleSet.some((role) => role === 'MANAGER')) {
+    if (this.authService.hasPermission('PERM_STOCK_ADJUSTMENT_SMALL_AUTO_APPROVAL_UPDATE')) {
       return (
         [ReasonType.THEFT, ReasonType.SYSTEM_ERROR].includes(this.createForm.reason) ||
         Math.abs(this.quantityDeltaPreview) >= 5
@@ -867,7 +857,7 @@ export class StockAdjustmentsComponent implements OnInit, OnDestroy {
     }
 
     if (this.requiresApprovalPreview) {
-      return 'Theo rule BE hiện tại, phiếu này sẽ vào trạng thái chờ duyệt. Tồn kho chỉ thay đổi sau khi admin phê duyệt.';
+      return 'Phiếu này sẽ vào trạng thái chờ duyệt. Tồn kho chỉ thay đổi sau khi người có quyền phê duyệt xác nhận.';
     }
 
     return 'Theo rule BE hiện tại, phiếu này có thể được áp dụng ngay sau khi tạo và sinh movement ADJUSTMENT_INCREASE hoặc ADJUSTMENT_DECREASE.';

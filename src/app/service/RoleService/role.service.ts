@@ -83,6 +83,10 @@ export class RoleService {
     return this.http.post<ApiResponse<PermissionResponse[]>>(`${this.apiUrl}/${roleId}/permissions`, request);
   }
 
+  updatePermissions(roleId: string, request: AssignPermissionsRequest): Observable<ApiResponse<PermissionResponse[]>> {
+    return this.http.put<ApiResponse<PermissionResponse[]>>(`${this.apiUrl}/${roleId}/permissions`, request);
+  }
+
   removePermission(roleId: string, permissionId: string): Observable<ApiResponse<void>> {
     return this.http.delete<ApiResponse<void>>(`${this.apiUrl}/${roleId}/permissions/${permissionId}`);
   }

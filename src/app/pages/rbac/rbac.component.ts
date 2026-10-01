@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { Observable, forkJoin } from 'rxjs';
+import { forkJoin } from 'rxjs';
 import { PermissionService } from '../../service/PermissionService/permission.service';
 import { RoleService } from '../../service/RoleService/role.service';
 import { ToastrService } from '../../service/SystemService/toastr.service';
@@ -79,7 +79,7 @@ export class RbacComponent implements OnInit {
   readonly roleUpdatePermissions = ['PERM_ROLE_UPDATE'];
   readonly roleDeletePermissions = ['PERM_ROLE_DELETE'];
   readonly rolePermissionReadPermissions = ['PERM_ROLE_PERMISSION_READ'];
-  readonly rolePermissionManagePermissions = ['PERM_ROLE_PERMISSION_CREATE', 'PERM_ROLE_PERMISSION_DELETE'];
+  readonly rolePermissionManagePermissions = ['PERM_ROLE_PERMISSION_UPDATE'];
 
   constructor(
     private authService: AuthService,
@@ -370,35 +370,26 @@ export class RbacComponent implements OnInit {
       return;
     }
 
-    const roleId = this.selectedRole.id;
-    const initialPermissionSet = new Set(this.initialPermissionsForRole);
-    const selectedPermissionSet = new Set(this.selectedPermissionsForRole);
-
-    const permissionIdsToAdd = this.selectedPermissionsForRole.filter((permissionId) => !initialPermissionSet.has(permissionId));
-    const permissionIdsToRemove = this.initialPermissionsForRole.filter((permissionId) => !selectedPermissionSet.has(permissionId));
-
-    const operations: Observable<unknown>[] = permissionIdsToRemove.map((permissionId) =>
-      this.roleService.removePermission(roleId, permissionId)
-    );
-
-    if (permissionIdsToAdd.length > 0) {
-      const request: AssignPermissionsRequest = { permission_ids: permissionIdsToAdd };
-      operations.push(this.roleService.assignPermissions(roleId, request));
-    }
-
-    if (operations.length === 0) {
+    if (this.haveSamePermissions(this.initialPermissionsForRole, this.selectedPermissionsForRole)) {
       this.toastr.info('Phân quyền', 'Không có thay đổi permission nào.');
       this.showAssignPermModal = false;
       return;
     }
 
-    forkJoin(operations).subscribe({
+    const request: AssignPermissionsRequest = { permission_ids: this.selectedPermissionsForRole };
+    this.roleService.updatePermissions(this.selectedRole.id, request).subscribe({
       next: () => {
         this.toastr.success('Phân quyền', 'Cập nhật permissions cho role thành công!');
         this.showAssignPermModal = false;
         this.loadRoles();
       }
     });
+  }
+
+  private haveSamePermissions(left: string[], right: string[]): boolean {
+    if (left.length !== right.length) return false;
+    const rightSet = new Set(right);
+    return left.every((id) => rightSet.has(id));
   }
 
   togglePermissionSelection(permId: string): void {

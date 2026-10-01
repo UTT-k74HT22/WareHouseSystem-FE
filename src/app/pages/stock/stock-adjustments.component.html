@@ -130,7 +130,7 @@
             </button>
             <ng-container *appHasAnyPermission="approvalPermissions">
               <button
-                *ngIf="isAdminReviewer && adjustment.status === StockAdjustmentsStatus.PENDING_APPROVAL"
+                *ngIf="adjustment.status === StockAdjustmentsStatus.PENDING_APPROVAL"
                 class="btn-icon btn-approve"
                 title="Phê duyệt"
                 (click)="openApproveModal(adjustment)">
@@ -139,7 +139,7 @@
             </ng-container>
             <ng-container *appHasAnyPermission="approvalPermissions">
               <button
-                *ngIf="isAdminReviewer && adjustment.status === StockAdjustmentsStatus.PENDING_APPROVAL"
+                *ngIf="adjustment.status === StockAdjustmentsStatus.PENDING_APPROVAL"
                 class="btn-icon btn-delete"
                 title="Từ chối"
                 (click)="openRejectModal(adjustment)">
@@ -175,7 +175,7 @@
         <button class="btn btn-ghost btn-card" (click)="openDetailModal(adjustment)">Chi tiết</button>
         <ng-container *appHasAnyPermission="approvalPermissions">
           <button
-            *ngIf="isAdminReviewer && adjustment.status === StockAdjustmentsStatus.PENDING_APPROVAL"
+            *ngIf="adjustment.status === StockAdjustmentsStatus.PENDING_APPROVAL"
             class="btn btn-primary btn-card"
             (click)="openApproveModal(adjustment)"
           >
@@ -184,7 +184,7 @@
         </ng-container>
         <ng-container *appHasAnyPermission="approvalPermissions">
           <button
-            *ngIf="isAdminReviewer && adjustment.status === StockAdjustmentsStatus.PENDING_APPROVAL"
+            *ngIf="adjustment.status === StockAdjustmentsStatus.PENDING_APPROVAL"
             class="btn btn-danger btn-card"
             (click)="openRejectModal(adjustment)"
           >
@@ -394,7 +394,7 @@
       <button class="btn btn-ghost" (click)="closeAllModals()">Đóng</button>
       <ng-container *appHasAnyPermission="approvalPermissions">
         <button
-          *ngIf="isAdminReviewer && selectedAdjustment.status === StockAdjustmentsStatus.PENDING_APPROVAL"
+          *ngIf="selectedAdjustment.status === StockAdjustmentsStatus.PENDING_APPROVAL"
           class="btn btn-primary"
           (click)="openApproveModal(selectedAdjustment)"
         >
@@ -403,7 +403,7 @@
       </ng-container>
       <ng-container *appHasAnyPermission="approvalPermissions">
         <button
-          *ngIf="isAdminReviewer && selectedAdjustment.status === StockAdjustmentsStatus.PENDING_APPROVAL"
+          *ngIf="selectedAdjustment.status === StockAdjustmentsStatus.PENDING_APPROVAL"
           class="btn btn-danger"
           (click)="openRejectModal(selectedAdjustment)"
         >

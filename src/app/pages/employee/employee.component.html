@@ -650,7 +650,7 @@
             </div>
           </div>
 
-          <div class="form-row">
+          <div class="form-row" *appHasAnyPermission="userRoleManagePermissions">
             <div class="form-group">
               <label>Vai trò <span class="required">*</span></label>
               <div class="role-checkbox-list">

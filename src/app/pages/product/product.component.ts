@@ -3,7 +3,6 @@ import { ProductResponse } from '../../dto/response/Product/ProductResponse';
 import { ProductService } from '../../service/ProductService/product.service';
 import { CategoryService } from '../../service/CategoryService/category.service';
 import { UOMService } from '../../service/UOMService/uom.service';
-import { StorageService } from '../../service/StorageService/storage.service';
 import { ToastrService } from '../../service/SystemService/toastr.service';
 import { ProductStatus } from '../../helper/enums/ProductStatus';
 import { CategoryResponse } from '../../dto/response/Category/CategoryResponse';
@@ -66,7 +65,6 @@ export class ProductComponent implements OnInit {
     private productService: ProductService,
     private categoryService: CategoryService,
     private uomService: UOMService,
-    private storageService: StorageService,
     private toastr: ToastrService
   ) {}
 
@@ -310,7 +308,7 @@ export class ProductComponent implements OnInit {
   private resolveProductImages(products: ProductResponse[]): void {
     products.forEach(p => {
       if (p.image_url && !this.imageUrlMap.has(p.id)) {
-        this.storageService.getPresignedUrl(p.image_url).subscribe({
+        this.productService.getImageUrl(p.id).subscribe({
           next: (res) => {
             if (res.success && res.data?.presignedUrl) {
               this.imageUrlMap.set(p.id, res.data.presignedUrl);
@@ -352,7 +350,7 @@ export class ProductComponent implements OnInit {
     this.createImagePreview = URL.createObjectURL(file);
 
     this.uploadingImage = true;
-    this.storageService.uploadFile(file, 'products').subscribe({
+    this.productService.uploadImage(file).subscribe({
       next: (res) => {
         if (res.success && res.data) {
           this.createForm.image_url = res.data.object_name;
@@ -394,7 +392,7 @@ export class ProductComponent implements OnInit {
     this.editImagePreview = URL.createObjectURL(file);
 
     this.uploadingImage = true;
-    this.storageService.uploadFile(file, 'products').subscribe({
+    this.productService.uploadImageForUpdate(this.selectedProduct!.id, file).subscribe({
       next: (res) => {
         if (res.success && res.data) {
           this.editForm.image_url = res.data.object_name;

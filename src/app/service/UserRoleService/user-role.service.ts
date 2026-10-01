@@ -14,11 +14,11 @@ export class UserRoleService {
 
   constructor(private http: HttpClient) {}
 
-  assignRolesToUser(
+  updateUserRoles(
     userId: string,
     request: AssignRolesRequest
   ): Observable<ApiResponse<RoleResponse[]>> {
-    return this.http.post<ApiResponse<RoleResponse[]>>(
+    return this.http.put<ApiResponse<RoleResponse[]>>(
       `${this.apiUrl}/${userId}/roles`,
       request
     );

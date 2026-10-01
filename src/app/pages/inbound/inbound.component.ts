@@ -45,9 +45,9 @@ export class InboundComponent implements OnInit {
   createPermissions = ['PERM_INBOUND_RECEIPT_CREATE'];
   updatePermissions = ['PERM_INBOUND_RECEIPT_UPDATE'];
   deletePermissions = ['PERM_INBOUND_RECEIPT_DELETE'];
-  lineCreatePermissions = ['PERM_INBOUND_RECEIPT_LINE_CREATE'];
-  lineUpdatePermissions = ['PERM_INBOUND_RECEIPT_LINE_UPDATE'];
-  lineDeletePermissions = ['PERM_INBOUND_RECEIPT_LINE_DELETE'];
+  lineCreatePermissions = ['PERM_INBOUND_RECEIPT_UPDATE'];
+  lineUpdatePermissions = ['PERM_INBOUND_RECEIPT_UPDATE'];
+  lineDeletePermissions = ['PERM_INBOUND_RECEIPT_UPDATE'];
 
   receipts: InboundReceiptResponse[] = [];
   warehouses: WareHouseResponse[] = [];

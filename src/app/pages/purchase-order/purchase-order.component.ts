@@ -25,9 +25,9 @@ export class PurchaseOrderComponent implements OnInit {
   createPermissions = ['PERM_PURCHASE_ORDER_CREATE'];
   updatePermissions = ['PERM_PURCHASE_ORDER_UPDATE'];
   deletePermissions = ['PERM_PURCHASE_ORDER_DELETE'];
-  lineCreatePermissions = ['PERM_PURCHASE_ORDER_LINE_CREATE'];
-  lineUpdatePermissions = ['PERM_PURCHASE_ORDER_LINE_UPDATE'];
-  lineDeletePermissions = ['PERM_PURCHASE_ORDER_LINE_DELETE'];
+  lineCreatePermissions = ['PERM_PURCHASE_ORDER_UPDATE'];
+  lineUpdatePermissions = ['PERM_PURCHASE_ORDER_UPDATE'];
+  lineDeletePermissions = ['PERM_PURCHASE_ORDER_UPDATE'];
 
   // ─── Dữ liệu ────────────────────────────────────────────────────
   orders: PurchaseOrderResponse[] = [];

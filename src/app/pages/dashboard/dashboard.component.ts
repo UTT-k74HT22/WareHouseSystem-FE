@@ -208,8 +208,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     return this.alerts.some((alert) => alert.severity === 'HIGH');
   }
 
-  isAdmin(): boolean { return (this.roles || []).some((r) => (r || '').trim().toUpperCase() === 'ADMIN'); }
-  isManager(): boolean { return (this.roles || []).some((r) => (r || '').trim().toUpperCase() === 'MANAGER'); }
 
   // ─── Chart builders (immutable pattern for change detection) ────────────
 

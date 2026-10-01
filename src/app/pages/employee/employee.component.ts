@@ -14,6 +14,7 @@ import { CreateEmployeeRequest } from '../../dto/request/Employee/CreateEmployee
 import { UpdateEmployeeRequest } from '../../dto/request/Employee/UpdateEmployeeRequest';
 import { ToastrService } from '../../service/SystemService/toastr.service';
 import { EMPLOYEE_STATUS_LABELS, ROLE_TYPE_LABELS } from '../../helper/constraint/employee-labels';
+import { AuthService } from '../../service/AuthService/auth-service.service';
 
 @Component({
   selector: 'app-employee',
@@ -24,6 +25,7 @@ export class EmployeeComponent implements OnInit {
   readonly createPermissions = ['PERM_EMPLOYEE_CREATE'];
   readonly updatePermissions = ['PERM_EMPLOYEE_UPDATE'];
   readonly deletePermissions = ['PERM_EMPLOYEE_DELETE'];
+  readonly userRoleManagePermissions = ['PERM_USER_ROLE_UPDATE'];
 
   employees: EmployeeResponse[] = [];
   warehouses: WareHouseResponse[] = [];
@@ -66,6 +68,7 @@ export class EmployeeComponent implements OnInit {
     private warehouseService: WarehouseService,
     private roleService: RoleService,
     private userRoleService: UserRoleService,
+    private authService: AuthService,
     private toastr: ToastrService
   ) {}
 
@@ -201,7 +204,7 @@ export class EmployeeComponent implements OnInit {
   private loadEditRoles(accountId: string | undefined): void {
     this.editRoles = [];
     this.initialEditRoles = [];
-    if (!accountId) {
+    if (!accountId || !this.authService.hasPermission('PERM_USER_ROLE_UPDATE')) {
       return;
     }
     this.editRolesLoading = true;
@@ -217,6 +220,10 @@ export class EmployeeComponent implements OnInit {
   }
 
   private persistEditRolesIfChanged(onDone: () => void): void {
+    if (!this.authService.hasPermission('PERM_USER_ROLE_UPDATE')) {
+      onDone();
+      return;
+    }
     const initial = new Set(this.initialEditRoles);
     const current = new Set(this.editRoles);
     const removed = this.initialEditRoles.filter((role) => !current.has(role));
@@ -239,7 +246,7 @@ export class EmployeeComponent implements OnInit {
       return;
     }
     const request: AssignRolesRequest = { role_ids: roleIds };
-    this.userRoleService.assignRolesToUser(accountId, request).subscribe({
+    this.userRoleService.updateUserRoles(accountId, request).subscribe({
       next: () => onDone(),
       error: (error) => {
         console.error('Error updating user roles:', error);

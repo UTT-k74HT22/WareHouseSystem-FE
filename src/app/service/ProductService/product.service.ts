@@ -8,6 +8,7 @@ import { ProductResponse } from '../../dto/response/Product/ProductResponse';
 import { CreateProductRequest } from '../../dto/request/Product/CreateProductRequest';
 import { UpdateProductRequest } from '../../dto/request/Product/UpdateProductRequest';
 import { SearchProductRequest } from '../../dto/request/Product/SearchProductRequest';
+import { FileUploadResponse } from '../../dto/response/Storage/FileUploadResponse';
 
 @Injectable({ providedIn: 'root' })
 export class ProductService {
@@ -94,5 +95,21 @@ export class ProductService {
   /** DELETE /api/v1/products/:id */
   delete(id: string): Observable<ApiResponse<void>> {
     return this.http.delete<ApiResponse<void>>(`${this.apiUrl}/${id}`);
+  }
+
+  uploadImage(file: File): Observable<ApiResponse<FileUploadResponse>> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<ApiResponse<FileUploadResponse>>(`${this.apiUrl}/images`, formData);
+  }
+
+  uploadImageForUpdate(productId: string, file: File): Observable<ApiResponse<FileUploadResponse>> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<ApiResponse<FileUploadResponse>>(`${this.apiUrl}/${productId}/image`, formData);
+  }
+
+  getImageUrl(productId: string): Observable<ApiResponse<{ presignedUrl: string }>> {
+    return this.http.get<ApiResponse<{ presignedUrl: string }>>(`${this.apiUrl}/${productId}/image-url`);
   }
 }

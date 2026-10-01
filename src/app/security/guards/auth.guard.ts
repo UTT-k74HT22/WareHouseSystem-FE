@@ -42,7 +42,7 @@ export class AuthGuard implements CanActivate {
                 return false;
               }
 
-              return this.hasRequiredRole(route, authState.roles);
+              return true;
             }),
             catchError(() => {
               this.router.navigate(['/dashboard']);
@@ -51,25 +51,9 @@ export class AuthGuard implements CanActivate {
           );
         }
 
-        return of(this.hasRequiredRole(route, authState.roles));
+        return of(true);
       })
     );
   }
 
-  private hasRequiredRole(route: ActivatedRouteSnapshot, userRoles: string[]): boolean {
-    const requiredRoles = route.data['roles'] as string[] | undefined;
-    if (!requiredRoles || requiredRoles.length === 0) {
-      return true;
-    }
-
-    const normalizedRoles = (userRoles || []).map((r) => (r || '').trim().toUpperCase());
-    const hasRole = requiredRoles.some((role) => normalizedRoles.includes((role || '').trim().toUpperCase()));
-    if (hasRole) {
-      return true;
-    }
-
-    this.toastr.error('Không có quyền', 'Bạn không có quyền truy cập trang này');
-    this.router.navigate(['/dashboard']);
-    return false;
-  }
 }
